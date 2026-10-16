@@ -1,0 +1,7 @@
+node_modules/
+packages/*/build/
+packages/*/dist/
+.claude/settings.local.json
+.vs/
+test/trace/model.trace
+.env

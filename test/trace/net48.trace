@@ -1,0 +1,749 @@
+## scalars: types, changing/change, cancel, $$, lock
+> create
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Name = "New"
+  ev Document.Name.changing(@Root.Document, "New", "Doc", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "New", "Doc", "Name")
+  $dirty → true
+> Name = "New" again
+> Name = "forbidden" (changing → false)
+  ev Document.Name.changing(@Root.Document, "forbidden", "New", "Name") → false
+  = "New"
+> Amount = "1 234,5"
+  ev Document.Amount.changing(@Root.Document, 1234.5, 5, "Amount")
+  ev Document.Amount.change(@Root.Document, 1234.5, 5, "Amount")
+  = 1234.5
+> Amount = "abc"
+  ev Document.Amount.changing(@Root.Document, 0, 1234.5, "Amount")
+  ev Document.Amount.change(@Root.Document, 0, 1234.5, "Amount")
+  = 0
+> Amount = null
+  = 0
+> Done = 1
+  ev Document.Done.changing(@Root.Document, true, false, "Done")
+  ev Document.Done.change(@Root.Document, true, false, "Done")
+  = true
+> Done = "false"
+  ev Document.Done.changing(@Root.Document, false, true, "Done")
+  ev Document.Done.change(@Root.Document, false, true, "Done")
+  = false
+> Name = 42
+  ev Document.Name.changing(@Root.Document, "42", "New", "Name")
+  ev Document.Name.change(@Root.Document, "42", "New", "Name")
+  = "42"
+> Date = new Date(2026, 0, 15)
+  ev Document.Date.changing(@Root.Document, D2026-01-15T00:00:00, D2025-03-30T00:00:00, "Date")
+  ev Document.Date.change(@Root.Document, D2026-01-15T00:00:00, D2025-03-30T00:00:00, "Date")
+  = D2026-01-15T00:00:00
+> Date = "2026-02-01T00:00:00"
+  ev Document.Date.changing(@Root.Document, D2026-02-01T00:00:00, D2026-01-15T00:00:00, "Date")
+  ev Document.Date.change(@Root.Document, D2026-02-01T00:00:00, D2026-01-15T00:00:00, "Date")
+  = D2026-02-01T00:00:00
+> $$Tab = "x"
+  ev Document.$$Tab.changing(@Root.Document, "x", "", "$$Tab")
+  ev Document.$$Tab.change(@Root.Document, "x", "", "$$Tab")
+> $lockEvents; Name = "Locked"; $unlockEvents
+  = true
+> $id, $name, $isNew, $maxLength(Name), $maxLength(Amount)
+  = [10, "Locked", false, 50, undefined]
+> $root, $parent, $vm present
+  = [true, true, true]
+> add a property to a sealed element
+  throws TypeError: Cannot add property Extra, object is not extensible
+> root.$setDirty(false)
+  ev Model.dirty.change(false, undefined)
+  $dirty → false
+> data
+  = TRoot {
+      Document: TDocument {
+        Id: 10
+        Name: "Locked"
+        Amount: 0
+        Done: false
+        Date: D2026-02-01T00:00:00
+        $$Tab: "x"
+      }
+    }
+
+## objects: assign element, null, plain object, $empty, $merge
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TDocument.construct(@~Document, "Document")
+  ev TAgentArray.construct(@~Agents)
+  ev TAgent.construct(@~Agents[], "Agents[]")
+  ev TAgent.construct(@~Agents[], "Agents[]")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Agent = Agents[0]
+  ev Document.Agent.changing(@Root.Document, @Root.Agents[0], @Root.Document.Agent, "Agent")
+  ev Model.dirty.change(true, "Document.Agent.Id")
+  ev Document.Agent.change(@Root.Document, @Root.Document.Agent, @Root.Document.Agent, "Agent")
+  = [true, 6]
+  $dirty → true
+> Agent.Name = "Changed"; Agents[0].Name
+  ev Document.Agent.Name.changing(@Root.Document.Agent, "Changed", "Six", "Name")
+  ev Document.Agent.Name.change(@Root.Document.Agent, "Changed", "Six", "Name")
+  = "Six"
+> Agent = Agents[0] again (same Id)
+  ev Document.Agent.changing(@Root.Document, @Root.Agents[0], @Root.Document.Agent, "Agent")
+> Agent = null
+  ev Document.Agent.changing(@Root.Document, null, @Root.Document.Agent, "Agent")
+  ev Document.Agent.change(@Root.Document, @Root.Document.Agent, @Root.Document.Agent, "Agent")
+  = [0, ""]
+> Agent = {Id: 8, Name: "Plain"}
+  ev Document.Agent.changing(@Root.Document, {Id: 8, Name: "Plain"}, @Root.Document.Agent, "Agent")
+  ev Document.Agent.change(@Root.Document, @Root.Document.Agent, @Root.Document.Agent, "Agent")
+> Agent.$empty()
+  ev Document.Agent.change(@Root.Document, @Root.Document.Agent, @Root.Document.Agent, "Agent")
+  = true
+> Document.$merge({Id: 2, Agent: {Id: 9}, Memo: "m"})
+  ev TAgent.construct(@~Agent, "Agent")
+  ev Document.change(@Root, @Root.Document, @Root.Document, "Document")
+  = [true, "Document.Agent"]
+> Document.$merge({Id: 2, Memo: "same id"})
+  ev TAgent.construct(@~Agent, "Agent")
+> Agent.$set({Id: 10})
+  ev Document.Agent.change(@Root.Document, @Root.Document.Agent, @Root.Document.Agent, "Agent")
+> data
+  = TRoot {
+      Document: TDocument {
+        Id: 2
+        Agent: TAgent {
+          Id: 10
+          Name: ""
+        }
+        Memo: "same id"
+      }
+      Agents: [
+        [0] TAgent {
+          Id: 6
+          Name: "Six"
+        }
+        [1] TAgent {
+          Id: 7
+          Name: "Seven"
+        }
+      ]
+    }
+
+## arrays: insert, cancel, remove, select, check, rows, move, sort, copy
+> create
+  ev TRowArray.construct(@~Rows)
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Rows[1].Qty = 5
+  ev Rows[].Qty.changing(@Root.Rows[1], 5, 2, "Qty")
+  ev Model.dirty.change(true, "Rows[].Qty")
+  ev Rows[].Qty.change(@Root.Rows[1], 5, 2, "Qty")
+    ev Rows[].Sum.changing(@Root.Rows[1], 100, 0, "Sum")
+    ev Rows[].Sum.change(@Root.Rows[1], 100, 0, "Sum")
+  = 100
+  $dirty → true
+> $append({Id: 4})
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].adding(@Root.Rows, @~Rows[])
+  ev Rows[].add(@Root.Rows, @Root.Rows[3], 3)
+  ev Rows[].select(@Root.Rows, @Root.Rows[3])
+  ev Rows[].select(@Root.Rows, @Root.Rows[3])
+  ev Rows[].RowNo.changing(@Root.Rows[0], 1, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[0], 1, 0, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[1], 2, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[1], 2, 0, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[2], 3, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[2], 3, 0, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[3], 4, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[3], 4, 0, "RowNo")
+  = @Root.Rows[3]
+> $prepend({Id: 5})
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].adding(@Root.Rows, @~Rows[])
+  ev Rows[].add(@Root.Rows, @Root.Rows[0], 0)
+  ev Rows[].select(@Root.Rows, @Root.Rows[0])
+  ev Rows[].select(@Root.Rows, @Root.Rows[0])
+  ev Rows[].RowNo.changing(@Root.Rows[0], 1, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[0], 1, 0, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[1], 2, 1, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[1], 2, 1, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[2], 3, 2, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[2], 3, 2, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[4], 5, 4, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[4], 5, 4, "RowNo")
+  = @Root.Rows[0]
+> $insert({Id: 6}, "above", Rows[2])
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].adding(@Root.Rows, @~Rows[])
+  ev Rows[].add(@Root.Rows, @Root.Rows[2], 2)
+  ev Rows[].select(@Root.Rows, @Root.Rows[2])
+  ev Rows[].select(@Root.Rows, @Root.Rows[2])
+  ev Rows[].RowNo.changing(@Root.Rows[2], 3, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[2], 3, 0, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[4], 5, 4, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[4], 5, 4, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[5], 6, 5, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[5], 6, 5, "RowNo")
+  = @Root.Rows[2]
+> $insert({Id: 7}, "below", Rows[0])
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].adding(@Root.Rows, @~Rows[])
+  ev Rows[].add(@Root.Rows, @Root.Rows[1], 1)
+  ev Rows[].select(@Root.Rows, @Root.Rows[1])
+  ev Rows[].select(@Root.Rows, @Root.Rows[1])
+  ev Rows[].RowNo.changing(@Root.Rows[1], 2, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[1], 2, 0, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[2], 3, 2, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[2], 3, 2, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[4], 5, 4, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[4], 5, 4, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[5], 6, 5, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[5], 6, 5, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[6], 7, 6, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[6], 7, 6, "RowNo")
+  = @Root.Rows[1]
+> $append({Id: 99}) (adding → false)
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].adding(@Root.Rows, @~Rows[]) → false
+  = null
+> $append([{Id: 11}, {Id: 12}])
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].adding(@Root.Rows, @~Rows[])
+  ev Rows[].add(@Root.Rows, @Root.Rows[7], 7)
+  ev Rows[].RowNo.changing(@Root.Rows[7], 8, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[7], 8, 0, "RowNo")
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].adding(@Root.Rows, @~Rows[])
+  ev Rows[].add(@Root.Rows, @Root.Rows[8], 8)
+  ev Rows[].RowNo.changing(@Root.Rows[8], 9, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[8], 9, 0, "RowNo")
+  ev Rows[].select(@Root.Rows, @Root.Rows[8])
+  = [@Root.Rows[7], @Root.Rows[8]]
+> $selected, $selectedIndex, $RowCount
+  = [@Root.Rows[8], 8, 9]
+> Rows[2].$select()
+  ev Rows[].select(@Root.Rows, @Root.Rows[2])
+  = @Root.Rows[2]
+> Rows[2].$select() again
+> $clearSelected()
+  ev Rows[].select(@Root.Rows, null)
+> Rows[0].$checked = true; Rows[3].$checked = true
+  ev Rows[].check(@Root.Rows, @Root.Rows[0])
+  ev Rows[].check(@Root.Rows, @Root.Rows[3])
+  = [[@Root.Rows[0], @Root.Rows[3]], true]
+> Rows[2].$select(); $remove(Rows[2])
+  ev Rows[].select(@Root.Rows, @Root.Rows[2])
+  ev Rows[].remove(@Root.Rows, @~Rows[], 2)
+  ev Rows[].RowNo.changing(@Root.Rows[2], 3, 4, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[2], 3, 4, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[3], 4, 5, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[3], 4, 5, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[4], 5, 6, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[4], 5, 6, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[5], 6, 7, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[5], 6, 7, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[6], 7, 8, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[6], 7, 8, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[7], 8, 9, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[7], 8, 9, "RowNo")
+  ev Rows[].select(@Root.Rows, @Root.Rows[2])
+  = @Root.Rows[2]
+> Rows[last].$remove()
+  ev Rows[].remove(@Root.Rows, @~Rows[], 7)
+  ev Rows[].select(@Root.Rows, @Root.Rows[6])
+  = @Root.Rows[6]
+> $remove(detached row)
+  ev TRow.construct(@~Rows[], "Rows[]")
+> $move(Rows[0], "down")
+  ev Rows[].RowNo.changing(@Root.Rows[0], 1, 2, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[0], 1, 2, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[1], 2, 1, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[1], 2, 1, "RowNo")
+  = "7,5,6,2,3,4,11"
+> Rows[3].$move("top")
+  ev Rows[].RowNo.changing(@Root.Rows[0], 1, 4, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[0], 1, 4, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[1], 2, 1, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[1], 2, 1, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[2], 3, 2, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[2], 3, 2, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[3], 4, 3, "RowNo")
+  = "2,7,5,6,3,4,11"
+> $canMove(Rows[0], "up"), Rows[0].$canMove("down")
+  = [false, true]
+> $sort(by Id desc)
+  ev Rows[].RowNo.changing(@Root.Rows[0], 1, 7, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[0], 1, 7, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[2], 3, 4, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[2], 3, 4, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[3], 4, 3, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[4], 5, 6, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[4], 5, 6, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[5], 6, 5, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[5], 6, 5, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[6], 7, 1, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[6], 7, 1, "RowNo")
+  = "11,7,6,5,4,3,2"
+> $find(Id === 4), $sum(Qty), Count, $isEmpty
+  = [@Root.Rows[4], 9, 7, false]
+> Selected("Id")
+  = 11
+> $new({Id: 30}) (not added)
+  ev TRow.construct(@~Rows[], "Rows[]")
+  = [@~Rows[], 7]
+> $valid, $permissions
+  = [true, {}]
+> data
+  = TRoot {
+      Rows: [ $RowCount=7
+        [0] TRow $selected {
+          Id: 11
+          Qty: 0
+          Price: 0
+          Sum: 0
+          RowNo: 1
+        }
+        [1] TRow {
+          Id: 7
+          Qty: 0
+          Price: 0
+          Sum: 0
+          RowNo: 2
+        }
+        [2] TRow $checked {
+          Id: 6
+          Qty: 0
+          Price: 0
+          Sum: 0
+          RowNo: 3
+        }
+        [3] TRow $checked {
+          Id: 5
+          Qty: 0
+          Price: 0
+          Sum: 0
+          RowNo: 4
+        }
+        [4] TRow {
+          Id: 4
+          Qty: 1
+          Price: 1
+          Sum: 0
+          RowNo: 5
+        }
+        [5] TRow {
+          Id: 3
+          Qty: 3
+          Price: 30
+          Sum: 0
+          RowNo: 6
+        }
+        [6] TRow {
+          Id: 2
+          Qty: 5
+          Price: 20
+          Sum: 100
+          RowNo: 7
+        }
+      ]
+    }
+> $copy([{Id: 21}, {Id: 22}])
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].RowNo.changing(@Root.Rows[0], 1, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[0], 1, 0, "RowNo")
+  ev Rows[].RowNo.changing(@Root.Rows[1], 2, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[1], 2, 0, "RowNo")
+  = 0
+> $empty()
+  = [0, 0]
+> root.$merge({Rows: [{Id: 31}], "Rows.$RowCount": 9})
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev Rows[].RowNo.changing(@Root.Rows[0], 1, 0, "RowNo")
+  ev Rows[].RowNo.change(@Root.Rows[0], 1, 0, "RowNo")
+  = [1, 9]
+> data
+  = TRoot {
+      Rows: [ $RowCount=9
+        [0] TRow {
+          Id: 31
+          Qty: 2
+          Price: 3
+          Sum: 0
+          RowNo: 1
+        }
+      ]
+    }
+
+## template: properties, defaults, construct, Model.load
+> create
+  console.error "invalid propery name 'Bad'"
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Document.Name.changing(@Root.Document, "Default name", "", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "Default name", "", "Name")
+  ev Document.Date.changing(@Root.Document, D2026-01-15T00:00:00, D1900-01-01T00:00:00, "Date")
+  ev Document.Date.change(@Root.Document, D2026-01-15T00:00:00, D1900-01-01T00:00:00, "Date")
+  ev Model.defaults(@Root)
+  ev Model.load(@Root, null, false)
+  ev Model.dirty.change(false, undefined)
+  $dirty → false
+> $Total, Rows[0].$Sum
+  = [10, 10]
+> Rows[0].Qty = 3; $Total
+  ev Document.Rows[].Qty.changing(@Root.Document.Rows[0], 3, 2, "Qty")
+  ev Model.dirty.change(true, "Document.Rows[].Qty")
+  ev Document.Rows[].Qty.change(@Root.Document.Rows[0], 3, 2, "Qty")
+  = 15
+  $dirty → true
+> $Upper, $Upper = "MIXED"
+  ev Document.Name.changing(@Root.Document, "mixed", "Default name", "Name")
+  ev Document.Name.change(@Root.Document, "mixed", "Default name", "Name")
+  = ["DEFAULT NAME", "mixed"]
+> $$Filter = "flt"
+  ev Root.$$Filter.changing(@Root, "flt", "", "$$Filter")
+  ev Root.$$Filter.change(@Root, "flt", "", "$$Filter")
+  = "flt"
+> $Flag = 1
+  ev Document.$Flag.changing(@Root.Document, true, false, "$Flag")
+  ev Document.$Flag.change(@Root.Document, true, false, "$Flag")
+  = true
+> $Count, $Info, $Rows
+  = [5, {kind: "plain"}, undefined]
+> $Count = "8"
+  ev Document.$Count.changing(@Root.Document, "8", 5, "$Count")
+  ev Document.$Count.change(@Root.Document, "8", 5, "$Count")
+  = "8"
+> Rows.$append({})
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Document.Rows[].adding(@Root.Document.Rows, @~Document.Rows[])
+  ev Document.Rows[].add(@Root.Document.Rows, @Root.Document.Rows[1], 1)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
+  = @Root.Document.Rows[1]
+> data
+  = TRoot {
+      Document: TDocument {
+        Id: 0
+        Name: "mixed"
+        Date: D2026-01-15T00:00:00
+        Rows: [
+          [0] TRow {
+            Qty: 3
+            Price: 5
+          }
+          [1] TRow $selected {
+            Qty: 0
+            Price: 0
+          }
+        ]
+        $Flag: true
+        $Count: "8"
+        $Info: {kind: "plain"}
+      }
+      $$Filter: "flt"
+    }
+
+## template: a property of an unknown kind
+> create
+  throws ReferenceError: alert is not defined
+
+## validators: rules, $valid, $errors, array paths, $forceValidate
+> create
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> root.$valid, Document.$valid, Rows.$valid
+  = [false, false, false]
+> $errors(Name), $errors(Email), $errors(Code)
+  = [[{msg: "Name is required", severity: "error"}], [{msg: "Bad email", severity: "error"}], null]
+> Rows[1].$errors(Qty), Rows[0].$errors(Qty)
+  = [[{msg: "Qty must be positive", severity: "error"}], null]
+> $hasErrors([Document.Name]), $hasErrors([Document.Memo])
+  = [true, false]
+> Name = "n"; Email = "a@b.cc"; Rows[1].Qty = 200
+  ev Document.Name.changing(@Root.Document, "n", "", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "n", "", "Name")
+  ev Document.Email.changing(@Root.Document, "a@b.cc", "bad", "Email")
+  ev Document.Email.change(@Root.Document, "a@b.cc", "bad", "Email")
+  ev Document.Rows[].Qty.changing(@Root.Document.Rows[1], 200, 0, "Qty")
+  ev Document.Rows[].Qty.change(@Root.Document.Rows[1], 200, 0, "Qty")
+  = [false, null, [{msg: "Qty is too big", severity: "warning"}]]
+  $dirty → true
+> Code = "toolong"; $forceValidate()
+  ev Document.Code.changing(@Root.Document, "toolong", "ok", "Code")
+  ev Document.Code.change(@Root.Document, "toolong", "ok", "Code")
+  = [{x: "Document.Code", e: [{msg: "Code is too long", severity: "error"}]}, {x: "Document.Rows[].Qty", e: [{msg: "Qty is too big", severity: "warning"}]}, {x: "Document.Rows[].Note", e: [{msg: "Note", severity: "error"}]}]
+> Rows[1].Qty = 60 (applyIf Note)
+  ev Document.Rows[].Qty.changing(@Root.Document.Rows[1], 60, 200, "Qty")
+  ev Document.Rows[].Qty.change(@Root.Document.Rows[1], 60, 200, "Qty")
+  = [false, [{msg: "Note", severity: "error"}]]
+
+## commands and delegates
+> create
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> _canExec_: plain, guarded(null), guarded(1), missing
+  = [true, false, true, false]
+> _canExec_: validFirst, readOnly, badCanExec, constFalse
+  console.error "badCanExec.canExec should be a function"
+  = [false, true, false, false]
+> _canExec_(plain, null, {checkArgument, validRequired})
+  = [false, false]
+> _exec_(validFirst) while invalid
+> _exec_(plain, "x")
+  ev Document.Name.changing(@Root.Document, "x", "", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "x", "", "Name")
+  = "plain:x"
+  $dirty → true
+> _exec_(guarded, 0), _exec_(guarded, 2)
+  = [undefined, "guarded:2"]
+> _exec_(confirmed)
+  vm.$confirm("Sure?")
+  ev Document.Name.changing(@Root.Document, "confirmed", "x", "Name")
+  ev Document.Name.change(@Root.Document, "confirmed", "x", "Name")
+> _exec_(saveFirst) while dirty
+  vm.$save()
+> _exec_(validFirst) while valid
+  = "valid"
+> _exec_(missing)
+  console.error "Command \"missing\" not found"
+> _exec_(noExec)
+  throws ReferenceError: $ is not defined
+> _delegate_(wrap)("a")
+  = "<a:confirmed>"
+> _delegate_(missing)
+  console.error "Delegate \"missing\" not found in the template"
+
+## tree: $items, $hasChildren, $expanded, select, insert, remove
+> create
+  ev TFolderArray.construct(@~Folders)
+  ev TFolderArray.construct(@~Folders[].Items)
+  ev TFolderArray.construct(@~Folders[].Items[].Items)
+  ev TFolderArray.construct(@~Folders[].Items[].Items[].Items)
+  ev TFolder.construct(@~Folders[].Items[].Items[], "Items[]")
+  ev TFolder.construct(@~Folders[].Items[], "Items[]")
+  ev TFolderArray.construct(@~Folders[].Items[].Items)
+  ev TFolder.construct(@~Folders[].Items[], "Items[]")
+  ev TFolder.construct(@~Folders[], "Folders[]")
+  ev TFolderArray.construct(@~Folders[].Items)
+  ev TFolder.construct(@~Folders[], "Folders[]")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $expanded/$collapsed/$level of A, A1
+  = [true, false, 0, false, 0]
+> A11.$select()
+  ev Folders[].select(@Root.Folders, @Root.Folders[0].Items[0].Items[0])
+  = [@Root.Folders[0].Items[0].Items[0], true]
+> A11.$findTreeRoot(), $items
+  = [@Root.Folders, @Root.Folders[0].Items]
+> A2.$select()
+  ev Folders[].select(@Root.Folders, @Root.Folders[0].Items[1])
+  = @Root.Folders[0].Items[1]
+> B.Items.$append({Id: 21})
+  ev TFolderArray.construct(@~Folders[].Items[].Items)
+  ev TFolder.construct(@~Folders[].Items[], "Items[]")
+  ev Folders[].Items[].adding(@Root.Folders[1].Items, @~Folders[].Items[])
+  ev Model.dirty.change(true, "Folders[].Items")
+  ev Folders[].Items[].add(@Root.Folders[1].Items, @Root.Folders[1].Items[0], 0)
+  ev Folders[].select(@Root.Folders, @Root.Folders[1].Items[0])
+  ev Folders[].Items[].select(@Root.Folders[1].Items, @Root.Folders[1].Items[0])
+  ev Folders[].HasChildren.changing(@Root.Folders[1], true, false, "HasChildren")
+  ev Folders[].HasChildren.change(@Root.Folders[1], true, false, "HasChildren")
+  = @Root.Folders[1].Items[0]
+  $dirty → true
+> B1.$remove()
+  ev Folders[].Items[].remove(@Root.Folders[1].Items, @~Folders[].Items[], 0)
+  ev Folders[].HasChildren.changing(@Root.Folders[1], false, true, "HasChildren")
+  ev Folders[].HasChildren.change(@Root.Folders[1], false, true, "HasChildren")
+  ev Folders[].select(@Root.Folders, @Root.Folders[1])
+  = [false, @Root.Folders[1]]
+> $find(Name === "A11"), [...$elements] ids
+  = [@Root.Folders[0].Items[0].Items[0], [1, 11, 111, 12, 2]]
+> [...$allItems()] ids
+  = [1, 11, 111, 12, 2]
+> B.$expand() (expanded)
+  = null
+> A2.$expand() (collapsed)
+  vm.$expand(@Root.Folders[0].Items[1], "Items")
+  = {then: fn then}
+> data
+  = TRoot {
+      Folders: [
+        [0] TFolder $expanded {
+          Id: 1
+          Name: "A"
+          HasChildren: true
+          Expanded: true
+          Items: [
+            [0] TFolder $expanded {
+              Id: 11
+              Name: "A1"
+              HasChildren: true
+              Expanded: false
+              Items: [
+                [0] TFolder {
+                  Id: 111
+                  Name: "A11"
+                  HasChildren: false
+                  Expanded: false
+                  Items: []
+                }
+              ]
+            }
+            [1] TFolder {
+              Id: 12
+              Name: "A2"
+              HasChildren: false
+              Expanded: false
+              Items: []
+            }
+          ]
+        }
+        [1] TFolder $selected $expanded {
+          Id: 2
+          Name: "B"
+          HasChildren: false
+          Expanded: false
+          Items: []
+        }
+      ]
+    }
+> A2.Items.$append() (no source)
+  ev TFolderArray.construct(@~Folders[].Items[].Items[].Items)
+  throws TypeError: Cannot read properties of null (reading 'Expanded')
+
+## model info: $ModelInfo, $permissions, read-only
+> create
+  ev TAgentArray.construct(@~Agents)
+  ev TAgent.construct(@~Agents[], "Agents[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Agents.$ModelInfo
+  = {PageSize: 20, Offset: 0, SortOrder: "Name", SortDir: "asc", Permissions: 7, Filter: {Fragment: "x", Period: P(D2026-01-01T00:00:00..D2026-03-31T00:00:00)}}
+> Agents.$permissions, Document.$permissions
+  = [{canView: true, canEdit: true, canDelete: true, canApply: false, canUnapply: false, canCreate: false, canFlag64: false, canFlag128: false, canFlag256: false}, {canView: false, canEdit: false, canDelete: false, canApply: false, canUnapply: false, canCreate: false, canFlag64: false, canFlag128: false, canFlag256: false}]
+> $readOnly, $stateReadOnly, $isCopy, __modelInfo
+  = [true, false, false, {ReadOnly: true, StateReadOnly: false, Copy: false}]
+> Document.Name = "x" (read-only)
+  ev Document.Name.changing(@Root.Document, "x", "", "Name")
+  ev Document.Name.change(@Root.Document, "x", "", "Name")
+  = "x"
+> Agents.$append({Id: 2}) (read-only)
+  ev TAgent.construct(@~Agents[], "Agents[]")
+  ev Agents[].adding(@Root.Agents, @~Agents[])
+  ev Agents[].add(@Root.Agents, @Root.Agents[1], 1)
+  ev Agents[].select(@Root.Agents, @Root.Agents[1])
+  ev Agents[].select(@Root.Agents, @Root.Agents[1])
+  = @Root.Agents[1]
+> Document.Period
+  = P(D2026-01-01T00:00:00..D2026-01-31T00:00:00)
+> _findRootModelInfo()
+  = {PageSize: 20, Offset: 0, SortOrder: "Name", SortDir: "asc", Permissions: 7, Filter: {Fragment: "x", Period: P(D2026-01-01T00:00:00..D2026-03-31T00:00:00)}}
+> data
+  = TRoot {
+      Agents: [
+        [0] TAgent {
+          Id: 1
+          Name: "One"
+        }
+        [1] TAgent $selected {
+          Id: 2
+          Name: ""
+        }
+      ]
+      Document: TDocument {
+        Id: 0
+        Name: "x"
+        Perm: 0
+        Period: P(D2026-01-01T00:00:00..D2026-01-31T00:00:00)
+      }
+    }
+
+## model info: copy
+> create
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  ev Model.dirty.change(true, undefined)
+  $dirty → true
+> $isCopy, $dirty
+  = [true, true]
+
+## options: skipDirty, bindOnce, persistSelect, query
+> create
+  ev TDocument.construct(@~Document, "Document")
+  ev TQuery.construct(@~Query, "Query")
+  ev TRowArray.construct(@~Rows)
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev TRow.construct(@~Rows[], "Rows[]")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Memo = "skip"
+  ev Document.Memo.changing(@Root.Document, "skip", "m", "Memo")
+  ev Model.dirty.change(true, "Document.Memo")
+  ev Document.Memo.change(@Root.Document, "skip", "m", "Memo")
+> Query.Text = "q"
+  ev Query.Text.changing(@Root.Query, "q", "", "Text")
+  ev Model.dirty.change(true, "Query.Text")
+  ev Query.Text.change(@Root.Query, "q", "", "Text")
+> Name = "dirty"
+  ev Document.Name.changing(@Root.Document, "dirty", "n", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "dirty", "n", "Name")
+  $dirty → true
+> Document.$merge({Id: 1, Name: "m2", Memo: "m2"}, true)
+  = ["m2", "skip"]
+> Rows[1].$select(); _saveSelections()
+  ev Rows[].select(@Root.Rows, @Root.Rows[1])
+  = {Rows: 2}
+> Rows[0].$select(); _restoreSelections({Rows: 2})
+  ev Rows[].select(@Root.Rows, @Root.Rows[0])
+  ev Rows[].select(@Root.Rows, @Root.Rows[1])
+  = @Root.Rows[1]
+> _globalSaveEvent_()
+  = "g.saved"
+> _fireGlobalPeriodChanged_, _fireGlobalAppEvent_, _fireSignalAppEvent_, _fireUnload_
+  ev GlobalPeriod.change(@Root, "p")
+  ev App.ev(1)
+  ev Signal.sig(2)
+  ev Model.unload(@Root)

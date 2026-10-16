@@ -1,0 +1,11 @@
+{
+  "name": "a2v10-vue3-core",
+  "private": true,
+  "description": "The A2v10 client on Vue 3: one package per shelf (design/view-engines.md in A2v10.Core).",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "node test/model/smoke.js && node test/model/specs.js && node test/trace/model.js",
+    "test:net48": "node test/net48/original.js",
+    "trace:net48": "node test/trace/net48.js"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@a2v10/model",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A2v10 data model core: elements, arrays, template, events on data. No framework, no browser.",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && rollup -c"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^1.0.0",
+    "rollup": "^4.64.7",
+    "typescript": "6.0.3"
+  }
+}

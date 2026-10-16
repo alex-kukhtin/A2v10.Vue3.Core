@@ -1,0 +1,5 @@
+# One package per shelf. pnpm links into a package's node_modules only what its package.json
+# declares, so an import of an undeclared package does not resolve: the shelves' dependency
+# rules are enforced by this layout. The root declares nothing for the same reason.
+packages:
+  - packages/*
