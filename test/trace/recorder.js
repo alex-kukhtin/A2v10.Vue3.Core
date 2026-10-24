@@ -1,14 +1,14 @@
 // Records what the model core does, as text: each operation, every event the core emits (by name, its
 // arguments by address), the handler's answer, console errors, throws, and changes of $dirty.
-// Core-agnostic: it is given the datamodel API (`cmn`) and the period module, so the same scenarios run
-// on the Net48 original and on the package, and their traces are compared line by line.
+// Core-agnostic: it is given the datamodel API (`cmn`), the period module and utils, so the same scenarios
+// run on the Net48 original and on the package, and their traces are compared line by line.
 
 'use strict';
 
 // A model is declared as the server declares it (VueDataScripter.GetConstructors): one constructor per
 // type, `array: true` adds `<Type>Array`; a property type is a constructor, or a type name as a string.
 // The constructors get the declared names: the core dispatches on constructor.name.
-function createRecorder({ cmn, period }) {
+function createRecorder({ cmn, period, utils }) {
 	const lines = [];
 	let handlers = {};
 	let root = null;
@@ -181,6 +181,8 @@ function createRecorder({ cmn, period }) {
 				meta.props[p] = isObj ? { ...t, type: resolve(t.type) } : resolve(t);
 			}
 			Object.assign(meta, special);
+			if (meta.$itemType)
+				meta.$itemType = resolve(meta.$itemType); // a map: the server writes the constructor
 			cmn.defineObject(ctors[name], meta, !!array);
 		}
 		return ctors;
@@ -188,11 +190,17 @@ function createRecorder({ cmn, period }) {
 
 	// As the page does it: modelData() (VueDataScripter.CreateScript), then the host (FOOTER),
 	// then __doInit__ (base.js: _modelLoad_, _seal_).
-	function model(title, { decl, template = {}, data = {}, info = {}, on = {} }) {
+	// A scenario's heading; with no model after it, operations call the modules directly.
+	function section(title) {
 		lines.push('', `## ${title}`);
-		handlers = on;
+		handlers = {};
 		lastDirty = undefined;
 		root = null;
+	}
+
+	function model(title, { decl, template = {}, data = {}, info = {}, on = {} }) {
+		section(title);
+		handlers = on;
 		const tml = { ...template, events };
 		lines.push('> create');
 		const r = capture(() => {
@@ -241,7 +249,7 @@ function createRecorder({ cmn, period }) {
 		return lines.join('\n').trimStart() + '\n';
 	}
 
-	const api = { model, op, show, run };
+	const api = { model, section, op, show, run, utils };
 	return api;
 }
 

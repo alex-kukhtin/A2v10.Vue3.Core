@@ -457,6 +457,8 @@
       }
       $$Filter: "flt"
     }
+> Document.$merge({Id: 0, Name: "merged"}); $Count, $Info
+  = [8, {kind: "plain"}]
 
 ## template: a property of an unknown kind
 > create
@@ -502,6 +504,17 @@
   ev Document.Rows[].Qty.changing(@Root.Document.Rows[1], 60, 200, "Qty")
   ev Document.Rows[].Qty.change(@Root.Document.Rows[1], 60, 200, "Qty")
   = [false, [{msg: "Note", severity: "error"}]]
+
+## validators: an unknown std rule
+> create
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $valid, $errors(Name)
+  console.error "invalid std rule: 'unknown'"
+  = [true, null]
 
 ## commands and delegates
 > create
@@ -596,6 +609,10 @@
 > A2.$expand() (collapsed)
   vm.$expand(@Root.Folders[0].Items[1], "Items")
   = {then: fn then}
+> A2.$select(); A.Items.$clearSelected()
+  ev Folders[].select(@Root.Folders, @Root.Folders[0].Items[1])
+  ev Folders[].Items[].select(@Root.Folders[0].Items, null)
+  = [undefined, undefined]
 > data
   = TRoot {
       Folders: [
@@ -629,7 +646,7 @@
             }
           ]
         }
-        [1] TFolder $selected $expanded {
+        [1] TFolder $expanded {
           Id: 2
           Name: "B"
           HasChildren: false
@@ -647,6 +664,23 @@
   ev Folders[].Items[].HasChildren.changing(@Root.Folders[0].Items[1], true, false, "HasChildren")
   ev Folders[].Items[].HasChildren.change(@Root.Folders[0].Items[1], true, false, "HasChildren")
   = @Root.Folders[0].Items[1].Items[0]
+
+## maps: $itemType, $setProperty on the root and nested
+> create
+  ev TMap.construct(@~Document.Map, "Map")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> root.$setProperty("X", {Id: 1}): path, "X" in root
+  ev TItem.construct(@~X, "X")
+  ev Model.dirty.change(true, undefined)
+  = ["X", false]
+  $dirty → true
+> Document.Map.$setProperty("Y", {Id: 2}): path, "Y" in Map
+  ev TItem.construct(@~Document.Map.Y, "Y")
+  = ["Document.Map.Y", false]
 
 ## model info: $ModelInfo, $permissions, read-only
 > create
@@ -748,3 +782,11 @@
   ev App.ev(1)
   ev Signal.sig(2)
   ev Model.unload(@Root)
+
+## utils: convertToString, DateUrl, isPromise
+> convertToString: null, "", 42, "s", {Name: "n"}
+  = ["", "", "42", "s", "n"]
+> format DateUrl: 00:00:00, 00:05:00, 00:05:30, 10:00:00
+  = ["20260115", "2026-01-15T00:05:00.000", "2026-01-15T00:05:30.000", "2026-01-15T10:00:00.000"]
+> isPromise: null, undefined, 0, {then, catch}, a Promise
+  = [false, false, false, true, true]

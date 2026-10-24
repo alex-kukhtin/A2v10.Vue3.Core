@@ -179,8 +179,12 @@ const SCENARIOS = [
 		t.op('$Count = "8"', () => { doc.$Count = '8'; return doc.$Count; });
 		t.op('Rows.$append({})', () => doc.Rows.$append({}));
 		t.show('data', root);
+		t.op('Document.$merge({Id: 0, Name: "merged"}); $Count, $Info', () => {
+			doc.$merge({ Id: 0, Name: 'merged' });
+			return [doc.$Count, doc.$Info];
+		});
 
-		// datamodel.js:240 answers an unknown property kind with alert(): a browser global.
+		// A property of an unknown kind (an array): Net48 answered with alert(), a browser global.
 		t.model('template: a property of an unknown kind', {
 			decl: { TRoot: { props: { Name: String } } },
 			template: { properties: { 'TRoot.$List': [1, 2] } }
@@ -222,6 +226,16 @@ const SCENARIOS = [
 		});
 		t.op('Code = "toolong"; $forceValidate()', () => { doc.Code = 'toolong'; return root.$forceValidate(); });
 		t.op('Rows[1].Qty = 60 (applyIf Note)', () => { doc.Rows[1].Qty = 60; return [root.$valid, doc.Rows[1].$errors('Note')]; });
+
+		const unknown = t.model('validators: an unknown std rule', {
+			decl: {
+				TRoot: { props: { Document: 'TDocument' } },
+				TDocument: { props: { Name: String } }
+			},
+			data: { Document: { Name: '' } },
+			template: { validators: { 'Document.Name': { valid: 'unknown', msg: 'Unknown' } } }
+		});
+		t.op('$valid, $errors(Name)', () => [unknown.$valid, unknown.Document.$errors('Name')]);
 	},
 
 	function commands(t) {
@@ -301,9 +315,34 @@ const SCENARIOS = [
 		t.op('[...$allItems()] ids', () => [...f.$allItems()].map(x => x.Id));
 		t.op('B.$expand() (expanded)', () => f[1].$expand());
 		t.op('A2.$expand() (collapsed)', () => f[0].Items[1].$expand());
+		t.op('A2.$select(); A.Items.$clearSelected()', () => {
+			f[0].Items[1].$select();
+			f[0].Items.$clearSelected();
+			return [f.$selected, f[0].Items.$selected];
+		});
 		t.show('data', root);
 		// last: Net48 throws here, and the data above stays comparable
 		t.op('A2.Items.$append() (no source)', () => f[0].Items[1].Items.$append());
+	},
+
+	function maps(t) {
+		const root = t.model('maps: $itemType, $setProperty on the root and nested', {
+			decl: {
+				TRoot: { props: { Document: 'TDocument' }, $itemType: 'TItem' },
+				TDocument: { props: { Id: Number, Map: 'TMap' } },
+				TMap: { props: {}, $itemType: 'TItem' },
+				TItem: { props: { Id: Number, Name: String } }
+			},
+			data: { Document: { Id: 1 } }
+		});
+		t.op('root.$setProperty("X", {Id: 1}): path, "X" in root', () => {
+			const ne = root.$setProperty('X', { Id: 1, Name: 'x' });
+			return [ne._path_, 'X' in root];
+		});
+		t.op('Document.Map.$setProperty("Y", {Id: 2}): path, "Y" in Map', () => {
+			const ne = root.Document.Map.$setProperty('Y', { Id: 2, Name: 'y' });
+			return [ne._path_, 'Y' in root.Document.Map];
+		});
 	},
 
 	function modelInfo(t) {
@@ -381,6 +420,17 @@ const SCENARIOS = [
 			root._fireSignalAppEvent_({ event: 'sig', data: 2 });
 			root._fireUnload_();
 		});
+	},
+
+	function utils(t) {
+		t.section('utils: convertToString, DateUrl, isPromise');
+		const u = t.utils;
+		t.op('convertToString: null, "", 42, "s", {Name: "n"}', () =>
+			[null, '', 42, 's', { Name: 'n' }].map(v => u.convertToString(v)));
+		t.op('format DateUrl: 00:00:00, 00:05:00, 00:05:30, 10:00:00', () =>
+			[[0, 0, 0], [0, 5, 0], [0, 5, 30], [10, 0, 0]].map(([h, m, s]) => u.format(new Date(2026, 0, 15, h, m, s), 'DateUrl')));
+		t.op('isPromise: null, undefined, 0, {then, catch}, a Promise', () =>
+			[null, undefined, 0, { then() { }, catch() { } }, Promise.resolve()].map(v => u.isPromise(v)));
 	}
 ];
 

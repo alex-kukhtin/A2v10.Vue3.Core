@@ -1,6 +1,6 @@
 # Defects found in the Net48 client sources
 
-Found while porting the model core to `@a2v10/model` (2026-10). Paths are under `Web/A2v10.Web.Site/app/` of the Net48 A2v10 repository; line numbers as of 2026-10-16 (B16, B17: as of 2026-10-24, after the fixes of B1-B13).
+Found while porting the model core to `@a2v10/model` (2026-10). Paths are under `Web/A2v10.Web.Site/app/` of the Net48 A2v10 repository; line numbers as of 2026-10-16 (B16-B19: as of 2026-10-24, after the fixes of B1-B13).
 
 Each entry: where, what, what follows from it, what the package does now, the fix proposed. An ID is cited in the package's code and in `test/trace/divergences.js`; keep IDs stable, mark an entry done instead of deleting it.
 
@@ -69,7 +69,17 @@ The package's rule: a crash is fixed at once; any other defect is kept as Net48 
 
 **B17** `services/datamodel.js:1213-1222` `$merge` treats a template marker property (`TMarker`) as a nested element: its value has no `$merge`, so `new TMarker(…)` is set through the setter.
 - Follows: every `$merge` (a reload) resets the markers: `{ type: Number, value: 5 }` becomes `0` (the setter coerces the TMarker object, since B10), a plain object becomes an empty TMarker object.
-- Done 2026-10-24: `$merge` skips markers (`if (ctor === TMarker) continue;`): they are client state, the server does not send them; in Net48 and the package (`model/element.ts`). Not in the trace.
+- Done 2026-10-24: `$merge` skips markers (`if (ctor === TMarker) continue;`): they are client state, the server does not send them; in Net48 and the package (`model/element.ts`). Trace: "template" `Document.$merge({Id: 0, Name: "merged"})`.
+
+**B18** `services/datamodel.js:406-413` `$setProperty` (a map, `$itemType`) adds a property to the map; `_seal_` (`:518-531`, after load) has sealed the map with the model.
+- Follows: after load `$setProperty` builds the element, emits its `construct`, marks the model dirty, and the property is not added. The server (`server/platform.js`, sloppy `target[prop] = value`) drops it silently; the browser (`platform/webvue.js` `Vue.set`; vue.js 2.7 is strict, a sealed object is not observed) throws TypeError (read in vue.js, not run). Nothing in `app/` calls `$setProperty`.
+- Package: kept (`model/element.ts`); the test runtime assigns as the server does (`test/model/runtime.js`). Trace: "maps" `root.$setProperty("X", …)`, `Document.Map.$setProperty("Y", …)`.
+- Fix: decide whether maps grow after load; then leave a map type unsealed, or drop `$setProperty`.
+
+**B19** `services/impl/array.js:89-95` `$clearSelected` on a nested tree array: `$selected` searches the descendants, so it clears the tree's one selection, and `emitSelect(this, null)` emits on the nested path.
+- Follows: `Folders[0].Items.$clearSelected()` leaves the tree with no selection and emits `Folders[].Items[].select(…, null)`; a `Folders[].select` handler (where the applications subscribe, see B16) is not told.
+- Package: kept (`model/array.ts`). Trace: "tree" `A2.$select(); A.Items.$clearSelected()`.
+- Fix: in a tree, emit on the tree root (`$findTreeRoot` of the cleared element), as `$select` does.
 
 ## Questions: what was meant
 

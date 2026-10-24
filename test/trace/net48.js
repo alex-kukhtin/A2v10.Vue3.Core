@@ -12,7 +12,7 @@ const { SCENARIOS } = require('./scenarios.js');
 loadNet48({ specs: false });
 const appRequire = globalThis.require; // app.js's registry, not Node's
 
-const t = createRecorder({ cmn: appRequire('std:datamodel'), period: appRequire('std:period') });
+const t = createRecorder({ cmn: appRequire('std:datamodel'), period: appRequire('std:period'), utils: appRequire('std:utils') });
 const text = t.run(SCENARIOS);
 
 const out = path.join(__dirname, 'net48.trace');

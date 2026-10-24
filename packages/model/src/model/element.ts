@@ -161,7 +161,8 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 		}
 
 		if (meta.$itemType) {
-			// a map: a new element of $itemType at prop.
+			// a map: a new element of $itemType at prop. After load the map is sealed: the property
+			// is not added (NET48-BUGS.md B18, kept).
 			elem.$setProperty = function (prop: string, src: unknown) {
 				const ne = new meta.$itemType!(src, elem._path_ ? `${elem._path_}.${prop}` : prop, elem);
 				platform.set(this, prop, ne);

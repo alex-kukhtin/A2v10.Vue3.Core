@@ -15,7 +15,7 @@ const { SCENARIOS } = require('./scenarios.js');
 const { DIVERGENCES } = require('./divergences.js');
 
 const core = loadModelBundle().createModel(serverRuntime(loadLocale()));
-const t = createRecorder({ cmn: core.datamodel, period: core.period });
+const t = createRecorder({ cmn: core.datamodel, period: core.period, utils: core.utils });
 const actual = t.run(SCENARIOS);
 fs.writeFileSync(path.join(__dirname, 'model.trace'), actual);
 

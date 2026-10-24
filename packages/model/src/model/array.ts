@@ -195,7 +195,7 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 		const sel = this.$selected;
 		if (!sel) return this;
 		sel.$selected = false;
-		emitSelect(this, null);
+		emitSelect(this, null); // on this path, in a tree too: not on the tree root (NET48-BUGS.md B19, kept)
 		return this;
 	};
 
