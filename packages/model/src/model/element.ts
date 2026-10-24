@@ -161,7 +161,9 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 		}
 
 		if (meta.$itemType) {
-			// a map: a new element of $itemType at prop; the map's shape is fixed at _seal_ (NET48-BUGS.md B18).
+			// a map: a new element of $itemType at prop. The shape is fixed at _seal_: a map grows in
+			// <Type>.construct and Model.defaults; Model.load comes after the seal in the browser
+			// (defer is Vue.nextTick), before it on the server (defer is synchronous).
 			elem.$setProperty = function (prop: string, src: unknown) {
 				if (Object.isSealed(this))
 					throw new Error(`$setProperty: the map '${this._path_ || 'Root'}' is sealed after load`);

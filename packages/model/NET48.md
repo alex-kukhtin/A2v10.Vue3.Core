@@ -7,7 +7,7 @@ The source: `Web/A2v10.Web.Site/app/services/` of the Net48 A2v10 repository (`d
 
 Both read the Net48 site (sources, specs, jasmine, the locale) from the folder `A2V10_NET48_SITE` names: in the environment, or in `.env` at the repository root (`.env.example` is the template).
 
-The defects of the source, and what the package does with each, are in `NET48-BUGS.md` at the repository root (IDs B1…, Q1…, cited in the code). This file lists what changed on purpose and is no defect: shelves and shapes.
+The open defects of the source, and what the package does with each, are in `NET48-BUGS.md` at the repository root (IDs B…, Q…, cited in the code; a done entry is deleted, its history in git). This file lists what changed on purpose and is no defect: shelves and shapes.
 
 ## Moved between shelves
 

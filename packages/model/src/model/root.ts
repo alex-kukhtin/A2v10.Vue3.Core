@@ -36,7 +36,7 @@ export function createRoots(ctx: ModelContext, tpl: Template, validation: Valida
 	}
 
 	// Marks the model dirty or clean; Model.dirty.change tells the key either way. Not dirty: a
-	// read-only model (only this: NET48-BUGS.md Q1), an index page, options.noDirty, a Query… path,
+	// read-only model (only this: NET48-BUGS.md B7), an index page, options.noDirty, a Query… path,
 	// an options.skipDirty key.
 	function setDirty(this: Root, val: boolean, path?: string, prop?: string): void {
 		if (val === this.$dirty) return;

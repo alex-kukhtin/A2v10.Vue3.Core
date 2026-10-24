@@ -262,7 +262,10 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 			if ('$RowCount' in that) that.$RowCount += 1;
 			that._root_.$setDirty(true, that._path_);
 			that._root_.$emit(events.add(that._path_), that, ne, len - 1);
-			if (select) // in a tree $select emits on the tree root only, not on that (NET48-BUGS.md B16)
+			// No [].select on that: in a tree $select emits on the tree root, the one selection. Net48
+			// also emitted on that, from a one-element $insert alone (not a click, not $remove's
+			// reselect, not a multi-element $insert); no application subscribes to a nested path.
+			if (select)
 				ne.$select();
 			if ('$rowNo' in newElem._meta_)
 				renumberRows(that);
