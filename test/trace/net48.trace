@@ -104,11 +104,9 @@
   ev Document.Agent.change(@Root.Document, @Root.Document.Agent, @Root.Document.Agent, "Agent")
   = true
 > Document.$merge({Id: 2, Agent: {Id: 9}, Memo: "m"})
-  ev TAgent.construct(@~Agent, "Agent")
   ev Document.change(@Root, @Root.Document, @Root.Document, "Document")
   = [true, "Document.Agent"]
 > Document.$merge({Id: 2, Memo: "same id"})
-  ev TAgent.construct(@~Agent, "Agent")
 > Agent.$set({Id: 10})
   ev Document.Agent.change(@Root.Document, @Root.Document.Agent, @Root.Document.Agent, "Agent")
 > data
@@ -156,7 +154,6 @@
   ev Rows[].adding(@Root.Rows, @~Rows[])
   ev Rows[].add(@Root.Rows, @Root.Rows[3], 3)
   ev Rows[].select(@Root.Rows, @Root.Rows[3])
-  ev Rows[].select(@Root.Rows, @Root.Rows[3])
   ev Rows[].RowNo.changing(@Root.Rows[0], 1, 0, "RowNo")
   ev Rows[].RowNo.change(@Root.Rows[0], 1, 0, "RowNo")
   ev Rows[].RowNo.changing(@Root.Rows[1], 2, 0, "RowNo")
@@ -170,7 +167,6 @@
   ev TRow.construct(@~Rows[], "Rows[]")
   ev Rows[].adding(@Root.Rows, @~Rows[])
   ev Rows[].add(@Root.Rows, @Root.Rows[0], 0)
-  ev Rows[].select(@Root.Rows, @Root.Rows[0])
   ev Rows[].select(@Root.Rows, @Root.Rows[0])
   ev Rows[].RowNo.changing(@Root.Rows[0], 1, 0, "RowNo")
   ev Rows[].RowNo.change(@Root.Rows[0], 1, 0, "RowNo")
@@ -188,7 +184,6 @@
   ev Rows[].adding(@Root.Rows, @~Rows[])
   ev Rows[].add(@Root.Rows, @Root.Rows[2], 2)
   ev Rows[].select(@Root.Rows, @Root.Rows[2])
-  ev Rows[].select(@Root.Rows, @Root.Rows[2])
   ev Rows[].RowNo.changing(@Root.Rows[2], 3, 0, "RowNo")
   ev Rows[].RowNo.change(@Root.Rows[2], 3, 0, "RowNo")
   ev Rows[].RowNo.changing(@Root.Rows[3], 4, 3, "RowNo")
@@ -202,7 +197,6 @@
   ev TRow.construct(@~Rows[], "Rows[]")
   ev Rows[].adding(@Root.Rows, @~Rows[])
   ev Rows[].add(@Root.Rows, @Root.Rows[1], 1)
-  ev Rows[].select(@Root.Rows, @Root.Rows[1])
   ev Rows[].select(@Root.Rows, @Root.Rows[1])
   ev Rows[].RowNo.changing(@Root.Rows[1], 2, 0, "RowNo")
   ev Rows[].RowNo.change(@Root.Rows[1], 2, 0, "RowNo")
@@ -371,7 +365,7 @@
   ev Rows[].RowNo.change(@Root.Rows[0], 1, 0, "RowNo")
   ev Rows[].RowNo.changing(@Root.Rows[1], 2, 0, "RowNo")
   ev Rows[].RowNo.change(@Root.Rows[1], 2, 0, "RowNo")
-  = 0
+  = 2
 > $empty()
   = [0, 0]
 > root.$merge({Rows: [{Id: 31}], "Rows.$RowCount": 9})
@@ -432,14 +426,13 @@
 > $Count, $Info, $Rows
   = [5, {kind: "plain"}, undefined]
 > $Count = "8"
-  ev Document.$Count.changing(@Root.Document, "8", 5, "$Count")
-  ev Document.$Count.change(@Root.Document, "8", 5, "$Count")
-  = "8"
+  ev Document.$Count.changing(@Root.Document, 8, 5, "$Count")
+  ev Document.$Count.change(@Root.Document, 8, 5, "$Count")
+  = 8
 > Rows.$append({})
   ev TRow.construct(@~Document.Rows[], "Rows[]")
   ev Document.Rows[].adding(@Root.Document.Rows, @~Document.Rows[])
   ev Document.Rows[].add(@Root.Document.Rows, @Root.Document.Rows[1], 1)
-  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
   ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
   = @Root.Document.Rows[1]
 > data
@@ -459,7 +452,7 @@
           }
         ]
         $Flag: true
-        $Count: "8"
+        $Count: 8
         $Info: {kind: "plain"}
       }
       $$Filter: "flt"
@@ -467,7 +460,11 @@
 
 ## template: a property of an unknown kind
 > create
-  throws ReferenceError: alert is not defined
+  console.error "invalid template property: TRoot.$List"
+  ev TRoot.construct(@Root, "")
+> load
+  ev Model.load(@Root, null, false)
+  $dirty → false
 
 ## validators: rules, $valid, $errors, array paths, $forceValidate
 > create
@@ -540,7 +537,7 @@
 > _exec_(missing)
   console.error "Command \"missing\" not found"
 > _exec_(noExec)
-  throws ReferenceError: $ is not defined
+  console.error "There is no method 'exec' in command 'noExec'"
 > _delegate_(wrap)("a")
   = "<a:confirmed>"
 > _delegate_(missing)
@@ -580,7 +577,6 @@
   ev Model.dirty.change(true, "Folders[].Items")
   ev Folders[].Items[].add(@Root.Folders[1].Items, @Root.Folders[1].Items[0], 0)
   ev Folders[].select(@Root.Folders, @Root.Folders[1].Items[0])
-  ev Folders[].Items[].select(@Root.Folders[1].Items, @Root.Folders[1].Items[0])
   ev Folders[].HasChildren.changing(@Root.Folders[1], true, false, "HasChildren")
   ev Folders[].HasChildren.change(@Root.Folders[1], true, false, "HasChildren")
   = @Root.Folders[1].Items[0]
@@ -644,7 +640,13 @@
     }
 > A2.Items.$append() (no source)
   ev TFolderArray.construct(@~Folders[].Items[].Items[].Items)
-  throws TypeError: Cannot read properties of null (reading 'Expanded')
+  ev TFolder.construct(@~Folders[].Items[].Items[], "Items[]")
+  ev Folders[].Items[].Items[].adding(@Root.Folders[0].Items[1].Items, @~Folders[].Items[].Items[])
+  ev Folders[].Items[].Items[].add(@Root.Folders[0].Items[1].Items, @Root.Folders[0].Items[1].Items[0], 0)
+  ev Folders[].select(@Root.Folders, @Root.Folders[0].Items[1].Items[0])
+  ev Folders[].Items[].HasChildren.changing(@Root.Folders[0].Items[1], true, false, "HasChildren")
+  ev Folders[].Items[].HasChildren.change(@Root.Folders[0].Items[1], true, false, "HasChildren")
+  = @Root.Folders[0].Items[1].Items[0]
 
 ## model info: $ModelInfo, $permissions, read-only
 > create
@@ -669,7 +671,6 @@
   ev TAgent.construct(@~Agents[], "Agents[]")
   ev Agents[].adding(@Root.Agents, @~Agents[])
   ev Agents[].add(@Root.Agents, @Root.Agents[1], 1)
-  ev Agents[].select(@Root.Agents, @Root.Agents[1])
   ev Agents[].select(@Root.Agents, @Root.Agents[1])
   = @Root.Agents[1]
 > Document.Period

@@ -13,7 +13,7 @@ import { events } from './events.js';
 import type { Elem, Root } from './types.js';
 
 // The type of a template property declared as a plain object (template.ts: templatePropDefault).
-// Its setter stores what it is given: no coercion, not even for { type: Number } (NET48-BUGS.md B10, kept).
+// Its setter coerces by `type` when the object has both `type` and `value`; else stores what it is given.
 export function TMarker() { }
 
 export function createTemplate(ctx: ModelContext) {
@@ -90,8 +90,7 @@ export function createTemplate(ctx: ModelContext) {
 					});
 				}
 			} else {
-				// Net48: alert(); a browser global (NET48-BUGS.md B3, fixed)
-				console.error(`invalid template property '${ctor.name}.${p}'`);
+				console.error(`invalid template property: ${ctor.name}.${p}`);
 			}
 		}
 	}
@@ -220,7 +219,6 @@ export function createTemplate(ctx: ModelContext) {
 					return cmdf.call(that, arg);
 				else if (isFunction(cmdf.exec))
 					return cmdf.exec.call(that, arg);
-				// Net48: console.error($`…`), a stray $: ReferenceError (NET48-BUGS.md B2, fixed)
 				console.error(`There is no method 'exec' in command '${cmd}'`);
 			};
 			const doExec = function () {

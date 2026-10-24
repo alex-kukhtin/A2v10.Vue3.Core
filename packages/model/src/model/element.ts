@@ -85,6 +85,11 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 			set(this: Elem, val: any) {
 				const skipDirty = prop.startsWith('$$');
 				let ctor: any = this._meta_.props[prop];
+				if (ctor === TMarker) {
+					const mp = this._meta_.markerProps![prop];
+					if (isDefined(mp.type) && isDefined(mp.value))
+						ctor = mp.type;
+				}
 				let isjson = false;
 				if (ctor.type) {
 					isjson = !!ctor.json;
@@ -146,8 +151,7 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 			let exp = false;
 			let clps = false;
 			if (meta.$expanded) {
-				// Net48 read source[…] unguarded: a tree element with no source threw (NET48-BUGS.md B4, fixed)
-				const val = source ? source[meta.$expanded] : undefined;
+				const val = source ? source[meta.$expanded] : false;
 				exp = !!val;
 				clps = !val;
 			}
@@ -157,10 +161,9 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 		}
 
 		if (meta.$itemType) {
-			// a map: a new element of $itemType at prop. Its path is the constructor's path argument
-			// as text: 'undefined.Prop' under a root (NET48-BUGS.md B12, kept).
+			// a map: a new element of $itemType at prop.
 			elem.$setProperty = function (prop: string, src: unknown) {
-				const ne = new meta.$itemType!(src, path + '.' + prop, elem);
+				const ne = new meta.$itemType!(src, elem._path_ ? `${elem._path_}.${prop}` : prop, elem);
 				platform.set(this, prop, ne);
 				this._root_.$setDirty(true);
 				return ne;
@@ -179,7 +182,7 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 	// --- the prototype ---------------------------------------------------------------------------
 
 	// Copies src into the element with events locked and validation off: scalars assigned, dates
-	// parsed, nested elements merged through their setter, arrays rebuilt with their $RowCount.
+	// parsed, nested elements merged into the ones there, arrays rebuilt with their $RowCount.
 	// checkBindOnce: skip options.bindOnce; existsOnly: skip nested elements src lacks.
 	// After: if the id changed, <path>.change with the element as new and old value.
 	function merge(this: Elem, src: any, checkBindOnce?: boolean, existsOnly?: boolean): Elem {
@@ -212,8 +215,11 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 				} else {
 					if (existsOnly && !(prop in src))
 						continue;
-					// a throwaway element, path prop: its construct event fires (NET48-BUGS.md B11, kept)
-					platform.set(this, prop, new ctor(src[prop], prop, this));
+					// a marker too: it has no $merge, a new TMarker replaces its value (NET48-BUGS.md B17, kept)
+					if (trg && trg.$merge)
+						trg.$merge(src[prop] || null);
+					else
+						platform.set(this, prop, new ctor(src[prop] || null, this._path_ ? `${this._path_}.${prop}` : prop, this));
 				}
 			}
 		} finally {

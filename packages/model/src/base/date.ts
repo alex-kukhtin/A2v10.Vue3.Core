@@ -58,10 +58,9 @@ export function isZero(d1: unknown): boolean {
 	return equal(d1, zero());
 }
 
-// As Net48: `&&` binds before `||`, so 00:05:00 has no time (NET48-BUGS.md B8, kept).
 export function hasTime(d1: unknown): boolean {
 	if (!isDate(d1)) return false;
-	return d1.getHours() !== 0 || d1.getMinutes() !== 0 && d1.getSeconds() !== 0;
+	return d1.getHours() !== 0 || d1.getMinutes() !== 0 || d1.getSeconds() !== 0;
 }
 
 export function compare(d1: unknown, d2: unknown): number | null {

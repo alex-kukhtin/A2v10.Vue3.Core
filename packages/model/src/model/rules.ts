@@ -56,7 +56,7 @@ function validateStd(rule: { valid: string, regExp?: RegExp }, val: any): boolea
 			}
 			return val === '' || rule.regExp.test(val);
 	}
-	console.error(`invalid std rule: '${rule}'`); // an object: '[object Object]' (NET48-BUGS.md B13, kept)
+	console.error(`invalid std rule: '${rule.valid}'`);
 	return true;
 }
 

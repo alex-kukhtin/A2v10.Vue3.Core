@@ -164,7 +164,7 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 		return this;
 	};
 
-	// Replaces the elements with new ones from src; no events; $RowCount left 0 (NET48-BUGS.md B6, kept).
+	// Replaces the elements with new ones from src; no events; $RowCount, if any, is the new length.
 	proto.$copy = function (this: ModelArray, src: unknown) {
 		if (this.$root.isReadOnly) // isReadOnly: no member has that name, never true (NET48-BUGS.md B7, kept)
 			return this;
@@ -173,6 +173,8 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 			for (let i = 0; i < src.length; i++)
 				this.push(this.$new(src[i]));
 		}
+		if ('$RowCount' in this)
+			this.$RowCount = this.length;
 		this.$renumberRows();
 		return this;
 	};
@@ -260,10 +262,8 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 			if ('$RowCount' in that) that.$RowCount += 1;
 			that._root_.$setDirty(true, that._path_);
 			that._root_.$emit(events.add(that._path_), that, ne, len - 1);
-			if (select) {
+			if (select) // in a tree $select emits on the tree root only, not on that (NET48-BUGS.md B16, kept)
 				ne.$select();
-				emitSelect(that, ne); // a second [].select: $select emitted one (NET48-BUGS.md B5, kept)
-			}
 			if ('$rowNo' in newElem._meta_)
 				renumberRows(that);
 			setHasChildren(that, true);

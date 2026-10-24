@@ -227,7 +227,7 @@ export function createFormat(locale: Locale) {
 		return format(r, dataType, opts);
 	}
 
-	// An element by its Name, a date by the culture. Net48 returned '' + val (NET48-BUGS.md B1, fixed).
+	// An element by its Name, a date by the culture.
 	function convertToString(obj: any): string {
 		if (!obj)
 			return '';

@@ -35,9 +35,9 @@ export function isBoolean(value: unknown): value is boolean {
 	return typeof value === 'boolean';
 }
 
-// As Net48: null throws, reads null.then (NET48-BUGS.md B9, kept).
 export function isPromise(v: any): v is Promise<unknown> {
-	return isDefined(v) && isFunction(v.then) && isFunction(v.catch);
+	return v !== null && (typeof v === 'object' || typeof v === 'function')
+		&& isFunction(v.then) && isFunction(v.catch);
 }
 
 export function isDateCtor(ctor: unknown): boolean {
