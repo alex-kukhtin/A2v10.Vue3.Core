@@ -6,6 +6,7 @@
     "build": "pnpm -r build",
     "test": "node test/model/smoke.js && node test/model/specs.js && node test/trace/model.js",
     "test:net48": "node test/net48/original.js",
-    "trace:net48": "node test/trace/net48.js"
+    "trace:net48": "node test/trace/net48.js",
+    "trace:base:net48": "node test/trace/base.net48.js"
   }
 }

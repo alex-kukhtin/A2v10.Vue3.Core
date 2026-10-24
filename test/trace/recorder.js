@@ -8,7 +8,8 @@
 // A model is declared as the server declares it (VueDataScripter.GetConstructors): one constructor per
 // type, `array: true` adds `<Type>Array`; a property type is a constructor, or a type name as a string.
 // The constructors get the declared names: the core dispatches on constructor.name.
-function createRecorder({ cmn, period, utils }) {
+// known(v): the text of a value the caller knows (the page recorder: a view model, a promise), or undefined.
+function createRecorder({ cmn, period, utils, known, origin }) {
 	const lines = [];
 	let handlers = {};
 	let root = null;
@@ -60,6 +61,8 @@ function createRecorder({ cmn, period, utils }) {
 			case 'function': return `fn ${v.name}`.trimEnd();
 			case 'symbol': return v.toString();
 		}
+		const s = known ? known(v) : undefined;
+		if (s !== undefined) return s;
 		if (v instanceof Date) return fmtDate(v);
 		if (isModel(v)) {
 			// Not placed in its parent (yet, or any more): construct, adding, remove. Its path then.
@@ -115,11 +118,13 @@ function createRecorder({ cmn, period, utils }) {
 
 	// Every event name exists for the core (`event in events`); the handler records the call,
 	// then runs the scenario's handler for that name, if any. Nested events are indented.
+	// origin(root): the name of the root an event comes from, written before it, or undefined.
 	const events = new Proxy({}, {
 		has: (_, k) => typeof k === 'string',
 		get: (_, k) => typeof k !== 'string' ? undefined : function (...args) {
 			const at = lines.length;
-			const text = `${ind()}ev ${k}(${args.map(a => fmt(a)).join(', ')})`;
+			const who = origin ? origin(this) : undefined;
+			const text = `${ind()}${who ? who + ' ' : ''}ev ${k}(${args.map(a => fmt(a)).join(', ')})`;
 			lines.push(text);
 			depth += 1;
 			let rv;
@@ -198,8 +203,8 @@ function createRecorder({ cmn, period, utils }) {
 		root = null;
 	}
 
-	function model(title, { decl, template = {}, data = {}, info = {}, on = {} }) {
-		section(title);
+	// The root as modelData() builds it; no host, not loaded. The page recorder hands it to a page.
+	function build({ decl, template = {}, data = {}, info = {}, on = {} }) {
 		handlers = on;
 		const tml = { ...template, events };
 		lines.push('> create');
@@ -215,8 +220,13 @@ function createRecorder({ cmn, period, utils }) {
 			throw ABORTED; // the rest of the scenario has no model to drive
 		}
 		root = r.value;
-		const log = s => lines.push(`${ind()}${s}`);
-		root._host_ = { $viewModel: createViewModel(log), $ctrl: {} };
+		return root;
+	}
+
+	function model(title, spec) {
+		section(title);
+		build(spec);
+		root._host_ = { $viewModel: createViewModel(write), $ctrl: {} };
 		op('load', () => {
 			root._modelLoad_(null);
 			root._seal_(root);
@@ -246,13 +256,46 @@ function createRecorder({ cmn, period, utils }) {
 				if (e !== ABORTED) throw e;
 			}
 		}
+		return text();
+	}
+
+	// line: as is (an operation's head, its result); write: at the current depth, nested() indents.
+	function line(s) {
+		lines.push(s);
+	}
+
+	function write(s) {
+		lines.push(`${ind()}${s}`);
+	}
+
+	function nested(fn) {
+		depth += 1;
+		try {
+			return fn();
+		} finally {
+			depth -= 1;
+		}
+	}
+
+	// fn with nothing it writes kept: a page recorder's teardown between scenarios.
+	function quiet(fn) {
+		const n = lines.length;
+		try {
+			return fn();
+		} finally {
+			lines.length = n;
+		}
+	}
+
+	function text() {
 		return lines.join('\n').trimStart() + '\n';
 	}
 
-	const api = { model, section, op, show, run, utils };
+	// model, op, run: the model's scenarios; the rest: for a recorder built on this one (test/trace/page.js).
+	const api = { model, section, op, show, run, utils, build, line, write, nested, quiet, noteDirty, fmt, snap, text };
 	return api;
 }
 
 const ABORTED = Symbol('scenario aborted');
 
-module.exports = { createRecorder };
+module.exports = { createRecorder, ABORTED };
