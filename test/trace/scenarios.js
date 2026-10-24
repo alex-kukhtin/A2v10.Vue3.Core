@@ -326,6 +326,7 @@ const SCENARIOS = [
 	},
 
 	function maps(t) {
+		// Before _seal_ (construct handlers) a map grows; after it, $setProperty refuses.
 		const root = t.model('maps: $itemType, $setProperty on the root and nested', {
 			decl: {
 				TRoot: { props: { Document: 'TDocument' }, $itemType: 'TItem' },
@@ -333,16 +334,15 @@ const SCENARIOS = [
 				TMap: { props: {}, $itemType: 'TItem' },
 				TItem: { props: { Id: Number, Name: String } }
 			},
-			data: { Document: { Id: 1 } }
+			data: { Document: { Id: 1 } },
+			on: {
+				'TMap.construct': map => { map.$setProperty('W', { Id: 3, Name: 'w' }); },
+				'TRoot.construct': rt => { rt.$setProperty('V', { Id: 4, Name: 'v' }); }
+			}
 		});
-		t.op('root.$setProperty("X", {Id: 1}): path, "X" in root', () => {
-			const ne = root.$setProperty('X', { Id: 1, Name: 'x' });
-			return [ne._path_, 'X' in root];
-		});
-		t.op('Document.Map.$setProperty("Y", {Id: 2}): path, "Y" in Map', () => {
-			const ne = root.Document.Map.$setProperty('Y', { Id: 2, Name: 'y' });
-			return [ne._path_, 'Y' in root.Document.Map];
-		});
+		t.op('added in construct: root.V, Document.Map.W paths',() => [root.V._path_, root.Document.Map.W._path_]);
+		t.op('after load: root.$setProperty("X", {Id: 1})', () => root.$setProperty('X', { Id: 1, Name: 'x' }));
+		t.op('after load: Document.Map.$setProperty("Y", {Id: 2})', () => root.Document.Map.$setProperty('Y', { Id: 2, Name: 'y' }));
 	},
 
 	function modelInfo(t) {

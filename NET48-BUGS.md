@@ -36,7 +36,11 @@ The package's rule: a crash is fixed at once; any other defect is kept as Net48 
 
 **B7** `services/datamodel.js:1102` (`$set`), `services/impl/array.js:72` (`$copy`), `:171` (`$empty`), `:274` (`$remove`) check `this.$root.isReadOnly`; no member has that name (the root's is `$readOnly`).
 - Follows: the checks never stop anything; a read-only model accepts `$set`, `$copy`, `$empty`, `$remove`.
-- Fix: decide with Q1; then `$readOnly`, or drop the checks.
+- Decided 2026-10-24 (with Q1), not done: the cut is the load door.
+  - `$copy` is the load door (its one caller: `$merge`, `services/datamodel.js:1196`): no check; it empties through `__empty__`, not `$empty`.
+  - `$empty`, `$remove`, `$set` check `$readOnly`.
+  - The lazy loaders reduce to `$copy`: `controllers/base.js:1418` (tree expand: `$empty()`, then push) and `:1462` (`$loadLazy`: `__empty__()`, then push). The reset before a reload reduces to `__empty__`: `$resetLazy` (`services/impl/array.js:319-325`, `$empty()`).
+  - Order: the package first, with scenarios. Net48 is left as it is on purpose: this is a decision, not a forgotten entry.
 
 **B8** `services/utils.js:608` `dateHasTime`: `getHours() !== 0 || getMinutes() !== 0 && getSeconds() !== 0`; `&&` binds first.
 - Follows: 00:05:00 has no time, 00:05:30 has. `format(d, 'DateUrl')` drops the time of the first.
@@ -73,8 +77,7 @@ The package's rule: a crash is fixed at once; any other defect is kept as Net48 
 
 **B18** `services/datamodel.js:406-413` `$setProperty` (a map, `$itemType`) adds a property to the map; `_seal_` (`:518-531`, after load) has sealed the map with the model.
 - Follows: after load `$setProperty` builds the element, emits its `construct`, marks the model dirty, and the property is not added. The server (`server/platform.js`, sloppy `target[prop] = value`) drops it silently; the browser (`platform/webvue.js` `Vue.set`; vue.js 2.7 is strict, a sealed object is not observed) throws TypeError (read in vue.js, not run). Nothing in `app/` calls `$setProperty`.
-- Package: kept (`model/element.ts`); the test runtime assigns as the server does (`test/model/runtime.js`). Trace: "maps" `root.$setProperty("X", …)`, `Document.Map.$setProperty("Y", …)`.
-- Fix: decide whether maps grow after load; then leave a map type unsealed, or drop `$setProperty`.
+- Done 2026-10-24: the map's shape is fixed at `_seal_`. A map grows before it (`<Type>.construct`, `Model.defaults`; `Model.load` only where `defer` is synchronous: on the server, not in the browser, where it is `Vue.nextTick`). After it `$setProperty` throws `$setProperty: the map '<path or Root>' is sealed after load`, in Net48 and the package (`model/element.ts`). Trace: "maps", added in construct handlers, then refused after load.
 
 **B19** `services/impl/array.js:89-95` `$clearSelected` on a nested tree array: `$selected` searches the descendants, so it clears the tree's one selection, and `emitSelect(this, null)` emits on the nested path.
 - Follows: `Folders[0].Items.$clearSelected()` leaves the tree with no selection and emits `Folders[].Items[].select(…, null)`; a `Folders[].select` handler (where the applications subscribe, see B16) is not told.
@@ -85,6 +88,7 @@ The package's rule: a crash is fixed at once; any other defect is kept as Net48 
 
 **Q1** Read-only (`__modelInfo.ReadOnly`, `StateReadOnly`) only stops dirtiness (`services/datamodel.js:1081`): setters store and emit change events, arrays add and remove.
 - Decide: is read-only a display state (the view disables the controls; the model accepts writes), or a model state (writes refused)? B7 depends on it.
+- Decided 2026-10-24: a model state. Reloading from the database is allowed; changing from inside is not. B7 carries it out.
 
 **Q2** Assigning an element to an object property (`row.Entity = other`) merges `other` into the existing object (`services/datamodel.js:163-166`). The setter then emits no change: the merge emits `<path>.change` only when the id changes (`:1225-1232`), with the object as both new and old value.
 - Follows: a handler of `Document.Agent.change` misses an assignment that keeps the id and changes other fields, and never sees the old value.
