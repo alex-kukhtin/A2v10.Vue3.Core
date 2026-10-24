@@ -182,7 +182,8 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 	// --- the prototype ---------------------------------------------------------------------------
 
 	// Copies src into the element with events locked and validation off: scalars assigned, dates
-	// parsed, nested elements merged into the ones there, arrays rebuilt with their $RowCount.
+	// parsed, nested elements merged into the ones there, arrays rebuilt with their $RowCount;
+	// template markers skipped.
 	// checkBindOnce: skip options.bindOnce; existsOnly: skip nested elements src lacks.
 	// After: if the id changed, <path>.change with the element as new and old value.
 	function merge(this: Elem, src: any, checkBindOnce?: boolean, existsOnly?: boolean): Elem {
@@ -196,6 +197,7 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 				if (prop.startsWith('$$')) continue;
 				if (checkBindOnce && tpl.isSkipMerge(this._root_, prop)) continue;
 				let ctor: any = this._meta_.props[prop];
+				if (ctor === TMarker) continue; // a marker is client state, not data
 				if (ctor.type) ctor = ctor.type;
 				const trg = this[prop];
 				if (Array.isArray(trg)) {
@@ -215,7 +217,6 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 				} else {
 					if (existsOnly && !(prop in src))
 						continue;
-					// a marker too: it has no $merge, a new TMarker replaces its value (NET48-BUGS.md B17, kept)
 					if (trg && trg.$merge)
 						trg.$merge(src[prop] || null);
 					else

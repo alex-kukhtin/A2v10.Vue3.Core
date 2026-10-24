@@ -1,6 +1,6 @@
 # Defects found in the Net48 client sources
 
-Found while porting the model core to `@a2v10/model` (2026-10). Paths are under `Web/A2v10.Web.Site/app/` of the Net48 A2v10 repository; line numbers as of 2026-10-16 (B16, B17: as of 2026-10-24, after the fixes).
+Found while porting the model core to `@a2v10/model` (2026-10). Paths are under `Web/A2v10.Web.Site/app/` of the Net48 A2v10 repository; line numbers as of 2026-10-16 (B16, B17: as of 2026-10-24, after the fixes of B1-B13).
 
 Each entry: where, what, what follows from it, what the package does now, the fix proposed. An ID is cited in the package's code and in `test/trace/divergences.js`; keep IDs stable, mark an entry done instead of deleting it.
 
@@ -28,7 +28,7 @@ The package's rule: a crash is fixed at once; any other defect is kept as Net48 
 
 **B5** `services/impl/array.js:225-227` `$insert` of one element: `ne.$select()` emits `[].select`, then `emitSelect(that, ne)` emits it again.
 - Follows: a `Rows[].select` handler runs twice per `$append`/`$prepend`/`$insert`.
-- Done 2026-10-24: the second `emitSelect` dropped, in Net48 and the package (`model/array.ts`). Trace: every `$append` in "arrays", "template", "model info". Outside a tree only: in a tree the two events differ, see B16.
+- Done 2026-10-24: the second `emitSelect` dropped, in Net48 and the package (`model/array.ts`). Trace: every `$append` in "arrays", "template", "model info". In a tree the second event was on another path, dropped too: see B16.
 
 **B6** `services/impl/array.js:71-82` `$copy` empties through `__empty__` (sets `$RowCount` 0) and pushes without counting.
 - Follows: after `$copy` alone, `$RowCount` is 0 whatever was copied. `$merge` sets it right after from the source, so loads are not affected; a direct `$copy` is.
@@ -62,15 +62,14 @@ The package's rule: a crash is fixed at once; any other defect is kept as Net48 
 - Follows: the message reads `invalid std rule: '[object Object]'`.
 - Done 2026-10-24: `${rule.valid}`, in Net48 and the package (`model/rules.ts`).
 
-**B16** `services/impl/array.js:226-227` (the B5 fix) In a tree, `ne.$select()` emits `[].select` on the tree root array (`$findTreeRoot`, `:418-427`); the dropped `emitSelect(that, ne)` was the one on the element's own array.
-- Follows: `$append` into a nested tree array (`Folders[].Items`) emits `Folders[].select` only; a `Folders[].Items[].select` handler no longer sees the new element.
-- Package: kept (`model/array.ts`). Trace: "tree" `B.Items.$append({Id: 21})`, `A2.Items.$append() (no source)`.
-- Fix: after `ne.$select()`, `emitSelect(that, ne)` when the array `$select` emitted on is not `that`.
+**B16** `services/impl/array.js:226-227` (the B5 fix) In a tree the dropped `emitSelect(that, ne)` was no duplicate: `ne.$select()` emits `[].select` on the tree root array (`$findTreeRoot`, `:418-427`), the dropped call emitted it on the element's own nested array (`Folders[].Items[].select`).
+- Follows: `$append` into a nested tree array emits `Folders[].select` only.
+- Decided 2026-10-24: dropped. Selecting in a tree emits on the root only: `$select` (a click), the reselect after `$remove`, a multi-element `$insert` never emitted the nested event; a one-element `$insert` alone did, so a handler on it saw appends, not selection. No subscriber in the Net48 and Net6 applications: they subscribe on root paths (`Folders[].select`, `Customers[].select`).
+- Package: as Net48 (`model/array.ts`). Trace: "tree" `B.Items.$append({Id: 21})`, `A2.Items.$append() (no source)`.
 
 **B17** `services/datamodel.js:1213-1222` `$merge` treats a template marker property (`TMarker`) as a nested element: its value has no `$merge`, so `new TMarker(…)` is set through the setter.
 - Follows: every `$merge` (a reload) resets the markers: `{ type: Number, value: 5 }` becomes `0` (the setter coerces the TMarker object, since B10), a plain object becomes an empty TMarker object.
-- Package: kept (`model/element.ts`). Not in the trace.
-- Fix: skip markers in `$merge`; they are not data, the server does not send them.
+- Done 2026-10-24: `$merge` skips markers (`if (ctor === TMarker) continue;`): they are client state, the server does not send them; in Net48 and the package (`model/element.ts`). Not in the trace.
 
 ## Questions: what was meant
 
@@ -88,6 +87,8 @@ The package's rule: a crash is fixed at once; any other defect is kept as Net48 
 
 **B14** `server/platform.js:30` `app.modules['std:eventBus'] = {}`: no `$emit`.
 - Follows: on the server an async validator's answer throws (`services/validators.js:176`). Matters when the model runs in Jint (`design/view-engines.md`): the server adapter must give `eventBus.$emit`.
+- Done 2026-10-24 in Net48: `std:eventBus` has an empty `$emit() {}`. The package requires it: `Runtime.eventBus.$emit` (`runtime.ts`).
 
 **B15** `services/url.js:210` `replaceId` is `alert('todo::replaceId')`.
-- Follows: a browser modal instead of a result. The platform's shelf: decide when url.js is ported.
+- Follows: a browser modal instead of a result.
+- Done 2026-10-24 in Net48: `replaceId` removed; nothing in `app/` called it. The platform's shelf: url.js is not ported.

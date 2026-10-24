@@ -262,7 +262,7 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 			if ('$RowCount' in that) that.$RowCount += 1;
 			that._root_.$setDirty(true, that._path_);
 			that._root_.$emit(events.add(that._path_), that, ne, len - 1);
-			if (select) // in a tree $select emits on the tree root only, not on that (NET48-BUGS.md B16, kept)
+			if (select) // in a tree $select emits on the tree root only, not on that (NET48-BUGS.md B16)
 				ne.$select();
 			if ('$rowNo' in newElem._meta_)
 				renumberRows(that);
