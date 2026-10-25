@@ -1,6 +1,5 @@
 // a2-debug (Net48 components/debug.js), unchanged in behaviour: the debug panel of the shell (the data model of
-// the active page, the profiling of the server's requests). a2-json-browser (Net48 browsejson.js) is not ported
-// yet: a stub stands in its place and says so.
+// the active page, the profiling of the server's requests). The model's tree is a2-json-browser (jsonbrowser.ts).
 
 import { require, vocabulary } from './platform.js';
 import { defineComponent } from 'vue';
@@ -24,18 +23,6 @@ const traceItem = defineComponent({
 		hasElem(): boolean {
 			return !!(this.elem && this.elem.length);
 		}
-	}
-});
-
-const jsonBrowserStub = defineComponent({
-	template: '<div class="a2-json-browser">a2-json-browser: not ported yet</div>',
-	props: {
-		root: null,
-		useSpec: Boolean
-	},
-	methods: {
-		expandAll() { },
-		clearExpanded() { }
 	}
 });
 
@@ -78,8 +65,7 @@ vocabulary.component('a2-debug', defineComponent({
 </div>
 `,
 	components: {
-		'a2-trace-item': traceItem,
-		'a2-json-browser': jsonBrowserStub
+		'a2-trace-item': traceItem
 	},
 	props: {
 		modelVisible: Boolean,

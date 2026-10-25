@@ -1,0 +1,110 @@
+<collection-view-server class="cw page absolute page-grid cw-absolute" id="el7cf86f1f-8f55-4fed-8a46-1dd71150406d" :items-source="Orders" :initial-filter="{Fragment: '',Period: period.all(),Company: null,Agent: null,Store: null,State: '',StateRole: ''}" :persistent-filter="[]"><template v-slot="Parent"><a2-taskpad class="page-taskpad overflow no-collapsible" initial-width="22rem" position="right" :initial-collapsed="false" style="padding:.5rem 1rem;grid-column:2"><template><a2-panel :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Фільтри</div></template><div class="panel-content"><template><a2-period-picker class="drop-bottom-right" display="name" label="Період" :description="Parent.Filter.Period.Name" align="center" :item="Parent.Filter" prop="Period"></a2-period-picker><a2-selector fetch-command="/catalog/company/fetch" display="Name" :highlight="true" :has-clear="true" label="Компанія" placeholder="Всі компанії" :item="Parent.Filter" prop="Company"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/company/browse', Parent.Filter.Company, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/agent/fetch" display="Name" :highlight="true" :has-clear="true" label="Контрагент" placeholder="@Agent.All" :item="Parent.Filter" prop="Agent"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/agent/browse', Parent.Filter.Agent, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/store/fetch" display="Name" :highlight="true" :has-clear="true" label="Склад" placeholder="Всі склади" :item="Parent.Filter" prop="Store"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/store/browse', Parent.Filter.Store, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-color-combobox v-cloak label="@OrderState" :items-source="OrderStates" :name-prop="'Name'" :value-prop="'Id'" :color-prop="'Color'" :outline="true" :item="Parent.Filter" prop="State"></a2-color-combobox></template></div></a2-panel></template></a2-taskpad><div class="page-content"><template><div class="grid" style="height:100%;grid-template-rows:auto 1fr auto "><div class="toolbar"><button class="btn first-elem btn-tb" @click.stop.prevent="$navigate('/document/order/edit', 'new', false, null, null)" :href="$href('/document/order/edit', 'new')" v-settabindex><i class="ico ico-add"></i> Створити</button><button class="btn btn-tb btn-icon" title="Змінити" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$openSelected('/document/order/edit', Parent.ItemsSource, false, null)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-tb btn-icon" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$dbRemoveSelected(Parent.ItemsSource, {message: 'Ви впевнені, що бажаєте видалити документ?'}, null)" v-settabindex><i class="ico ico-clear"></i> </button><div class="divider" role="separator"></div><div class="dropdown dir-down" v-dropdown><button class="btn btn-tb" toggle v-settabindex><i class="ico ico-file"></i> Створити на підставі<span class="caret"></span></button><div class="dropdown-menu menu" role="menu"><template><button class="dropdown-item" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$openSelected('/document/waybillout/edit/new?BasedOn={0}&Base=/document/order', Parent.ItemsSource, false, null)" v-disable>Видаткова накладна</button></template></div></div><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button><div class="aligner"></div><textbox class="with-width" :tab-index="1" :has-clear="true" :has-search="true" :highlight="true" placeholder="Пошук" :item="Parent.Filter" prop="Fragment" style="width:20rem"></textbox></div><data-grid class="user-select data-grid-light" :compact="false" key="43025e72-f732-4c9f-b67b-bcd95935e3f4" :fixed-header="true" :items-source="Parent.ItemsSource" :hover="true" :striped="false" :border="true" :sort="true" :route-query="$query" grid="Horizontal"><data-grid-column :fit="true" wrap="no-wrap" align="right" header="#" content="Id"></data-grid-column><data-grid-column header="@Done" content="Done"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" align="center" header="Дата" content="Date" data-type="Date"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" header="Номер" content="Number"></data-grid-column><data-grid-column header="Компанія" sort-prop="Company" content="Company.Name"></data-grid-column><data-grid-column header="Контрагент" sort-prop="Agent" content="Agent.Name"></data-grid-column><data-grid-column header="Склад" sort-prop="Store" content="Store.Name"></data-grid-column><data-grid-column header="Стан" :sort="false" id="col7"></data-grid-column><template v-slot:col7="cell"><span class="tag-label outline" v-if="cell.row.State.Id" v-text="cell.row.State.Name" :class="cell.row.State.Color"></span></template><data-grid-column :fit="true" wrap="no-wrap" align="right" header="Сума" content="Sum" data-type="Currency"></data-grid-column><data-grid-column header="Примітка" content="Memo"></data-grid-column></data-grid><a2-pager :source="Parent.Pager"></a2-pager></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+	const template = (function() {
+	let module = { exports: undefined };
+	(function(module, exports) {
+		const template = {
+    options: {
+        persistSelect: ['Orders']
+    },
+    events: {
+        'g.document.saved': handleSaved,
+		'g.document.posted': handlePosted
+    }
+};
+module.exports = template;
+function handlePosted(elem) {
+    let doc = elem.Order;
+    let found = this.Orders.$find(d => d.Id === doc.Id);
+    if (!found) return;
+    found.Done = doc.Done;
+}
+function handleSaved(elem) {
+    let doc = elem.Order;
+    let found = this.Orders.$find(d => d.Id === doc.Id);
+    if (found)
+        found.$merge(doc).$select();
+}
+	})(module, module.exports);
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Orders": [
+    { "Id": 1002, "Done": false, "Date": "2026-10-20T00:00:00", "Memo": null, "Number": "2", "Company": { "Id": 1, "Name": "Моя компанія" }, "Agent": { "Id": 1001, "Name": "Другий" }, "Store": {}, "State": { "Id": "confirmed", "Name": "Підтверджений", "Color": "blue", "Role": "InProgress" }, "Sum": 1500 },
+    { "Id": 1001, "Done": true, "Date": "2026-10-10T00:00:00", "Memo": "перше", "Number": "1", "Company": { "Id": 1, "Name": "Моя компанія" }, "Agent": { "Id": 1004, "Name": "Основний" }, "Store": {}, "State": { "Id": "closed", "Name": "Виконаний", "Color": "green", "Role": "Success" }, "Sum": 250 }
+  ],
+  "Orders.$RowCount": 2,
+  "OrderStates": [
+    { "Id": "", "Name": "@OrderState.All", "Color": "white", "Role": null },
+    { "Id": "new", "Name": "Новий", "Color": "tan", "Role": "Initial" },
+    { "Id": "confirmed", "Name": "Підтверджений", "Color": "blue", "Role": "InProgress" },
+    { "Id": "shipped", "Name": "Відвантажений", "Color": "cyan", "Role": "InProgress" },
+    { "Id": "closed", "Name": "Виконаний", "Color": "green", "Role": "Success" },
+    { "Id": "cancelled", "Name": "Скасований клієнтом", "Color": "orange", "Role": "Failure" },
+    { "Id": "expired", "Name": "Протермінований", "Color": "red", "Role": "Failure" }
+  ],
+  "$ModelInfo": {
+    "Orders": {
+      "PageSize": 20, "Offset": 0, "SortOrder": "Id", "SortDir": "desc",
+      "Filter": {
+        "Fragment": null,
+        "Period": {
+          "From": "\u0022\\/\u00222026-10-25T00:00:00\u0022\\/\u0022",
+          "To": "\u0022\\/\u00222026-10-25T00:00:00\u0022\\/\u0022"
+        },
+        "StateRole": "",
+        "Company": { "Id": null, "Name": null },
+        "Agent": { "Id": null, "Name": null },
+        "Store": { "Id": null, "Name": null },
+        "State": ""
+      }
+    }
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRoot, {props: {'Orders':TOrderArray,'OrderStates':TOrderStateArray}}, false);
+function TOrder(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TOrder, {props: {'Id':Number,'Done':Boolean,'Date':Date,'Memo':{type:String, len:255},'Number':{type:String, len:64},'Company':TRCompany,'Agent':TRAgent,'Store':TRStore,'State':TROrderState,'Sum':Number}, $id: 'Id'}, true);
+function TOrderArray(source, path, parent) { return cmn.createArray(source, path, TOrder, TOrderArray, parent); }
+function TRCompany(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRCompany, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRCompanyArray(source, path, parent) { return cmn.createArray(source, path, TRCompany, TRCompanyArray, parent); }
+function TRAgent(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRAgent, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRAgentArray(source, path, parent) { return cmn.createArray(source, path, TRAgent, TRAgentArray, parent); }
+function TRStore(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRStore, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRStoreArray(source, path, parent) { return cmn.createArray(source, path, TRStore, TRStoreArray, parent); }
+function TROrderState(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TROrderState, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255},'Color':{type:String, len:32},'Role':{type:String, len:16}}, $id: 'Id',$name: 'Name'}, true);
+function TROrderStateArray(source, path, parent) { return cmn.createArray(source, path, TROrderState, TROrderStateArray, parent); }
+function TOrderState(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TOrderState, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255},'Color':{type:String, len:32},'Role':{type:String, len:16}}, $id: 'Id',$name: 'Name'}, true);
+function TOrderStateArray(source, path, parent) { return cmn.createArray(source, path, TOrderState, TOrderStateArray, parent); }
+const ctors = {TRoot,TOrder,TOrderArray,TRCompany,TRCompanyArray,TRAgent,TRAgentArray,TRStore,TRStoreArray,TROrderState,TROrderStateArray,TOrderState,TOrderStateArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'document/order/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://document/order/index/
+</script>

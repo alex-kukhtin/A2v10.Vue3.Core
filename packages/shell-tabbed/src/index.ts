@@ -3,6 +3,7 @@
 
 import './modal.js';
 import './toastr.js';
+import './jsonbrowser.js';
 import './debug.js';
 import './header.js';
 import './navbar.js';

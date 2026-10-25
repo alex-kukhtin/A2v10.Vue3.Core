@@ -38,6 +38,8 @@ const FILES = {
 	'/_page/report/trialbalance/index/0': [path.join(__dirname, 'pages/report-trialbalance-index.html'), 'text/html; charset=utf-8'],
 	'/_page/accplan/national/index/0': [path.join(__dirname, 'pages/accplan-national-index.html'), 'text/html; charset=utf-8'],
 	'/_page/task/edit/104': [path.join(__dirname, 'pages/task-edit.html'), 'text/html; charset=utf-8'],
+	'/_page/catalog/agent/index/0': [path.join(__dirname, 'pages/catalog-agent-index.html'), 'text/html; charset=utf-8'],
+	'/_page/document/order/index/0': [path.join(__dirname, 'pages/document-order-index.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']
 };
 

@@ -1,0 +1,90 @@
+<collection-view-server class="cw page absolute page-grid cw-absolute" id="el61a4d945-8463-416b-be09-db366117e78c" :items-source="Agents" :initial-filter="{Fragment: '',Store: null,Account: null,Tags: ''}" :persistent-filter="[]"><template v-slot="Parent"><a2-taskpad class="page-taskpad overflow no-collapsible" initial-width="22rem" position="right" :initial-collapsed="false" style="padding:.5rem 1rem;grid-column:2"><template><a2-panel :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Фільтри</div></template><div class="panel-content"><template><a2-selector fetch-command="/catalog/store/fetch" display="Name" :highlight="true" :has-clear="true" label="Склад" placeholder="Всі склади" :item="Parent.Filter" prop="Store"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/store/browse', Parent.Filter.Store, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/accplan/national/fetch" display="DisplayName" :highlight="true" :has-clear="true" label="Рахунок" placeholder="@Account.All" :item="Parent.Filter" prop="Account"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/accplan/national/browse', Parent.Filter.Account, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-tags-filter :items-source="Tags" label="Теги" placeholder="Всі теги" :item="Parent.Filter" prop="Tags"></a2-tags-filter></template></div></a2-panel></template></a2-taskpad><div class="page-content"><template><div class="grid" style="height:100%;grid-template-rows:auto 1fr auto "><div class="toolbar"><button class="btn first-elem btn-tb" @click.stop.prevent="$dialog('append', '/catalog/agent/edit', Parent.ItemsSource, null, null)" v-settabindex><i class="ico ico-add"></i> Створити</button><button class="btn btn-tb btn-icon" title="Змінити" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$dialog('edit-selected', '/catalog/agent/edit', Parent.ItemsSource, null, null)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-tb btn-icon" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$dbRemoveSelected(Parent.ItemsSource, {message: 'Ви впевнені, що бажаєте видалити елемент?'}, null)" v-settabindex><i class="ico ico-clear"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$openSelected('/catalog/agent/show', Parent.ItemsSource, false, null)" v-settabindex><i class="ico ico-arrow-open"></i> Показати</button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button><div class="aligner"></div><textbox class="with-width" :tab-index="1" :has-clear="true" :has-search="true" :highlight="true" placeholder="Пошук" :item="Parent.Filter" prop="Fragment" style="width:20rem"></textbox></div><data-grid class="user-select data-grid-light" :compact="false" key="7b06034b-08d1-466d-82ea-1777378e97cf" :fixed-header="true" :items-source="Parent.ItemsSource" :hover="true" :striped="false" :border="true" :sort="true" :route-query="$query" grid="Horizontal"><data-grid-column :fit="true" wrap="no-wrap" align="right" header="#" content="Id"></data-grid-column><data-grid-column header="Назва" sort-prop="Name" id="col1"></data-grid-column><template v-slot:col1="cell"><template><span class="block" v-text="cell.row.Name"></span><a2-tags-list :items-source="cell.row.Tags"></a2-tags-list></template></template><data-grid-column :fit="true" wrap="no-wrap" align="center" header="Дата" content="Date" data-type="Date"></data-grid-column><data-grid-column header="Склад" sort-prop="Store" content="Store.Name"></data-grid-column><data-grid-column header="Рахунок" sort-prop="Account" content="Account.Name"></data-grid-column><data-grid-column header="Примітка" content="Memo"></data-grid-column></data-grid><a2-pager :source="Parent.Pager"></a2-pager></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+	const template = (function() {
+	let module = { exports: undefined };
+	(function(module, exports) {
+		const template = {
+    options: {
+        persistSelect: ['Agents']
+    },
+    events: {
+        'g.tags.saved': tagsSaved
+    }
+};
+module.exports = template;
+function tagsSaved(root) {
+	if (root.Params.For !== 'Agent') return;
+	let tags = root.Tags;
+	this.Tags.$copy(tags);
+	let ag = this.Agents;
+	ag.forEach(ag => {
+		ag.Tags.forEach(at => {
+			let nt = tags.find(tg => tg.Id == at.Id);
+			if (nt) at.$merge(nt);
+		});
+	});
+}
+	})(module, module.exports);
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Agents": [
+    { "Id": 1004, "Name": "Основний", "Memo": null, "Date": "2026-10-14T00:00:00", "Store": {}, "Account": {}, "Tags": [] },
+    { "Id": 1002, "Name": "Третій", "Memo": "123133", "Date": "2026-10-02T00:00:00", "Store": {}, "Account": { "Id": "70", "Name": "70", "DisplayName": "70 Доходи від реалізації" },
+      "Tags": [ { "Id": 1001, "Name": "Поганий", "Color": "salmon", "Memo": "" } ] },
+    { "Id": 1001, "Name": "Другий", "Memo": null, "Date": "2026-09-30T00:00:00", "Store": {}, "Account": { "Id": "361", "Name": "361", "DisplayName": "361 Розрахунки з вітчизняними покупцями" },
+      "Tags": [ { "Id": 1001, "Name": "Поганий", "Color": "salmon", "Memo": "" }, { "Id": 1000, "Name": "Гарний", "Color": "olive", "Memo": "" } ] }
+  ],
+  "Agents.$RowCount": 3,
+  "Tags": [
+    { "Id": 1000, "Name": "Гарний", "Color": "olive", "Memo": "" },
+    { "Id": 1001, "Name": "Поганий", "Color": "salmon", "Memo": "" }
+  ],
+  "$ModelInfo": {
+    "Agents": {
+      "PageSize": 20, "Offset": 0, "SortOrder": "Id", "SortDir": "desc",
+      "Filter": { "Fragment": null, "Tags": null, "Store": { "Id": null, "Name": null }, "Account": { "Id": null, "Name": null } }
+    }
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRoot, {props: {'Agents':TAgentArray,'Tags':TTagArray}}, false);
+function TAgent(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TAgent, {props: {'Id':Number,'Name':{type:String, len:255},'Memo':{type:String, len:255},'Date':Date,'Store':TRStore,'Account':TRAccount,'Tags':TTagArray}, $id: 'Id',$name: 'Name'}, true);
+function TAgentArray(source, path, parent) { return cmn.createArray(source, path, TAgent, TAgentArray, parent); }
+function TRStore(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRStore, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRStoreArray(source, path, parent) { return cmn.createArray(source, path, TRStore, TRStoreArray, parent); }
+function TRAccount(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRAccount, {props: {'Id':{type:String, len:64},'Name':{type:String, len:64},'DisplayName':{type:String, len:320}}, $id: 'Id',$name: 'Name'}, true);
+function TRAccountArray(source, path, parent) { return cmn.createArray(source, path, TRAccount, TRAccountArray, parent); }
+function TTag(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TTag, {props: {'Id':Number,'Name':{type:String, len:255},'Color':{type:String, len:32},'Memo':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TTagArray(source, path, parent) { return cmn.createArray(source, path, TTag, TTagArray, parent); }
+const ctors = {TRoot,TAgent,TAgentArray,TRStore,TRStoreArray,TRAccount,TRAccountArray,TTag,TTagArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'catalog/agent/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://catalog/agent/index/
+</script>
