@@ -46,7 +46,7 @@ const SCENARIOS = [
 		t.op('$id, $name, $isNew, $maxLength(Name), $maxLength(Amount)',
 			() => [doc.$id, doc.$name, doc.$isNew, doc.$maxLength('Name'), doc.$maxLength('Amount')]);
 		t.op('$root, $parent, $vm present', () => [doc.$root === root, doc.$parent === root, !!doc.$vm]);
-		t.op('add a property to a sealed element', () => { doc.Extra = 1; return 'Extra' in doc; });
+		t.op('add a property to an element after load', () => { doc.Extra = 1; return 'Extra' in doc; });
 		t.op('root.$setDirty(false)', () => { root.$setDirty(false); });
 		t.show('data', root);
 	},
@@ -133,6 +133,11 @@ const SCENARIOS = [
 		t.op('root.$merge({Rows: [{Id: 31}], "Rows.$RowCount": 9})', () => {
 			root.$merge({ Rows: [{ Id: 31, Qty: 2, Price: 3 }], 'Rows.$RowCount': 9 });
 			return [rows.length, rows.$RowCount];
+		});
+		t.op('root.$setDirty(false); $copy([{Id: 41, RowNo: 1}]); $dirty', () => { // B7: a load, not a change
+			root.$setDirty(false);
+			rows.$copy([{ Id: 41, RowNo: 1 }]);
+			return root.$dirty;
 		});
 		t.show('data', root);
 	},
@@ -326,7 +331,7 @@ const SCENARIOS = [
 	},
 
 	function maps(t) {
-		// Before _seal_ (construct handlers) a map grows; after it, $setProperty refuses.
+		// A map grows in construct handlers; after load Net48 refuses (its _seal_), the package does not (NET48.md).
 		const root = t.model('maps: $itemType, $setProperty on the root and nested', {
 			decl: {
 				TRoot: { props: { Document: 'TDocument' }, $itemType: 'TItem' },
@@ -369,6 +374,14 @@ const SCENARIOS = [
 		t.op('$readOnly, $stateReadOnly, $isCopy, __modelInfo', () => [root.$readOnly, root.$stateReadOnly, root.$isCopy, root.__modelInfo]);
 		t.op('Document.Name = "x" (read-only)', () => { root.Document.Name = 'x'; return root.Document.Name; });
 		t.op('Agents.$append({Id: 2}) (read-only)', () => root.Agents.$append({ Id: 2 }));
+		// B7: changed from inside, refused; loaded ($merge → $copy), allowed
+		t.op('Agents.$remove(Agents[0]) (read-only)', () => { root.Agents.$remove(root.Agents[0]); return root.Agents.$ids; });
+		t.op('Agents.$empty() (read-only)', () => { root.Agents.$empty(); return root.Agents.length; });
+		t.op('Document.$set({Name: "set"}) (read-only)', () => { root.Document.$set({ Name: 'set' }); return root.Document.Name; });
+		t.op('$merge({Agents: [{Id: 3}]}) (read-only: the load door)', () => {
+			root.$merge({ Agents: [{ Id: 3, Name: 'Three' }] }, false, true);
+			return root.Agents.$ids;
+		});
 		t.op('Document.Period', () => root.Document.Period);
 		t.op('_findRootModelInfo()', () => root._findRootModelInfo());
 		t.show('data', root);

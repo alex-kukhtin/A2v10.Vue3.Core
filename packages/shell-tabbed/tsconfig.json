@@ -1,0 +1,21 @@
+{
+  // tsc checks and emits ESM + .d.ts + maps into build/; rollup bundles build/ into dist/ (rollup.config.mjs).
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // The platform lives in the browser: DOM is its host.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"], // ES2023: the shell sorts with toSorted
+    "types": [],
+    "strict": true,
+    "noEmitOnError": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "declaration": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "rootDir": "src",
+    "outDir": "build"
+  },
+  "include": ["src"]
+}

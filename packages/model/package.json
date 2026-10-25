@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "description": "A2v10 data model core: elements, arrays, template, events on data. No framework, no browser.",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    }
+  },
   "files": [
     "dist"
   ],

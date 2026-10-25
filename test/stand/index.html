@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+	<meta charset="utf-8">
+	<title>a2v10 memory stand</title>
+	<style>
+		body { font: 14px system-ui, sans-serif; margin: 16px; }
+		.bar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+		.result { font-weight: 600; }
+		.result.bad { color: #b00; }
+		.include.loading { opacity: .4; }
+	</style>
+	<!-- the layout's order: the locale, then the core -->
+	<script src="/locale.js"></script>
+	<script src="/a2v10-core.js"></script>
+</head>
+<body>
+	<div id="app"></div>
+	<script>
+	// The stand for "memory does not grow with the session": open N pages one after another in one a2-include
+	// (each with a template of its own and an inner page), drop the last, and count what was not collected:
+	// the model root, the page's component and its compiled render, for every page and inner page.
+	// Objects, not bytes (NewVue DESIGN §2). Measure in a browser no debugger is attached to: DevTools, Vue
+	// DevTools, and a browser driven over the debugger protocol (an agent's) hold a few pages for good. Seen
+	// 2026-10-24: driven, 12 objects (4 pages) of 10000 stayed; the same build in a plain Chrome, all collected.
+	'use strict';
+	const { Vue, attach } = a2v10.platform;
+
+	const pending = new Set();
+	const registry = new FinalizationRegistry(key => pending.delete(key));
+	let seq = 0;
+
+	function watchCollect(handle) {
+		const n = ++seq;
+		const def = handle.$.type;
+		for (const [what, obj] of [['root', Vue.toRaw(handle.$data)], ['def', def], ['render', def.render]]) {
+			const key = `${n}:${what}`;
+			registry.register(obj, key);
+			pending.add(key);
+		}
+	}
+
+	const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+	// Garbage, to have a collection come sooner: not a guarantee, a way not to wait.
+	function pressure() {
+		let sink = [];
+		for (let i = 0; i < 12; i++)
+			sink.push(new Array(500000).fill(i));
+		sink = null;
+	}
+
+	const app = Vue.createApp({
+		template: `<div class="bar">
+				<button @click="run(100)" :disabled="running">run 100</button>
+				<button @click="run(1000)" :disabled="running">run 1000</button>
+				<button @click="run(10000)" :disabled="running">run 10000</button>
+				<span class="result" :class="{bad: bad}" id="result" v-text="result"></span>
+			</div>
+			<a2-include v-if="source" :source="source" :arg="arg" :complete="complete"></a2-include>`,
+		data: () => ({ source: '', arg: 0, running: false, result: 'idle', bad: false }),
+		methods: {
+			complete() {
+				const done = this.waiter;
+				this.waiter = null;
+				if (done) done();
+			},
+			// the next page (its inner page mounts in its turn)
+			async open(i) {
+				await new Promise(resolve => {
+					this.waiter = resolve;
+					this.arg = i;
+				});
+			},
+			async run(n) {
+				this.running = true;
+				this.bad = false;
+				const start = performance.now();
+				const heap0 = performance.memory ? performance.memory.usedJSHeapSize : 0;
+				this.source = 'stand/page';
+				for (let i = 1; i <= n; i++) {
+					await this.open(i);
+					if (i % 100 === 0) this.result = `open ${i}/${n}`;
+				}
+				// let the inner page of the last one mount, then drop it all
+				await sleep(50);
+				this.source = '';
+				await Vue.nextTick();
+				const opened = performance.now();
+				let waited = 0;
+				while (pending.size && waited < 60000) {
+					pressure();
+					this.result = `waiting for collection: ${pending.size} left`;
+					await sleep(500);
+					waited += 500;
+				}
+				const heap1 = performance.memory ? performance.memory.usedJSHeapSize : 0;
+				const heap = heap0 ? ` · heap ${Math.round(heap0 / 1024)} → ${Math.round(heap1 / 1024)} KB` : '';
+				this.bad = pending.size > 0;
+				this.result = `${n} pages in ${Math.round((opened - start) / 1000)} s · ${seq} pages watched (inner ones too)` +
+					`${heap} · ${pending.size ? `NOT collected: ${pending.size} (${[...pending].slice(0, 6).join(', ')})` : 'all collected'}`;
+				this.running = false;
+			}
+		}
+	});
+	// Every page, an inner one too, is watched once mounted: a page is the component whose data is a model root.
+	app.mixin({
+		mounted() {
+			if (this.$data && '_root_' in this.$data && this.$data._root_ === this.$data)
+				watchCollect(this);
+		}
+	});
+	attach(app);
+	app.mount('#app');
+	</script>
+</body>
+</html>

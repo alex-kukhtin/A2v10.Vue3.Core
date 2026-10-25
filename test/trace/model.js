@@ -12,28 +12,21 @@ const { loadModelBundle } = require('../model/load.js');
 const { loadLocale, serverRuntime } = require('../model/runtime.js');
 const { createRecorder } = require('./recorder.js');
 const { SCENARIOS } = require('./scenarios.js');
-const { DIVERGENCES } = require('./divergences.js');
+const { DIVERGENCES, expectedTrace } = require('./divergences.js');
 
 const core = loadModelBundle().createModel(serverRuntime(loadLocale()));
 const t = createRecorder({ cmn: core.datamodel, period: core.period, utils: core.utils });
 const actual = t.run(SCENARIOS);
 fs.writeFileSync(path.join(__dirname, 'model.trace'), actual);
 
-// Net48's trace with each divergence's block replaced by the package's; a block must occur once.
-let expected = fs.readFileSync(path.join(__dirname, 'net48.trace'), 'utf8').replace(/\r\n/g, '\n');
-for (const d of DIVERGENCES) {
-	const from = d.net48.join('\n') + '\n';
-	const count = expected.split(from).length - 1;
-	if (count !== 1)
-		throw new Error(`divergence '${d.why}': its Net48 block occurs ${count} times in net48.trace`);
-	expected = expected.replace(from, () => d.model.join('\n') + '\n');
-}
+const expected = expectedTrace(fs.readFileSync(path.join(__dirname, 'net48.trace'), 'utf8'), 'model');
+const divergences = DIVERGENCES.filter(d => d.trace === 'model').length;
 
 const a = actual.split('\n');
 const e = expected.split('\n');
 const at = a.findIndex((line, i) => line !== e[i]);
 if (at === -1 && a.length === e.length) {
-	console.log(`trace: ${SCENARIOS.length} scenarios, ${a.length} lines, equal to Net48 but for ${DIVERGENCES.length} divergences`);
+	console.log(`trace: ${SCENARIOS.length} scenarios, ${a.length} lines, equal to Net48 but for ${divergences} divergences`);
 } else {
 	const i = at === -1 ? Math.min(a.length, e.length) : at;
 	const head = e.slice(0, i).reverse().find(l => l.startsWith('## ')) || '';

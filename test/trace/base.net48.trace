@@ -478,7 +478,9 @@
   bus confirm({promise: null, data: {message: "Доступ заборонено!", title: undefined, style: "alert", list: undefined}}) → true
 > $dialog("show", …, { validRequired: true })
   bus closeAllPopups()
-  throws ReferenceError: root is not defined
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: null, rd: true}) → {Id: 5}
+  = Promise
+  resolved {Id: 5}
 > Document.Memo = "m"
   ev Document.Memo.changing(@Root.Document, "m", "", "Memo")
   ev Model.dirty.change(true, "Document.Memo")
@@ -490,13 +492,14 @@
   ev Model.beforeSave(@Root)
   bus beginRequest("/_data/save")
   fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"m","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":5,"Name":"Doc","Memo":"m","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
-  = null
+  = Promise
   bus endRequest("/_data/save")
   ev TRow.construct(@~Document.Rows[], "Rows[]")
   ev TRow.construct(@~Document.Rows[], "Rows[]")
   ev Model.saved(@Root)
   ev Model.dirty.change(false, undefined)
   bus modal("/document/show", {promise: null, data: @Root.Document, query: null, rd: true}) → {Id: 5}
+  resolved {Id: 5}
   $dirty → false
 > $dialog("show", …, { checkReadOnly: true }), not read-only
   bus closeAllPopups()
@@ -543,7 +546,69 @@
   = [false, true]
 > $dialog("show", "/document/show", Document, null, { saveRequired: true }), new and clean
   bus closeAllPopups()
-  throws TypeError: Cannot read properties of undefined (reading 'then')
+  ev Model.dirty.change(true, undefined)
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/new","data":{"Document":{"Id":0,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":8,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  = Promise
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus setnewid({from: "", to: "8"})
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: null, rd: true}) → {Id: 1}
+  resolved {Id: 1}
+
+## $dialog, $report: validRequired on an invalid model; saveRequired refused
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $dialog("show", …, { validRequired: true }), invalid
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Спочатку виправте помилки", title: undefined, style: "alert", list: undefined}}) → true
+> $report("rep", Document, { validRequired: true }), invalid
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Спочатку виправте помилки", title: undefined, style: "alert", list: undefined}}) → true
+> Document.Name = "1"
+  ev Document.Name.changing(@Root.Document, "1", "Doc", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "1", "Doc", "Name")
+  $dirty → true
+> $dialog("show", …, { saveRequired: true }), the save refused by the server
+  bus closeAllPopups()
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"1","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 255 "UI:Cannot save"
+  = Promise
+  bus endRequest("/_data/save")
+  bus confirm({promise: null, data: {message: "Cannot save", title: undefined, style: "alert", list: undefined}}) → true
+  pending
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount R /_page/document/edit/new
+  bus registerData(vm:R, {caller: null}) → vm:A
+  bus isModalRequery({url: "/_page/document/edit/new", result: false})
+  [R] ev Model.load(@Root, @Root, false)
+  $dirty → false
+> R: $dialog("show", …, { saveRequired: true }), new and read-only: $save does not save
+  bus closeAllPopups()
 
 ## $confirm, $alert, $msg, $toast, $remove
 > create
@@ -1236,7 +1301,7 @@
   window.open("/v/show/5?base=document%2Fother%2Fedit%2F5&rep=rep&X=1", "_blank")
 > $report("rep", Document, { validRequired: true })
   bus closeAllPopups()
-  throws ReferenceError: root is not defined
+  window.open("/report/show/5?base=%2F_page%2Fdocument%2Fedit%2F5&rep=rep", "_blank")
 > $export(Document, "/document/exp", { F: 1 }), $export()
   location =("/_export/document/exp/5?F=1")
   location =("/_export/document/edit/5")
@@ -1316,7 +1381,8 @@
   bus beginRequest("/_file/document/upload/new?Key=k")
   fetch POST /_file/document/upload/new?Key=k FormData(file, Key) → 500 ""
   bus endRequest("/_file/document/upload/new?Key=k")
-  resolved undefined
+  alert("unknown error")
+  resolved false
 > $upload(…) → network failure
   bus closeAllPopups()
   html.uploadFile("image/*", "/document/upload") → File("a.txt")
@@ -1324,7 +1390,8 @@
   bus beginRequest("/_file/document/upload/new?Key=k")
   fetch POST /_file/document/upload/new?Key=k FormData(file, Key) → fails fetch failed
   bus endRequest("/_file/document/upload/new?Key=k")
-  rejected TypeError("err.indexOf is not a function")
+  alert("fetch failed")
+  resolved false
 > $upload(…, { catchError: true }) → network failure
   bus closeAllPopups()
   html.uploadFile("image/*", "/document/upload") → File("a.txt")
@@ -1386,8 +1453,8 @@
   bus registerData(vm:D, {caller: null}) → vm:A
   bus isModalRequery({url: "/_dialog/agent/edit/7", result: false})
   [D] ev Model.load(@Root, @Root, false)
-> D.$caller === A
-  = true
+> D.$caller
+  = vm:A
 > D.__parseControllerAttributes("{'saveEvent':'agent.saved','alwaysOk':true,'placement':'right'}")
   = {alwaysOk: true, placement: "right"}
 > D: Agent.Name = "New"; $save()
@@ -1451,7 +1518,7 @@
 > bus childrenSaved, another token
   bus childrenSaved({token: "other", toast: "No"})
 > bus childrenSaved, the page's token
-  bus childrenSaved({token: "1628", update: @Root.Documents, toast: "Saved", id: 2})
+  bus childrenSaved({token: "1630", update: @Root.Documents, toast: "Saved", id: 2})
     bus toast({text: "Saved", style: "success", time: undefined})
     bus closeAllPopups()
     bus beginRequest("/_data/reload")
@@ -1489,7 +1556,7 @@
   bus registerData(null)
   html.removePrintFrame()
 > listeners
-  = {signalEvent: 1}
+  = {}
 > bus signalEvent; globalAppEvent
   bus signalEvent({event: "sig.ev", data: 3})
   bus globalAppEvent({event: "app.ev", data: 4})

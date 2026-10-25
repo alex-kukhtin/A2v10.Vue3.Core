@@ -1,11 +1,11 @@
 // The root: the element the page's model is, built by `new TRoot(data)`. implementRoot gives the
 // root type the template and the members the platform drives the model by (base.js):
-//   _modelLoad_ → defaults, then Model.load after the runtime's update; _seal_ → Object.seal;
+//   _modelLoad_ → defaults, then Model.load after the runtime's update;
 //   _exec_/_canExec_/_delegate_ → commands; _validate_/_validateAll_ → validation;
 //   _saveSelections/_restoreSelections, _setRuntimeInfo_, _fire*_ → application events.
 // Net48 set the root-only members on each root in createObject; they live on the prototype now.
 
-import { isArray, isDefined, isObject, isObjectExact, isPrimitiveCtor } from '../base/is.js';
+import { isDefined, isObject } from '../base/is.js';
 import { simpleEval } from '../base/path.js';
 import type { ModelContext } from './context.js';
 import { defHidden, defHiddenGet } from './define.js';
@@ -16,8 +16,7 @@ import type { ElementCtor, Root } from './types.js';
 import type { Validation } from './validate.js';
 
 export function createRoots(ctx: ModelContext, tpl: Template, validation: Validation, modelInfo: ModelInfo) {
-	const { platform, period } = ctx;
-	const file = platform.File;
+	const { platform } = ctx;
 
 	// The state of a new root; createObject calls it last.
 	function initRoot(root: any, source: any): void {
@@ -79,23 +78,6 @@ export function createRoots(ctx: ModelContext, tpl: Template, validation: Valida
 
 	function fireUnload(this: Root): void {
 		this.$emit(events.unload, this);
-	}
-
-	// Seals the element and every nested element: no member can be added after load.
-	function seal(elem: any): void {
-		Object.seal(elem);
-		if (!elem._meta_) return;
-		for (const p in elem._meta_.props) {
-			let ctor = elem._meta_.props[p];
-			if (ctor.type) ctor = ctor.type;
-			if (isPrimitiveCtor(ctor, file)) continue;
-			if (ctor === period.constructor) continue;
-			const val = elem[p];
-			if (isArray(val))
-				val.forEach(itm => seal(itm));
-			else if (isObjectExact(val))
-				seal(val);
-		}
 	}
 
 	function isReadOnly(this: Root): boolean {
@@ -203,7 +185,7 @@ export function createRoots(ctx: ModelContext, tpl: Template, validation: Valida
 		const p = root.prototype;
 		p.$emit = tpl.emit;
 		p.$setDirty = setDirty;
-		p.$defer = platform.defer;
+		defHidden(p, '$defer', platform.defer); // hidden: the page's methods have a $defer too, and Vue 3 dev warns on a data key (for…in) a method has
 		p.$template = template;
 		p._exec_ = tpl.executeCommand;
 		p._canExec_ = tpl.canExecuteCommand;
@@ -224,7 +206,6 @@ export function createRoots(ctx: ModelContext, tpl: Template, validation: Valida
 		p._setDefaults_ = setDefaults;
 		p._fireLoad_ = fireLoad;
 		p._fireUnload_ = fireUnload;
-		p._seal_ = seal;
 		defHiddenGet(p, '$readOnly', isReadOnly);
 		defHiddenGet(p, '$stateReadOnly', isStateReadOnly);
 		defHiddenGet(p, '$isCopy', isCopy);

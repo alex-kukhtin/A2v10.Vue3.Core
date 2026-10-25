@@ -161,12 +161,8 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 		}
 
 		if (meta.$itemType) {
-			// a map: a new element of $itemType at prop. The shape is fixed at _seal_: a map grows in
-			// <Type>.construct and Model.defaults; Model.load comes after the seal in the browser
-			// (defer is Vue.nextTick), before it on the server (defer is synchronous).
+			// a map: a new element of $itemType at prop, at any time (Net48 refused after load: the seal, NET48.md)
 			elem.$setProperty = function (prop: string, src: unknown) {
-				if (Object.isSealed(this))
-					throw new Error(`$setProperty: the map '${this._path_ || 'Root'}' is sealed after load`);
 				const ne = new meta.$itemType!(src, elem._path_ ? `${elem._path_}.${prop}` : prop, elem);
 				platform.set(this, prop, ne);
 				this._root_.$setDirty(true);
@@ -245,7 +241,7 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 	}
 
 	function setElement(this: Elem, src: unknown): void {
-		if (this.$root.isReadOnly) // isReadOnly: no member has that name, never true (NET48-BUGS.md B7, kept)
+		if (this.$root.$readOnly) // read-only: changed from inside, refused (B7)
 			return;
 		this.$merge(src);
 	}

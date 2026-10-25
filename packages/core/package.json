@@ -1,0 +1,22 @@
+{
+  "name": "@a2v10/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The delivery of the shelves every page stands on: a2v10-core.js = model + platform + primitives, with Vue.",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "dependencies": {
+    "@a2v10/model": "workspace:*",
+    "@a2v10/platform": "workspace:*",
+    "@a2v10/primitives": "workspace:*"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^1.0.0",
+    "rollup": "^4.64.7"
+  }
+}

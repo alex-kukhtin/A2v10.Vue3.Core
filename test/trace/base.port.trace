@@ -1,0 +1,1347 @@
+## $save: a new document
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/new
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/new", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Document.Name = "Doc"
+  ev Document.Name.changing(@Root.Document, "Doc", "", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "Doc", "", "Name")
+  $dirty → true
+> $save({ toast: "Saved" })
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/new","data":{"Document":{"Id":0,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":25,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  = Promise
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus setnewid({from: "", to: "25"})
+  bus toast({text: "Saved", style: "success", time: undefined})
+  resolved {Id: 25, Name: "Doc", Memo: "", Agent: {Id: 0, Name: ""}, Rows: [{Id: 1, Qty: 1}, {Id: 2, Qty: 2}]}
+  $dirty → false
+> $baseUrl, Document.$id, $isDirty
+  = ["/_page/document/edit/25", 25, false]
+> $save() not dirty
+> data
+  = TRoot {
+      Document: TDocument {
+        Id: 25
+        Name: "Doc"
+        Memo: ""
+        Agent: TAgent {
+          Id: 0
+          Name: ""
+        }
+        Rows: [
+          [0] TRow {
+            Id: 1
+            Qty: 1
+          }
+          [1] TRow {
+            Id: 2
+            Qty: 2
+          }
+        ]
+      }
+    }
+
+## $save: a copy
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/7
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/7", result: false})
+  ev Model.load(@Root, null, false)
+  ev Model.dirty.change(true, undefined)
+  $dirty → true
+> $isCopy, $isDirty
+  = [true, true]
+> $save()
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/7","data":{"Document":{"Id":7,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":31,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  = Promise
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus setnewid({from: "", to: "edit/31"})
+  resolved {Id: 31, Name: "Doc", Memo: "", Agent: {Id: 0, Name: ""}, Rows: [{Id: 1, Qty: 1}, {Id: 2, Qty: 2}]}
+  $dirty → false
+> $baseUrl
+  = "/_page/document/edit/31"
+
+## $save: read-only, invalid, refused
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Document.Name = ""
+  ev Document.Name.changing(@Root.Document, "", "Doc", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "", "Doc", "Name")
+  $dirty → true
+> $save({ options: { validRequired: true } })
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Спочатку виправте помилки", title: undefined, style: "alert", list: ["Name is required"]}}) → true
+> Document.Name = "Doc"
+  ev Document.Name.changing(@Root.Document, "Doc", "", "Name")
+  ev Document.Name.change(@Root.Document, "Doc", "", "Name")
+> $save() → 255 UI:
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 255 "UI:Cannot save\\nthe document"
+  = Promise
+  bus endRequest("/_data/save")
+  bus confirm({promise: null, data: {message: "Cannot save\nthe document", title: undefined, style: "alert", list: undefined}}) → true
+  pending
+> $save() → 255 not UI:
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 255 "Deadlock"
+  = Promise
+  bus endRequest("/_data/save")
+  alert("Deadlock")
+  pending
+> $save() → 500
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 500 ""
+  = Promise
+  bus endRequest("/_data/save")
+  alert("")
+  pending
+> $save() → network failure
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → fails fetch failed
+  = Promise
+  bus endRequest("/_data/save")
+  alert("fetch failed")
+  pending
+> $save() → not an object
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 5
+  = Promise
+  bus endRequest("/_data/save")
+  alert("Cannot use 'in' operator to search for 'Document' in 5")
+  pending
+
+## $save, $savePart, $remove: read-only model
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/6
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/6", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Document.Name = "Changed"
+  ev Document.Name.changing(@Root.Document, "Changed", "Doc", "Name")
+  ev Document.Name.change(@Root.Document, "Changed", "Doc", "Name")
+> $readOnly, $isDirty
+  = [true, false]
+> $save()
+> $savePart(Document, "/document/edit")
+> $remove(Rows[0])
+> $removeSelected(Rows)
+> Rows.length
+  = 2
+
+## $savePart, $ensureSaved
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/new
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/new", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $ensureSaved() twice at once
+  ev Model.dirty.change(true, undefined)
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/new","data":{"Document":{"Id":0,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":40,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  = Promise
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus setnewid({from: "", to: "40"})
+  resolved [true, true]
+> $ensureSaved() saved
+  = Promise
+  resolved true
+> $savePart(Document, "/document/part", true)
+  bus closeAllPopups()
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_dialog/document/part","data":{"Id":40,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}} → 200 {"Id":40,"Name":"Doc","Memo":"part saved","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}
+  = Promise
+  bus endRequest("/_data/save")
+  ev Model.dirty.change(true, "Document.Memo")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  resolved @Root.Document
+  $dirty → true
+
+## $reload: an element page
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5?Tab=2
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5?Tab=2", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $baseUrl, $baseQuery
+  = ["/_page/document/edit/5?Tab=2", {Tab: "2"}]
+> Rows[1].$select()
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
+> $reload()
+  bus closeAllPopups()
+  bus beginRequest("/_data/reload")
+  fetch POST /_data/reload {"baseUrl":"/_page/document/edit/5?Tab=2"} → 200 {"Document":{"Id":5,"Name":"Reloaded","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  = Promise
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/edit/5?Tab=2")
+  ev Model.dirty.change(true, "Document.Name")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  bus isModalRequery({url: "/_page/document/edit/5?Tab=2", result: false})
+  ev Model.load(@Root, null, false)
+  ev Model.dirty.change(false, undefined)
+  resolved @Root
+> Document.Name, Rows.$selected
+  = ["Reloaded", undefined]
+> $requery()
+  bus requery(vm:A, undefined)
+> $requeryNew(9)
+  bus setnewid({from: "", to: "9"})
+  bus requery(vm:A, undefined)
+> $baseUrl
+  = "/_page/document/edit/9?Tab=2"
+
+## $reload: an index page, its $ModelInfo, queryChange, $searchChange
+> create
+  ev TDocumentArray.construct(@~Documents)
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/index/0
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $reload(Documents)
+  bus closeAllPopups()
+  bus beginRequest("/_data/reload")
+  fetch POST /_data/reload {"baseUrl":"/_page/document/index/0?pageSize=20&dir=asc&order=Name"} → 200 {"Documents":[{"Id":3,"Name":"Three"}],"Documents.$RowCount":1,"$ModelInfo":{"Documents":{"PageSize":20,"Offset":0,"SortOrder":"Name","SortDir":"asc","Filter":{"Text":"abc"}}}}
+  = Promise
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/index/0?pageSize=20&dir=asc&order=Name")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+  resolved @Root
+> bus queryChange({ Text: "abc", Order: undefined })
+  bus queryChange({Text: "abc", Order: undefined})
+    bus closeAllPopups()
+    bus beginRequest("/_data/reload")
+    fetch POST /_data/reload {"baseUrl":"/_page/document/index/0?Text=abc"} → 200 {"Documents":[{"Id":3,"Name":"Three"}],"Documents.$RowCount":1,"$ModelInfo":{"Documents":{"PageSize":20,"Offset":0,"SortOrder":"Name","SortDir":"asc","Filter":{"Text":"abc"}}}}
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/index/0?Text=abc")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+> bus queryChange of another page
+  bus queryChange({__baseUrl__: "/_page/agent/index/0", Text: "x"})
+> Documents.$ModelInfo
+  = {PageSize: 20, Offset: 0, SortOrder: "Name", SortDir: "asc", Filter: {Text: "abc"}, $setFilter: fn setModelInfoFilter}
+> $searchChange()
+  bus closeAllPopups()
+  bus beginRequest("/_data/reload")
+  fetch POST /_data/reload {"baseUrl":"/_page/document/index/0?pageSize=20&dir=asc&order=Name&Text=abc"} → 200 {"Documents":[{"Id":3,"Name":"Three"}],"Documents.$RowCount":1,"$ModelInfo":{"Documents":{"PageSize":20,"Offset":0,"SortOrder":"Name","SortDir":"asc","Filter":{"Text":"abc"}}}}
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/index/0?pageSize=20&dir=asc&order=Name&Text=abc")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+> $setFilter(Documents, "Text", "q"); $clearFilter(Documents)
+  bus setFilter({source: @Root.Documents, prop: "Text", value: "q"})
+  bus clearFilter({source: @Root.Documents})
+
+## $reload: the Query element, watched
+> create
+  ev TQuery.construct(@~Query, "Query")
+  ev TDocumentArray.construct(@~Documents)
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/index/0
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Query.Text = "abc"
+  ev Query.Text.changing(@Root.Query, "abc", "", "Text")
+  ev Model.dirty.change(true, "Query.Text")
+  ev Query.Text.change(@Root.Query, "abc", "", "Text")
+  bus closeAllPopups()
+  bus beginRequest("/_data/reload")
+  fetch POST /_data/reload {"baseUrl":"/_page/document/index/0?Text=abc"} → 200 {"Query":{"Text":"abc"},"Documents":[]}
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/index/0?Text=abc")
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+> $isDirty
+  = false
+
+## $dialog: the commands
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $dialog("show", "/document/show", Document)
+  throws TypeError: vm.$dialog is not a function
+> $showDialog("/document/show?Mode=1", Document, { Extra: 2 })
+  throws TypeError: vm.$showDialog is not a function
+> $dialog("show", …, query as a function)
+  throws TypeError: vm.$dialog is not a function
+> $dialog("browse", "/agent/browse", Document.Agent)
+  throws TypeError: vm.$dialog is not a function
+> $dialog("browse", plain object)
+  throws TypeError: vm.$dialog is not a function
+> $dialog("edit", "/agent/edit", Document.Agent)
+  throws TypeError: vm.$dialog is not a function
+> $dialog("append", "/row/new", Rows)
+  throws TypeError: vm.$dialog is not a function
+> $dialog("new", "/row/new", Rows), nothing selected
+  throws TypeError: vm.$dialog is not a function
+> Rows[0].$select()
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[0])
+> $dialog("edit-selected", "/row/edit", Rows)
+  throws TypeError: vm.$dialog is not a function
+> $dialog("show-selected", "/row/show", Rows) → "reload"
+  throws TypeError: vm.$dialog is not a function
+> $dialog("copy", "/row/copy", Rows[0])
+  throws TypeError: vm.$dialog is not a function
+> $dialog("append", "/row/new", Rows, null, { reloadAfter: true })
+  throws TypeError: vm.$dialog is not a function
+> $dialog("show", "/document/cancel", Document) → false
+  throws TypeError: vm.$dialog is not a function
+> $dialog("append", …, an object)
+  throws TypeError: vm.$dialog is not a function
+> $dialog("edit", …, an array)
+  throws TypeError: vm.$dialog is not a function
+> $dialog("edit", …, { checkPermission: "CanEdit" })
+  throws TypeError: vm.$dialog is not a function
+> $dialog("show", …, { validRequired: true })
+  throws TypeError: vm.$dialog is not a function
+> Document.Memo = "m"
+  ev Document.Memo.changing(@Root.Document, "m", "", "Memo")
+  ev Model.dirty.change(true, "Document.Memo")
+  ev Document.Memo.change(@Root.Document, "m", "", "Memo")
+  $dirty → true
+> $dialog("show", …, { saveRequired: true })
+  throws TypeError: vm.$dialog is not a function
+> $dialog("show", …, { checkReadOnly: true }), not read-only
+  throws TypeError: vm.$dialog is not a function
+> data
+  = TRoot {
+      Document: TDocument {
+        Id: 5
+        Name: "Doc"
+        Memo: "m"
+        Agent: TAgent {
+          Id: 0
+          Name: ""
+        }
+        Rows: [
+          [0] TRow $selected {
+            Id: 1
+            Qty: 1
+          }
+          [1] TRow {
+            Id: 2
+            Qty: 2
+          }
+        ]
+      }
+    }
+
+## $dialog: saveRequired, a new document
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/new
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/new", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $isDirty, $mainObject.$isNew
+  = [false, true]
+> $dialog("show", "/document/show", Document, null, { saveRequired: true }), new and clean
+  throws TypeError: vm.$dialog is not a function
+
+## $dialog, $report: validRequired on an invalid model; saveRequired refused
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $dialog("show", …, { validRequired: true }), invalid
+  throws TypeError: vm.$dialog is not a function
+> $report("rep", Document, { validRequired: true }), invalid
+  throws TypeError: vm.$report is not a function
+> Document.Name = "1"
+  ev Document.Name.changing(@Root.Document, "1", "Doc", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "1", "Doc", "Name")
+  $dirty → true
+> $dialog("show", …, { saveRequired: true }), the save refused by the server
+  throws TypeError: vm.$dialog is not a function
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount R /_page/document/edit/new
+  bus registerData(vm:R, {caller: null}) → vm:A
+  bus isModalRequery({url: "/_page/document/edit/new", result: false})
+  [R] ev Model.load(@Root, @Root, false)
+  $dirty → false
+> R: $dialog("show", …, { saveRequired: true }), new and read-only: $save does not save
+  throws TypeError: ro.$dialog is not a function
+
+## $confirm, $alert, $msg, $toast, $remove
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $confirm("Sure?")
+  bus confirm({promise: null, data: {message: "Sure?", style: "confirm"}}) → true
+  = Promise
+  resolved true
+> $confirm({ msg: "No?", title: "T" }) → Cancel
+  bus confirm({promise: null, data: {msg: "No?", title: "T", style: "confirm", message: "No?"}}) → false
+  = Promise
+  pending
+> $alert("Hi")
+  bus confirm({promise: null, data: {message: "Hi", title: undefined, style: "alert", list: undefined}}) → true
+  = Promise
+  resolved true
+> $alert({ msg: "Hi", title: "T", list: ["a"] })
+  bus confirm({promise: null, data: {message: "Hi", title: "T", style: "alert", list: ["a"]}}) → true
+  = Promise
+  resolved true
+> $msg("Info")
+  bus confirm({promise: null, data: {message: "Info", title: "Повідомлення", style: "info"}}) → true
+  = Promise
+  resolved true
+> $alertUi("UI:Text\\nmore")
+  bus confirm({promise: null, data: {message: "Text\nmore", title: undefined, style: "alert", list: undefined}}) → true
+> $alertUi("raw")
+  alert("raw")
+> $alertUi(new Error("boom"))
+  alert("boom")
+> $alertUi({ x: 1 })
+  throws TypeError: msg.indexOf is not a function
+> $toast("Done"); $toast({ text: "T", style: "info" }); $toast(null)
+  bus toast({text: "Done", style: "success", time: undefined})
+  bus toast({text: "T", style: "info"})
+> $removeSelected(Rows), nothing selected
+> $remove(Rows[0], "No?") → Cancel
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "No?", style: "confirm"}}) → false
+> $remove(Rows[0], "Delete?")
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Delete?", style: "confirm"}}) → true
+  ev Model.dirty.change(true, "Document.Rows")
+  ev Document.Rows[].remove(@Root.Document.Rows, @~Document.Rows[], 0)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[0])
+  $dirty → true
+> $removeSelected(Rows): the one $remove selected
+  bus closeAllPopups()
+  ev Document.Rows[].remove(@Root.Document.Rows, @~Document.Rows[], 0)
+> $removeSelected(Document)
+  console.error "$removeSelected. The argument is not an array"
+> Rows.length
+  = 0
+
+## $saveModified, $close, $saveAndClose: a page
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $saveModified(), not dirty
+  = true
+> Document.Name = "1"
+  ev Document.Name.changing(@Root.Document, "1", "Doc", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "1", "Doc", "Name")
+  $dirty → true
+> $saveModified() → Save
+  bus confirm({promise: null, data: {message: "Елемент було змінено. Зберегти зміни?", title: "Підтвердження закриття", buttons: [{text: "Зберегти", result: "save"}, {text: "Не зберігати", result: "close"}, {text: "Скасувати", result: false}], style: "confirm"}}) → "save"
+  = false
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"1","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":5,"Name":"1","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus closePlain({root: vm:A})
+  $dirty → false
+> Document.Name = "2"
+  ev Document.Name.changing(@Root.Document, "2", "1", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "2", "1", "Name")
+  $dirty → true
+> $close() → Don't save
+  bus confirm({promise: null, data: {message: "Елемент було змінено. Зберегти зміни?", title: "Підтвердження закриття", buttons: [{text: "Зберегти", result: "save"}, {text: "Не зберігати", result: "close"}, {text: "Скасувати", result: false}], style: "confirm"}}) → "close"
+  ev Model.dirty.change(false, undefined)
+  bus closePlain({root: vm:A})
+  $dirty → false
+> Document.Name = "3"
+  ev Document.Name.changing(@Root.Document, "3", "2", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "3", "2", "Name")
+  $dirty → true
+> $saveModified("Msg", "Title") → Cancel
+  bus confirm({promise: null, data: {message: "Msg", title: "Title", buttons: [{text: "Зберегти", result: "save"}, {text: "Не зберігати", result: "close"}, {text: "Скасувати", result: false}], style: "confirm"}}) → false
+  = false
+> $saveAndClose()
+  throws TypeError: vm.$saveAndClose is not a function
+
+## $saveModified, $modal*: a dialog
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount D /_dialog/document/edit/5
+  bus registerData(vm:D, {caller: null}) → null
+  bus isModalRequery({url: "/_dialog/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Document.Name = "1"
+  ev Document.Name.changing(@Root.Document, "1", "Doc", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "1", "Doc", "Name")
+  $dirty → true
+> $saveModified(null, null, true) → Save, invalid
+  bus confirm({promise: null, data: {message: "Елемент було змінено. Зберегти зміни?", title: "Підтвердження закриття", buttons: [{text: "Зберегти", result: "save"}, {text: "Не зберігати", result: "close"}, {text: "Скасувати", result: false}], style: "confirm"}}) → "save"
+  = false
+  bus confirm({promise: null, data: {message: "Спочатку виправте помилки", title: undefined, style: "alert", list: ["Memo is required"]}}) → true
+> $saveModified() → Save
+  bus confirm({promise: null, data: {message: "Елемент було змінено. Зберегти зміни?", title: "Підтвердження закриття", buttons: [{text: "Зберегти", result: "save"}, {text: "Не зберігати", result: "close"}, {text: "Скасувати", result: false}], style: "confirm"}}) → "save"
+  = false
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_dialog/document/edit/5","data":{"Document":{"Id":5,"Name":"1","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":5,"Name":"1","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus modalClose({Id: 5, Name: "1", Memo: "", Agent: {Id: 0, Name: ""}, Rows: [{Id: 1, Qty: 1}, {Id: 2, Qty: 2}]})
+  $dirty → false
+> Document.Name = "2"
+  ev Document.Name.changing(@Root.Document, "2", "1", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "2", "1", "Name")
+  $dirty → true
+> $saveModified() → Don't save
+  bus confirm({promise: null, data: {message: "Елемент було змінено. Зберегти зміни?", title: "Підтвердження закриття", buttons: [{text: "Зберегти", result: "save"}, {text: "Не зберігати", result: "close"}, {text: "Скасувати", result: false}], style: "confirm"}}) → "close"
+  = false
+  ev Model.dirty.change(false, undefined)
+  bus modalClose(false)
+  $dirty → false
+> $modalClose({ Id: 1 })
+  bus modalClose({Id: 1})
+> Document.Name = "3"
+  ev Document.Name.changing(@Root.Document, "3", "2", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "3", "2", "Name")
+  $dirty → true
+> $modalSaveAndClose(true, { validRequired: true }), invalid
+  throws TypeError: vm.$modalSaveAndClose is not a function
+> Document.Memo = "m"
+  ev Document.Memo.changing(@Root.Document, "m", "", "Memo")
+  ev Document.Memo.change(@Root.Document, "m", "", "Memo")
+> $modalSaveAndClose(true)
+  throws TypeError: vm.$modalSaveAndClose is not a function
+> $modalSaveAndClose("x"), not dirty
+  throws TypeError: vm.$modalSaveAndClose is not a function
+> $modalSelect(Rows), nothing selected
+  throws TypeError: vm.$modalSelect is not a function
+> Rows[1].$select(); $modalSelect(Rows)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
+  throws TypeError: vm.$modalSelect is not a function
+> $modalSelect(Document)
+  throws TypeError: vm.$modalSelect is not a function
+> $modalSelectChecked(Rows)
+  throws TypeError: vm.$modalSelectChecked is not a function
+> $setCurrentUrl("/document/edit/6")
+  bus modalSetBase("/_dialog/document/edit/6")
+> $baseUrl
+  = "/_dialog/document/edit/6"
+> $requery()
+  bus modalRequery("/_dialog/document/edit/6")
+
+## $loadLazy, lazy $reload, $dbRemove
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $loadLazy(Document, "Rows")
+  ev Model.lazy.init({elem: @Root.Document, prop: "Rows", modelInfo: null})
+  bus beginRequest("/_data/loadlazy")
+  fetch POST /_data/loadlazy {"baseUrl":"/_page/document/edit/5?pageSize=10","id":5,"prop":"Rows"} → 200 {"Rows":[{"Id":10,"Qty":1},{"Id":11,"Qty":2}],"Rows.$RowCount":2}
+  = Promise
+  bus endRequest("/_data/loadlazy")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Document.Rows.load(@Root.Document.Rows)
+  resolved @Root.Document.Rows
+> $loadLazy(Document, "Rows") loaded
+  ev Model.lazy.init({elem: @Root.Document, prop: "Rows", modelInfo: null})
+  = Promise
+  resolved @Root.Document.Rows
+> Rows.$RowCount, $loaded
+  = [2, true]
+> $reload(Rows)
+  bus closeAllPopups()
+  ev Model.lazy.init({elem: @Root.Document, prop: "Rows", modelInfo: null})
+  bus beginRequest("/_data/loadlazy")
+  fetch POST /_data/loadlazy {"baseUrl":"/_page/document/edit/5?pageSize=10","id":5,"prop":"Rows"} → 200 {"Rows":[{"Id":10,"Qty":1},{"Id":11,"Qty":2}],"Rows.$RowCount":2}
+  = Promise
+  bus endRequest("/_data/loadlazy")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Document.Rows.load(@Root.Document.Rows)
+  resolved @Root.Document.Rows
+> $dbRemoveSelected(Rows), nothing selected
+  bus closeAllPopups()
+> $dbRemove(Rows[0], null, { checkPermission: "CanDelete" })
+  console.warn "[!!Permissions] not found"
+  bus confirm({promise: null, data: {message: "Доступ заборонено!", title: undefined, style: "alert", list: undefined}}) → true
+> $dbRemove(null)
+> $dbRemove(Rows[0], "Delete?")
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Delete?", style: "confirm"}}) → true
+  bus beginRequest("/_data/dbRemove")
+  fetch POST /_data/dbRemove {"baseUrl":"/_page/document/edit/5","id":10,"prop":"Rows"} → 200 {}
+  bus endRequest("/_data/dbRemove")
+  ev Model.dirty.change(true, "Document.Rows")
+  ev Document.Rows[].remove(@Root.Document.Rows, @~Document.Rows[], 0)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[0])
+  $dirty → true
+> $dbRemoveSelected(Rows): the one $remove selected
+  bus closeAllPopups()
+  bus closeAllPopups()
+  bus beginRequest("/_data/dbRemove")
+  fetch POST /_data/dbRemove {"baseUrl":"/_page/document/edit/5","id":11,"prop":"Rows"} → 200 {}
+  bus endRequest("/_data/dbRemove")
+  ev Document.Rows[].remove(@Root.Document.Rows, @~Document.Rows[], 0)
+> data
+  = TRoot {
+      Document: TDocument {
+        Id: 5
+        Name: "Doc"
+        Memo: ""
+        Agent: TAgent {
+          Id: 0
+          Name: ""
+        }
+        Rows: [] $RowCount=0
+      }
+    }
+
+## $dbRemove: not lazy, refused
+> create
+  ev TDocumentArray.construct(@~Documents)
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/index/0
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> Documents[1].$select(); $dbRemoveSelected(Documents)
+  ev Documents[].select(@Root.Documents, @Root.Documents[1])
+  bus closeAllPopups()
+  bus closeAllPopups()
+  bus beginRequest("/_data/dbRemove")
+  fetch POST /_data/dbRemove {"baseUrl":"/_page/document/index/0","id":2} → 255 "UI:In use"
+  bus endRequest("/_data/dbRemove")
+  bus confirm({promise: null, data: {message: "In use", title: undefined, style: "alert", list: undefined}}) → true
+> Documents.length
+  = 2
+
+## $expand: a tree
+> create
+  ev TFolderArray.construct(@~Folders)
+  ev TFolderArray.construct(@~Folders[].Items)
+  ev TFolder.construct(@~Folders[], "Folders[]")
+  ev TFolderArray.construct(@~Folders[].Items)
+  ev TFolder.construct(@~Folders[], "Folders[]")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/folder/index/0
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/folder/index/0", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $expand(Folders[0], "Items", true)
+  bus beginRequest("/_data/expand")
+  fetch POST /_data/expand {"baseUrl":"/_page/folder/index/0","id":1} → 200 {"Items":[{"Id":11,"Name":"Child","HasChildren":false,"Items":[]}]}
+  = Promise
+  bus endRequest("/_data/expand")
+  ev TFolderArray.construct(@~Folders[].Items[].Items)
+  ev TFolder.construct(@~Folders[].Items[], "Items[]")
+  resolved @Root.Folders[0].Items
+> $expand(Folders[0], "Items", true) again
+  = Promise
+  resolved @Root.Folders[0].Items
+> $expand(Folders[1], "Items")
+  = Promise
+  resolved @Root.Folders[1].Items
+> data
+  = TRoot {
+      Folders: [
+        [0] TFolder $expanded {
+          Id: 1
+          Name: "Root"
+          HasChildren: true
+          Items: [
+            [0] TFolder {
+              Id: 11
+              Name: "Child"
+              HasChildren: false
+              Items: []
+            }
+          ]
+        }
+        [1] TFolder {
+          Id: 2
+          Name: "Empty"
+          HasChildren: false
+          Items: []
+        }
+      ]
+    }
+
+## $invoke, $invokeServer, $asyncValid
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $invoke("calc", { X: 1 })
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"calc","baseUrl":"/_page/document/edit/5","data":{"X":1}} → 200 {"Result":1}
+  = Promise
+  bus endRequest("/_data/invoke")
+  resolved {Result: 1}
+> $invoke("calc", { X: 1 }, "/agent/edit")
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"calc","baseUrl":"/_page/agent/edit/index/0","data":{"X":1}} → 200 {"Result":1}
+  = Promise
+  bus endRequest("/_data/invoke")
+  resolved {Result: 1}
+> $invoke("calc") → text
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"calc","baseUrl":"/_page/document/edit/5"} → 200 "plain"
+  = Promise
+  bus endRequest("/_data/invoke")
+  resolved "plain"
+> $invoke("calc") → a number
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"calc","baseUrl":"/_page/document/edit/5"} → 200 5
+  = Promise
+  bus endRequest("/_data/invoke")
+  alert("Invalid response type for $invoke")
+  pending
+> $invoke("calc") → 255
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"calc","baseUrl":"/_page/document/edit/5"} → 255 "UI:Refused"
+  = Promise
+  bus endRequest("/_data/invoke")
+  bus confirm({promise: null, data: {message: "Refused", title: undefined, style: "alert", list: undefined}}) → true
+  pending
+> $invoke("calc", null, null, { catchError: true }) → 255
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"calc","baseUrl":"/_page/document/edit/5"} → 255 "UI:Refused"
+  = Promise
+  bus endRequest("/_data/invoke")
+  rejected "UI:Refused"
+> $invoke("calc", null, null, { hideIndicator: true })
+  fetch POST /_data/invoke {"cmd":"calc","baseUrl":"/_page/document/edit/5"} → 200 {}
+  = Promise
+  resolved {}
+> $invokeServer("/document/approve", Document, "Sure?", { reloadAfter: true })
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Sure?", style: "confirm"}}) → true
+  = Promise
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"approve","baseUrl":"/_page/document/index/0","data":{"Id":5}} → 200 {}
+  bus endRequest("/_data/invoke")
+  bus closeAllPopups()
+  bus beginRequest("/_data/reload")
+  fetch POST /_data/reload {"baseUrl":"/_page/document/edit/5"} → 200 {"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/edit/5")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  resolved undefined
+> $invokeServer("/document/approve", Document, null, { requeryAfter: true })
+  bus closeAllPopups()
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"approve","baseUrl":"/_page/document/index/0","data":{"Id":5}} → 200 {}
+  = Promise
+  bus endRequest("/_data/invoke")
+  bus requery(vm:A, undefined)
+  resolved undefined
+> $asyncValid("check", { X: 1 })
+  = Promise
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"check","baseUrl":"/_page/document/edit/5","data":{"X":1}} → 200 {"Result":{"Value":true}}
+  bus endRequest("/_data/invoke")
+  resolved true
+> $asyncValid("check", { X: 1 }) again
+  = true
+> $asyncValid("check", { X: 2 })
+  = Promise
+  bus beginRequest("/_data/invoke")
+  fetch POST /_data/invoke {"cmd":"check","baseUrl":"/_page/document/edit/5","data":{"X":2}} → 200 {"Result":{"Value":true}}
+  bus endRequest("/_data/invoke")
+  resolved true
+> bus beginRequest from another page; $isLoading; $invokeServer
+  bus beginRequest("/other")
+  = [true, false, Promise]
+> bus endRequest; $isLoading
+  bus endRequest("/other")
+  = false
+> $longOperation(async)
+  bus beginRequest("")
+  bus toast("inside")
+  = Promise
+  bus endRequest("")
+  resolved undefined
+
+## $exec, $canExecute, $execSelected, $delegate, $handleClick
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $exec("rename", Document)
+  throws TypeError: vm.$exec is not a function
+> $exec("missing")
+  throws TypeError: vm.$exec is not a function
+> $exec("rename", Document, "No?")
+  throws TypeError: vm.$exec is not a function
+> $exec("confirmed", Document)
+  throws TypeError: vm.$exec is not a function
+> $canExecute("guarded", Rows[0]), Rows[1]
+  throws TypeError: vm.$canExecute is not a function
+> $canExecute("missing")
+  throws TypeError: vm.$canExecute is not a function
+> $canExecSel("guarded", Rows), nothing selected
+  throws TypeError: vm.$canExecSel is not a function
+> Rows[1].$select(); $execSelected("guarded", Rows)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
+  throws TypeError: vm.$execSelected is not a function
+> $execSelected("guarded", Rows, "Sure?")
+  throws TypeError: vm.$execSelected is not a function
+> $execSelected("guarded", Document)
+  throws TypeError: vm.$execSelected is not a function
+> $exec("rename", Document, null, { checkPermission: "CanEdit" })
+  throws TypeError: vm.$exec is not a function
+> $isPermissionsDisabled({ checkPermission: "CanEdit" }, { $permissions: { CanEdit: true } })
+  throws TypeError: vm.$isPermissionsDisabled is not a function
+> $delegate("filter")(Rows[0])
+  = false
+> $delegate("missing")
+  console.error "Delegate \"missing\" not found in the template"
+> $handleClick("click", event)
+  throws TypeError: vm.$handleClick is not a function
+> $move("down", Rows[0]); $canMove("up", Rows[0])
+  throws TypeError: vm.$move is not a function
+> $moveSelected("up", Rows); $canMoveSelected("up", Rows)
+  throws TypeError: vm.$moveSelected is not a function
+> $hasSelected(Rows), $hasChecked(Rows)
+  throws TypeError: vm.$hasChecked is not a function
+> data
+  = TRoot {
+      Document: TDocument {
+        Id: 5
+        Name: "Doc"
+        Memo: ""
+        Agent: TAgent {
+          Id: 0
+          Name: ""
+        }
+        Rows: [
+          [0] TRow {
+            Id: 1
+            Qty: 1
+          }
+          [1] TRow $selected {
+            Id: 2
+            Qty: 2
+          }
+        ]
+      }
+    }
+
+## $exec, $canExecute, $navigate, $dialog: read-only model
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $exec("readOnly", Document)
+  throws TypeError: vm.$exec is not a function
+> $exec("plain", Document, null, { checkReadOnly: true })
+  throws TypeError: vm.$exec is not a function
+> $exec("plain", Document)
+  throws TypeError: vm.$exec is not a function
+> $canExecute("readOnly", Document), $canExecute("plain", Document, { checkReadOnly: true })
+  throws TypeError: vm.$canExecute is not a function
+> $navigate("/document/edit", 6, false, null, { checkReadOnly: true })
+  throws TypeError: vm.$navigate is not a function
+> $dialog("show", "/x", Document, null, { checkReadOnly: true })
+  throws TypeError: vm.$dialog is not a function
+> Document.Memo
+  = ""
+
+## $navigate, files, reports, the side pane
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $href("/document/edit", Document), $href("/document/edit/new"), $href("/document/edit", { Id: 3, Mode: "x" })
+  throws TypeError: vm.$href is not a function
+> $mailto("a@b.c", "Hi there"), $callphone("123")
+  throws TypeError: vm.$mailto is not a function
+> $navigate("/document/edit", Document)
+  throws TypeError: vm.$navigate is not a function
+> $navigate("/document/edit", 6, true, Rows)
+  throws TypeError: vm.$navigate is not a function
+> Document.Memo = "m"; $navigate(…, { saveRequired: true })
+  ev Document.Memo.changing(@Root.Document, "m", "", "Memo")
+  ev Model.dirty.change(true, "Document.Memo")
+  ev Document.Memo.change(@Root.Document, "m", "", "Memo")
+  throws TypeError: vm.$navigate is not a function
+  $dirty → true
+> $navigateSimple("/document/edit/7"), $navigateSimple("/x", true)
+  throws TypeError: vm.$navigateSimple is not a function
+> $navigateExternal("https://x"), $navigateExternal("https://y", true)
+  throws TypeError: vm.$navigateExternal is not a function
+> $openSelected("/row/edit", Rows), nothing selected
+  throws TypeError: vm.$openSelected is not a function
+> Rows[0].$select(); $openSelected("/row/edit", Rows, true)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[0])
+  throws TypeError: vm.$openSelected is not a function
+> $openSelectedFrame("/row/frame", Rows)
+  throws TypeError: vm.$openSelectedFrame is not a function
+> $download("/doc.pdf")
+  throws TypeError: vm.$download is not a function
+> $file("/document/print", 5), { action: "download" }, { action: "print" }
+  throws TypeError: vm.$file is not a function
+> $attachment("/document/att", 3), { export: true }, { newWindow: true }, { print: true }
+  throws TypeError: vm.$attachment is not a function
+> $report("rep", Document)
+  throws TypeError: vm.$report is not a function
+> $report("rep", Document, { export: true, format: "pdf" }), { print: true }, { attach: true }, { viewer: "v" }
+  throws TypeError: vm.$report is not a function
+> $report("rep", Document, { validRequired: true })
+  throws TypeError: vm.$report is not a function
+> $export(Document, "/document/exp", { F: 1 }), $export()
+  throws TypeError: vm.$export is not a function
+> $showSidePane("/agent/pane", 7, { X: 1 }); $hideSidePane()
+  throws TypeError: vm.$showSidePane is not a function
+> $shareUrl()
+  bus activeTabUrl({url: ""}) → "/document/edit/5"
+  = "/document/edit/5"
+> $showHelp("/doc"), $helpHref("/doc")
+  throws TypeError: vm.$showHelp is not a function
+> $print()
+  window.print()
+> $inlineOpen("dlg"); $inlineClose("dlg", 1); $inlineDepth(); $closeAllPopups()
+  throws TypeError: vm.$inlineOpen is not a function
+> create
+  ev TDocumentArray.construct(@~Documents)
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TRoot.construct(@Root, "")
+> mount L /_page/document/index/0
+  bus registerData(vm:L, {caller: null}) → vm:A
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  [L] ev Model.load(@Root, @Root, false)
+  $dirty → false
+> L: Documents[0].$select(); $openSelected("{Name}", Documents); $openSelected("{Missing}", Documents)
+  [L] ev Documents[].select(@Root.Documents, @Root.Documents[0])
+  throws TypeError: l.$openSelected is not a function
+
+## $upload, $uploadBlob, $uploadBlobFile
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $upload("/document/upload", "image/*", { Key: "k" })
+  throws TypeError: vm.$upload is not a function
+> $upload(…) → 255 UI:
+  throws TypeError: vm.$upload is not a function
+> $upload(…) → 500
+  throws TypeError: vm.$upload is not a function
+> $upload(…) → network failure
+  throws TypeError: vm.$upload is not a function
+> $upload(…, { catchError: true }) → network failure
+  throws TypeError: vm.$upload is not a function
+> $uploadBlob("/document/blob", "*", { Base: "B", Id: 5 })
+  throws TypeError: vm.$uploadBlob is not a function
+> $uploadBlobFile("/document/blob", file, { Base: "B", Id: 5 }) → 255
+  throws TypeError: vm.$uploadBlobFile is not a function
+
+## $eusign
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $eusign("/document/sign", 3)
+  throws TypeError: vm.$eusign is not a function
+
+## a dialog and its caller: saveEvent, $emitCaller, $saveCaller, $dirtyCaller
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> create
+  ev TAgent.construct(@~Agent, "Agent")
+  ev TRoot.construct(@Root, "")
+> mount D /_dialog/agent/edit/7
+  bus registerData(vm:D, {caller: null}) → vm:A
+  bus isModalRequery({url: "/_dialog/agent/edit/7", result: false})
+  [D] ev Model.load(@Root, @Root, false)
+> D.$caller
+  = vm:A
+> D.__parseControllerAttributes("{'saveEvent':'agent.saved','alwaysOk':true,'placement':'right'}")
+  = {alwaysOk: true, placement: "right"}
+> D: Agent.Name = "New"; $save()
+  [D] ev Agent.Name.changing(@Root.Agent, "New", "Agent", "Name")
+  [D] ev Model.dirty.change(true, "Agent.Name")
+  [D] ev Agent.Name.change(@Root.Agent, "New", "Agent", "Name")
+  bus closeAllPopups()
+  [D] ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_dialog/agent/edit/7","data":{"Agent":{"Id":7,"Name":"New"}}} → 200 {"Agent":{"Id":7,"Name":"New"}}
+  = Promise
+  bus endRequest("/_data/save")
+  [D] ev Model.saved(@Root)
+  [A] ev agent.saved(@Root)
+  [D] ev Model.dirty.change(false, undefined)
+  resolved {Id: 7, Name: "New"}
+> D: $emitSaveEvent(); $emitCaller("x.y", 1, 2)
+  [A] ev agent.saved(@Root)
+  [A] ev x.y(1, 2)
+> D: $dirtyCaller(); A.$isDirty
+  [A] ev Model.dirty.change(true, undefined)
+  = true
+> D: $saveCaller()
+  bus closeAllPopups()
+  [A] ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  = Promise
+  bus endRequest("/_data/save")
+  [A] ev TRow.construct(@~Document.Rows[], "Rows[]")
+  [A] ev TRow.construct(@~Document.Rows[], "Rows[]")
+  [A] ev Model.saved(@Root)
+  [A] ev Model.dirty.change(false, undefined)
+  resolved {Id: 5, Name: "Doc", Memo: "", Agent: {Id: 0, Name: ""}, Rows: [{Id: 1, Qty: 1}, {Id: 2, Qty: 2}]}
+> D: $emitGlobal("g.ev", 1); $emitParentTab("p.ev", 2)
+  bus globalAppEvent({event: "g.ev", data: 1})
+    [A] ev g.ev(1)
+    [D] ev g.ev(1)
+  bus toParentTab({event: "p.ev", source: vm:D, data: 2})
+> A: $emitCaller("x") with no caller
+  console.error "There is no caller here"
+> A.$destroy(); D: $saveCaller(), $emitCaller("x")
+  [A] ev Model.unload(@Root)
+  bus registerData(null)
+  html.removePrintFrame()
+  = [null, undefined]
+
+## the bus into a page, and its end
+> create
+  ev TDocumentArray.construct(@~Documents)
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/index/0
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> listeners
+  = {beginRequest: 1, childrenSaved: 1, endRequest: 1, globalAppEvent: 1, globalPeriodChanged: 1, invokeTest: 1, queryChange: 1, signalEvent: 1}
+> bus childrenSaved, another token
+  bus childrenSaved({token: "other", toast: "No"})
+> bus childrenSaved, the page's token
+  bus childrenSaved({token: "1630", update: @Root.Documents, toast: "Saved", id: 2})
+    bus toast({text: "Saved", style: "success", time: undefined})
+    bus closeAllPopups()
+    bus beginRequest("/_data/reload")
+    fetch POST /_data/reload {"baseUrl":"/_page/document/index/0?pageSize=20&dir=asc&order=Name"} → 200 {"Documents":[{"Id":1,"Name":"One"},{"Id":2,"Name":"Two"}],"$ModelInfo":{"Documents":{"PageSize":20,"Offset":0,"SortOrder":"Name","SortDir":"asc"}}}
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/index/0?pageSize=20&dir=asc&order=Name")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+> bus globalPeriodChanged; globalAppEvent; signalEvent
+  bus globalPeriodChanged({From: 1})
+    ev GlobalPeriod.change(@Root, {From: 1})
+  bus globalAppEvent({event: "app.ev", data: 1})
+    ev app.ev(1)
+  bus signalEvent({event: "sig.ev", data: 2})
+    ev Signal.sig.ev(2)
+> bus invokeTest
+  bus invokeTest({target: "controller", action: "eval", path: "Documents.length"})
+  = 2
+> $emit("cwChange", Documents)
+  bus closeAllPopups()
+  bus beginRequest("/_data/reload")
+  fetch POST /_data/reload {"baseUrl":"/_page/document/index/0?pageSize=20&dir=asc&order=Name"} → 200 {"Documents":[{"Id":1,"Name":"One"},{"Id":2,"Name":"Two"}],"$ModelInfo":{"Documents":{"PageSize":20,"Offset":0,"SortOrder":"Name","SortDir":"asc"}}}
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/index/0?pageSize=20&dir=asc&order=Name")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  ev TDocument.construct(@~Documents[], "Documents[]")
+  bus isModalRequery({url: "/_page/document/index/0", result: false})
+  ev Model.load(@Root, null, false)
+> $destroy()
+  ev Model.unload(@Root)
+  bus registerData(null)
+  html.removePrintFrame()
+> listeners
+  = {}
+> bus signalEvent; globalAppEvent
+  bus signalEvent({event: "sig.ev", data: 3})
+  bus globalAppEvent({event: "app.ev", data: 4})
+
+## helpers: format, errors, $nodirty, $clearObject
+> create
+  ev TAgent.construct(@~Document.Agent, "Agent")
+  ev TRowArray.construct(@~Document.Rows)
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TDocument.construct(@~Document, "Document")
+  ev TRoot.construct(@Root, "")
+> mount A /_page/document/edit/5
+  bus registerData(vm:A, {caller: null}) → null
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  $dirty → false
+> $format(1234.5, "Currency"), $format(0, { dataType: "Number", hideZeros: true }), $format("x", { format: "[{0}]" })
+  throws TypeError: vm.$format is not a function
+> $format(new Date(2026, 0, 15), { dataType: "Date" }), $format(5), $format(5, { mask: "##-##" })
+  throws TypeError: vm.$format is not a function
+> $getNegativeRedClass(-1), (1), ("x")
+  throws TypeError: vm.$getNegativeRedClass is not a function
+> $maxChars("abcdef", 3), $toJson({ A: 1 }), $sanitize("<b>x</b>")
+  throws TypeError: vm.$maxChars is not a function
+> $hasError("Document.Memo"), $errorMessage("Document.Memo")
+  throws TypeError: vm.$hasError is not a function
+> $getErrors(), $getErrors("warning"), $getErrors(["error"])
+  throws TypeError: vm.$getErrors is not a function
+> $hasError, $errorMessage after $getErrors
+  throws TypeError: vm.$hasError is not a function
+> $hasSelected(Rows, { validRequired: true })
+  = false
+> $nodirty(async: Memo = "m")
+  throws TypeError: vm.$nodirty is not a function
+> $isDirty, $isPristine, $canSave, $isLoading, $modelInfo, $indirectUrl, $query
+  = [false, true, false, false, {}, "", {}]
+> $clearObject(Document.Agent); $clearObject(Rows); $clearObject({ A: 1 }); $clearObject(null)
+  throws TypeError: vm.$clearObject is not a function
+> $defer(fn)
+  ev Document.Name.changing(@Root.Document, "deferred", "Doc", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "deferred", "Doc", "Name")
+  $dirty → true
+> $ctrl members
+  = ["$save", "$ensureSaved", "$savePart", "$invoke", "$close", "$modalClose", "$msg", "$alert", "$confirm", "$saveModified", "$asyncValid", "$toast", "$requery", "$reload", "$notifyOwner", "$defer", "$setFilter", "$clearFilter", "$expand", "$emitCaller", "$emitSaveEvent", "$emitGlobal", "$emitParentTab", "$longOperation", "$requeryNew", "$saveCaller", "$dirtyCaller", "$shareUrl", "$isDirty", "$isPristine"]
+> data
+  = TRoot {
+      Document: TDocument {
+        Id: 5
+        Name: "deferred"
+        Memo: ""
+        Agent: TAgent {
+          Id: 0
+          Name: ""
+        }
+        Rows: [
+          [0] TRow {
+            Id: 1
+            Qty: 1
+          }
+          [1] TRow {
+            Id: 2
+            Qty: 2
+          }
+        ]
+      }
+    }

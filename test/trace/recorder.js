@@ -9,7 +9,7 @@
 // type, `array: true` adds `<Type>Array`; a property type is a constructor, or a type name as a string.
 // The constructors get the declared names: the core dispatches on constructor.name.
 // known(v): the text of a value the caller knows (the page recorder: a view model, a promise), or undefined.
-function createRecorder({ cmn, period, utils, known, origin }) {
+function createRecorder({ cmn, period, utils, known, origin, raw = v => v }) {
 	const lines = [];
 	let handlers = {};
 	let root = null;
@@ -37,17 +37,19 @@ function createRecorder({ cmn, period, utils, known, origin }) {
 	}
 
 	// Data properties only (_meta_.props): reading any other enumerable member may run a getter
-	// ($valid validates the whole model) and change what is being recorded.
+	// ($valid validates the whole model) and change what is being recorded. Compared raw (raw: Vue 3's toRaw):
+	// the port's model is reached through reactive() and through its hidden members, which Vue leaves raw.
 	function addr(x) {
-		if (x._root_ === x) return 'Root';
-		const p = x._parent_;
+		x = raw(x);
+		if (raw(x._root_) === x) return 'Root';
+		const p = raw(x._parent_);
 		if (!p) return '?';
 		if (Array.isArray(p)) {
 			const i = p.indexOf(x);
 			return `${addr(p)}[${i < 0 ? '?' : i}]`;
 		}
 		for (const k in p._meta_.props)
-			if (p[k] === x) return `${addr(p)}.${k}`;
+			if (raw(p[k]) === x) return `${addr(p)}.${k}`;
 		return `${addr(p)}.?`;
 	}
 
@@ -194,7 +196,7 @@ function createRecorder({ cmn, period, utils, known, origin }) {
 	}
 
 	// As the page does it: modelData() (VueDataScripter.CreateScript), then the host (FOOTER),
-	// then __doInit__ (base.js: _modelLoad_, _seal_).
+	// then __doInit__ (base.js: _modelLoad_, _seal_; the package has no _seal_: NET48.md).
 	// A scenario's heading; with no model after it, operations call the modules directly.
 	function section(title) {
 		lines.push('', `## ${title}`);
@@ -229,7 +231,8 @@ function createRecorder({ cmn, period, utils, known, origin }) {
 		root._host_ = { $viewModel: createViewModel(write), $ctrl: {} };
 		op('load', () => {
 			root._modelLoad_(null);
-			root._seal_(root);
+			if (root._seal_)
+				root._seal_(root);
 		});
 		return root;
 	}

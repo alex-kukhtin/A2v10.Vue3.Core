@@ -1,0 +1,21 @@
+{
+  "name": "@a2v10/shell-tabbed",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The tabbed shell on Vue 3 (a2v10-shell-tabbed.js): tabs, dialogs, toasts, the header and the menu; creates the document's one app.",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && rollup -c"
+  },
+  "dependencies": {
+    "@a2v10/platform": "workspace:*",
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "@rollup/plugin-terser": "^1.0.0",
+    "rollup": "^4.64.7",
+    "typescript": "6.0.3"
+  }
+}

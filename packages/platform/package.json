@@ -1,0 +1,23 @@
+{
+  "name": "@a2v10/platform",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A2v10 client platform on Vue 3: the module registry, the vocabulary, the runtime compiler. No shell, no engine's components.",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@a2v10/model": "workspace:*",
+    "@vue/compiler-dom": "3.5.43",
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

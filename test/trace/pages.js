@@ -229,6 +229,29 @@ const PAGES = [
 			() => vm.$dialog('show', '/document/show', vm.Document, null, { saveRequired: true }));
 	},
 
+	async function dialogRefused(t) {
+		const reply = replies();
+		t.section('$dialog, $report: validRequired on an invalid model; saveRequired refused', {
+			server: { 'POST /_data/save': reply.route },
+			shell: { modal: () => ({ Id: 1 }) }
+		});
+		const vm = await t.page('A', {
+			decl: DOC, url: '/_page/document/edit/5', data: doc(5),
+			template: { validators: { 'Document.Memo': 'Memo is required' } }
+		});
+		await t.op('$dialog("show", …, { validRequired: true }), invalid',
+			() => vm.$dialog('show', '/document/show', vm.Document, null, { validRequired: true }));
+		await t.op('$report("rep", Document, { validRequired: true }), invalid',
+			() => vm.$report('rep', vm.Document, { validRequired: true }));
+		await t.op('Document.Name = "1"', () => { vm.Document.Name = '1'; });
+		reply.next = { status: 255, text: 'UI:Cannot save' };
+		await t.op('$dialog("show", …, { saveRequired: true }), the save refused by the server',
+			() => vm.$dialog('show', '/document/show', vm.Document, null, { saveRequired: true }));
+		const ro = await t.page('R', { decl: DOC, url: '/_page/document/edit/new', data: doc(0), info: { ReadOnly: true } });
+		await t.op('R: $dialog("show", …, { saveRequired: true }), new and read-only: $save does not save',
+			() => ro.$dialog('show', '/document/show', ro.Document, null, { saveRequired: true }));
+	},
+
 	async function messages(t) {
 		t.section('$confirm, $alert, $msg, $toast, $remove', {
 			shell: { confirm: data => data.message !== 'No?' }
@@ -567,7 +590,7 @@ const PAGES = [
 			},
 			url: '/_dialog/agent/edit/7', inDialog: true, data: { Agent: { Id: 7, Name: 'Agent' } }
 		});
-		await t.op('D.$caller === A', () => d.$caller === a);
+		await t.op('D.$caller', () => d.$caller); // by its name: the port's caller is A's controller, not the object a runner mounts
 		await t.op('D.__parseControllerAttributes("{\'saveEvent\':\'agent.saved\',\'alwaysOk\':true,\'placement\':\'right\'}")',
 			() => d.__parseControllerAttributes("{'saveEvent':'agent.saved','alwaysOk':true,'placement':'right'}"));
 		await t.op('D: Agent.Name = "New"; $save()', () => { d.Agent.Name = 'New'; return d.$save(); });

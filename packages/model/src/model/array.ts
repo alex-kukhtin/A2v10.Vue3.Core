@@ -164,11 +164,10 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 		return this;
 	};
 
-	// Replaces the elements with new ones from src; no events; $RowCount, if any, is the new length.
+	// Replaces the elements with new ones from src; no events, no dirtiness; $RowCount, if any, is the new length.
+	// The load door (B7): $merge and the controller's loaders come here, on a read-only model too.
 	proto.$copy = function (this: ModelArray, src: unknown) {
-		if (this.$root.isReadOnly) // isReadOnly: no member has that name, never true (NET48-BUGS.md B7, kept)
-			return this;
-		this.$empty();
+		this.__empty__();
 		if (isArray(src)) {
 			for (let i = 0; i < src.length; i++)
 				this.push(this.$new(src[i]));
@@ -210,7 +209,7 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 	};
 
 	proto.$empty = function (this: ModelArray) {
-		if (this.$root.isReadOnly)
+		if (this.$root.$readOnly) // read-only: changed from inside, refused (B7)
 			return this;
 		this._root_.$setDirty(true, this._path_);
 		return this.__empty__();
@@ -290,7 +289,7 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 	// Removes an element; the one in its place, or the last, gets selected. The last child of a
 	// tree element gone: the element itself is selected.
 	proto.$remove = function (this: ModelArray, item: Elem) {
-		if (this.$root.isReadOnly)
+		if (this.$root.$readOnly) // B7
 			return this;
 		if (!item)
 			return this;
@@ -379,7 +378,7 @@ export function createArrays(ctx: ModelContext, tpl: Template) {
 
 	proto.$resetLazy = function (this: ModelArray) {
 		this.$lock = false;
-		this.$empty();
+		this.__empty__(); // before a reload: the load door's, not a change (B7)
 		if (this.$loaded)
 			this.$loaded = false;
 		return this;

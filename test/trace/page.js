@@ -128,8 +128,10 @@ function createPageRecorder() {
 
 	// --- values the model recorder does not know --------------------------------------------------
 
+	// A page is Net48's Vue instance, or the port's controller (env.isPage); the name its scenario gave it.
 	function known(v) {
-		if (v._isVue) return `vm:${names.get(v) ?? mounting ?? '?'}`;
+		if (names.has(v)) return `vm:${names.get(v)}`;
+		if (v._isVue || (env.isPage && env.isPage(v))) return `vm:${mounting ?? '?'}`;
 		if (v instanceof Promise) return 'Promise';
 		if (v instanceof Error) return `${v.constructor.name}(${JSON.stringify(v.message)})`;
 		if (v instanceof FormData) return `FormData(${[...v.keys()].join(', ')})`;
@@ -137,11 +139,15 @@ function createPageRecorder() {
 		return undefined;
 	}
 
-	// env: { cmn, period, utils, bus, mount(root, spec) → view model }, from the runner once the core is loaded.
+	// env: { cmn, period, utils, bus, mount(root, spec) → view model }, from the runner once the core is loaded;
+	// for the port also: isPage(v), pageOf(vm) (the controller behind a mounted page), raw(root) (Vue's toRaw).
 	function attach(e) {
 		env = e;
-		const origin = root => pages.length > 1 && roots.has(root) ? `[${roots.get(root)}]` : undefined;
-		rec = createRecorder({ cmn: e.cmn, period: e.period, utils: e.utils, known, origin });
+		const origin = root => {
+			const r = env.raw ? env.raw(root) : root;
+			return pages.length > 1 && roots.has(r) ? `[${roots.get(r)}]` : undefined;
+		};
+		rec = createRecorder({ cmn: e.cmn, period: e.period, utils: e.utils, known, origin, raw: e.raw });
 		// Console and stray rejections, at any time: a then-chain logs after its operation returned.
 		console.error = (...a) => rec.write(`console.error ${a.map(x => rec.fmt(x)).join(' ')}`);
 		console.warn = (...a) => rec.write(`console.warn ${a.map(x => rec.fmt(x)).join(' ')}`);
@@ -222,6 +228,8 @@ function createPageRecorder() {
 		await op(`mount ${name} ${spec.url}`, () => {
 			vm = env.mount(root, spec);
 			names.set(vm, name);
+			if (env.pageOf)
+				names.set(env.pageOf(vm), name);
 			pages.push(vm);
 		});
 		mounting = null;

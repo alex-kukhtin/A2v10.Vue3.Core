@@ -53,7 +53,7 @@
   = [10, "Locked", false, 50, undefined]
 > $root, $parent, $vm present
   = [true, true, true]
-> add a property to a sealed element
+> add a property to an element after load
   throws TypeError: Cannot add property Extra, object is not extensible
 > root.$setDirty(false)
   ev Model.dirty.change(false, undefined)
@@ -373,13 +373,18 @@
   ev Rows[].RowNo.changing(@Root.Rows[0], 1, 0, "RowNo")
   ev Rows[].RowNo.change(@Root.Rows[0], 1, 0, "RowNo")
   = [1, 9]
+> root.$setDirty(false); $copy([{Id: 41, RowNo: 1}]); $dirty
+  ev Model.dirty.change(false, undefined)
+  ev Model.dirty.change(true, "Rows")
+  ev TRow.construct(@~Rows[], "Rows[]")
+  = true
 > data
   = TRoot {
-      Rows: [ $RowCount=9
+      Rows: [ $RowCount=1
         [0] TRow {
-          Id: 31
-          Qty: 2
-          Price: 3
+          Id: 41
+          Qty: 0
+          Price: 0
           Sum: 0
           RowNo: 1
         }
@@ -708,27 +713,33 @@
   ev Agents[].add(@Root.Agents, @Root.Agents[1], 1)
   ev Agents[].select(@Root.Agents, @Root.Agents[1])
   = @Root.Agents[1]
+> Agents.$remove(Agents[0]) (read-only)
+  ev Agents[].remove(@Root.Agents, @~Agents[], 0)
+  = "2"
+> Agents.$empty() (read-only)
+  = 0
+> Document.$set({Name: "set"}) (read-only)
+  = "set"
+> $merge({Agents: [{Id: 3}]}) (read-only: the load door)
+  ev TAgent.construct(@~Agents[], "Agents[]")
+  = "3"
 > Document.Period
-  = P(D2026-01-01T00:00:00..D2026-01-31T00:00:00)
+  = P(D1901-01-01T00:00:00..D2999-12-31T00:00:00)
 > _findRootModelInfo()
   = {PageSize: 20, Offset: 0, SortOrder: "Name", SortDir: "asc", Permissions: 7, Filter: {Fragment: "x", Period: P(D2026-01-01T00:00:00..D2026-03-31T00:00:00)}}
 > data
   = TRoot {
       Agents: [
         [0] TAgent {
-          Id: 1
-          Name: "One"
-        }
-        [1] TAgent $selected {
-          Id: 2
-          Name: ""
+          Id: 3
+          Name: "Three"
         }
       ]
       Document: TDocument {
         Id: 0
-        Name: "x"
+        Name: "set"
         Perm: 0
-        Period: P(D2026-01-01T00:00:00..D2026-01-31T00:00:00)
+        Period: P(D1901-01-01T00:00:00..D2999-12-31T00:00:00)
       }
     }
 

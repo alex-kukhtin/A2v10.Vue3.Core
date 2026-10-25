@@ -1,0 +1,21 @@
+{
+  // tsc checks and emits ESM + .d.ts + maps into build/; @a2v10/core bundles build/ (with vue) into its dist/.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // The platform lives in the browser: DOM is its host.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+    "strict": true,
+    "noEmitOnError": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "declaration": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "rootDir": "src",
+    "outDir": "build"
+  },
+  "include": ["src"]
+}

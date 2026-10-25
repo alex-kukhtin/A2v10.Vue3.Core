@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!-- The tabbed shell's stand: the page as the Vue 3 layout will be (_Layout.tabbed.vue3.cshtml with
+     Default.tabbed.vue3.cshtml, rendered as Razor would: debug configuration, no nav pane, no banner, English
+     texts), the theme's CSS from A2v10.Web.Assets, and the shell script's start (Resources/shellPlain.js for Vue 3).
+     Pages and the home page are the stand server's synthetic ones. -->
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="helpUrl" content="" />
+	<meta name="rootUrl" content="" />
+	<title></title>
+	<link href="/css/tabbed.min.css" rel="stylesheet">
+	<link href="/css/default.colorscheme.css" rel="stylesheet">
+</head>
+<body>
+<div id="shell" class="mdi-shell debug" v-cloak>
+	<a2-mdi-header :title="title" person-name="Stand User" :has-profile="false" profile-text="Profile" enable-dark="False"
+		is-dark="False"
+		accesskeyprofile-text="Profile" :logo="''" :has-license="false" license-text="License" >
+	</a2-mdi-header>
+	<div class="load-indicator" v-show="processing"></div>
+	<a2-mdi-navbar :menu="menu" :columns="columns"></a2-mdi-navbar>
+	<div class="mdi-tabs-container" v-on:contextmenu.stop.prevent="tabsContextMenu">
+		<ul class="mdi-tabs" :style="{'--maxTabWidth': maxTabWidth}">
+			<li ref="home" v-on:click.stop.prevent="selectHome()" tab-key="10" class="tab-home" v-bind:class="{active: isHomeActive()}">
+				<span class="ico ico-home"></span>
+			</li>
+			<li v-for="t in tabs" :key="t.key" :tab-key="t.key" :title="t.title" v-on:mouseleave="t.debug = false"
+				ref="tab" :class="{active: isTabActive(t), drag: isDragged(t), willclose: willClose(t)}" v-on:click.stop.prevent="selectTab(t, false, $event)" v-on:mouseup.middle="closeTab(t)"
+					:style="{left:offsetLeft(t), order: t.o}" v-on:pointerdown="pointerDown($event, t)" v-on:pointermove="pointerMove($event, t)" v-on:pointerup="pointerUp($event,t)">
+				<span v-text="tabTitle(t)" class="tab-title"></span>
+				<span class="close ico ico-clear" v-on:click.stop.prevent="closeTab(t)"></span>
+				<span class="tab-tooltip" v-if="t.debug" v-text="tabTooltip(t)" v-on:click="clickTooltip(t)"></span>
+			</li>
+		</ul>
+		<div class="mdi-tabs-menu">
+			<span class="open-menu ico ico-chevron-down" v-on:click.stop.prevent="toggleTabPopup"></span>
+			<ul class="mdi-tabs-popup menu" v-if="tabPopupOpen" ref="tabPopup"
+				v-on:contextmenu.stop.prevent="dummy">
+				<li class="group">Open tabs</li>
+				<li v-for="t in tabs" v-on:click.stop.prevent="selectTab(t, false, $event)">
+					<span v-text="fitText(t.title)"></span>
+				</li>
+				<li class="group">Recently closed tabs</li>
+				<li v-for="t in closedTabs" v-on:click.stop.prevent="reopenTab(t)">
+					<span v-text="fitText(t.title)"></span>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div class="mdi-main">
+		<a2-include :source="homeSource()" :complete="tabLoadComplete" :lock="lockRoute" :on-error="tabLoadError" v-show="isHomeActive()"></a2-include>
+		<div class="mdi-view" v-for="(t, tx) in tabs" v-show="isTabActive(t)" :key="t.key">
+			<a2-include :source="tabSource(t)" :complete="tabLoadComplete" :lock="lockRoute" :reload="t.reload" :on-error="tabLoadError"></a2-include>
+		</div>
+	</div>
+	<div class="mdi-banner ">
+	</div>
+	<div class="mdi-footer">
+		<div :class="{spinner: true, active:processing}"></div>
+		<span class="divider"></span>
+
+		<span class="links">
+			<a target="_blank" tabindex="-1" href="" v-on:click.stop.prevent="navigateUrl('/app/about/0')">About</a>
+		</span>
+		<span class="divider"></span>
+
+		<span class="version-info">
+			<a target="_blank" tabindex="-1" href="https://a2v10.com"><i class="ico ico-a2logo a2logo-layout"></i></a>
+			Version
+			<span v-text="version"></span>
+		</span>
+			<div class="debug-btn dropdown dir-up" v-dropdown>
+				<button class="btn btn-debug" toggle>Debug<span class="caret up"></span></button>
+				<div class="dropdown-menu menu up-left">
+					<a v-on:click.prevent="debugModel" class="dropdown-item" tabindex="-1"><i class="ico ico-database"></i> Data model</a>
+					<a v-on:click.prevent="debugTrace" class="dropdown-item" tabindex="-1"><i class="ico ico-chart-stacked-line"></i> Profiling</a>
+					<div class="divider"></div>
+					<label class="checkbox">
+						<input type="checkbox" v-model="traceEnabled" name="trace"/>
+						<span>Tracing</span>
+					</label>
+				</div>
+			</div>
+	</div>
+	<a2-debug :model-stack="modelStack" :model-visible="debugShowModel" v-if="isDebug"
+			  :trace-visible="debugShowTrace" :counter="dataCounter" :close="debugClose"></a2-debug>
+	<div class=modal-stack v-if=hasModals>
+		<div class="modal-wrapper modal-animation-frame" v-for="dlg in modals" v-bind:class="{show: dlg.wrap}">
+			<a2-modal :dialog=dlg></a2-modal>
+		</div>
+	</div>
+	<a2-toastr></a2-toastr>
+	<div class="side-pane-frame" v-if="sidePaneVisible">
+		<include :src="sidePaneUrl" :hide-indicator="true"></include>
+	</div>
+	<div id="ctx-tabs-popup" class="contextmenu">
+		<div class="dropdown-menu menu" role="menu">
+			<button class="dropdown-item" v-on:click="reopenClosedTab" v-bind:disabled="!canReopenClosed"><span>Reopen closed tab</span></button>
+			<button class="dropdown-item" v-on:click="popupClose" v-bind:disabled="!canPopupClose"><span>Close</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseOther" v-bind:disabled="!contextTabKey"><span>Close other tabs</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseRight" v-bind:disabled="!canPopupCloseRight"><span>Close tabs to the right</span></button>
+			<button class="dropdown-item" v-on:click="popupCloseAll"><span>Close all tabs</span></button>
+			<div class="divider" role="separator"></div>
+			<button class="dropdown-item" v-on:click="copyTabUrl" v-bind:disabled="!canPopupClose"><span>Copy tab URL</span></button>
+		</div>
+	</div>
+	<div v-if="newVersionAvailable" class="mdi-new-version">
+		<div class="nv-body">
+			<h3>A new version is available</h3>
+			<span>Reload the page to continue</span>
+			<button class="btn btn-primary" v-on:click="reloadApplication">Reload to update</button>
+		</div>
+	</div>
+</div>
+	<!-- the layout's scripts, in its order: signalr (a stub here: no hub), the locale, the core, the shell -->
+	<script>
+		window.signalR = {
+			LogLevel: { Information: 2 },
+			HubConnectionBuilder: class {
+				withUrl() { return this; } withAutomaticReconnect() { return this; } configureLogging() { return this; }
+				build() { return { on() { }, start: async () => { } }; }
+			}
+		};
+	</script>
+	<script src="/locale.js"></script>
+	<script src="/a2v10-core.js"></script>
+	<script src="/a2v10-shell-tabbed.js"></script>
+	<script src="/a2v10-xaml.js"></script>
+	<!-- /_shell/script for Vue 3: the menu from the server, then start -->
+	<script>
+	(function () {
+		const menu = {
+			SysParams: { AppTitle: 'Vue 3 stand' },
+			Menu: [{
+				Menu: [
+					{ Name: 'Documents', Icon: 'file', Menu: [{ Name: 'Pages', Menu: [
+						{ Name: 'Page 1', Url: 'page:/stand/page/1' },
+						{ Name: 'Page 2', Url: 'page:/stand/page/2' }] }] },
+					{ Name: 'Direct', Icon: 'folder', Url: '/stand/page/3' },
+					{ Name: 'Companies', Icon: 'list', Url: '/catalog/company/index/0' }
+				]
+			}],
+			UserState: {}
+		};
+		window.$$rootUrl = '';
+		window.$$debug = true;
+		window.$$theme = 'A';
+		const sp = menu.SysParams || {};
+		a2v10.shell.start('#shell', {
+			version: '0.0.0-stand',
+			menu: menu.Menu ? menu.Menu[0].Menu : null,
+			columns: menu.Columns || 1,
+			title: sp.AppTitle || '',
+			subtitle: sp.AppSubTitle || '',
+			userState: menu.UserState,
+			isDebug: true,
+			appData: { appId: 'stand', userId: 1, version: '0.0.0-stand' }
+		});
+	})();
+	</script>
+</body>
+</html>

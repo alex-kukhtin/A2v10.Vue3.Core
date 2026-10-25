@@ -1,0 +1,22 @@
+{
+  "name": "@a2v10/primitives",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A2v10 primitives on Vue 3: what the shells' and the engines' components are composed of (v-dropdown, v-contextmenu…).",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@a2v10/platform": "workspace:*",
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

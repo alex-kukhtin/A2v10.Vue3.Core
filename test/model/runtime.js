@@ -20,7 +20,7 @@ function loadLocale() {
 function serverRuntime(locale) {
 	return {
 		platform: {
-			// as server/platform.js, a sloppy-mode assignment: a sealed target drops a new property
+			// as server/platform.js, a sloppy-mode assignment
 			set(target, prop, value) { Reflect.set(target, prop, value); },
 			defer(fn) { fn(); },
 			File: function () { return this; },

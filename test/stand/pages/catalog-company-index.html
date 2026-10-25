@@ -1,0 +1,99 @@
+<collection-view-server class="cw page absolute cw-absolute" id="elb3aaee78-4f40-4d6a-9894-5c06fd7cd621" :items-source="Companies" :initial-filter="{Fragment: ''}" :persistent-filter="[]"><template v-slot="Parent"><template><div class="grid" style="height:100%;grid-template-rows:auto 1fr auto "><div class="toolbar"><button class="btn first-elem btn-tb" @click.stop.prevent="$dialog('append', '/catalog/company/edit', Parent.ItemsSource, null, null)" v-settabindex><i class="ico ico-add"></i> Створити</button><button class="btn btn-tb btn-icon" title="Змінити" :disabled="!$hasSelected(Parent.ItemsSource, null)" @click.stop.prevent="$dialog('edit-selected', '/catalog/company/edit', Parent.ItemsSource, null, null)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-tb btn-icon" :disabled="!$hasSelected(Parent.ItemsSource, null)" @click.stop.prevent="$dbRemoveSelected(Parent.ItemsSource, {message: 'Ви впевнені, що бажаєте видалити елемент?'}, null)" v-settabindex><i class="ico ico-clear"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb" :disabled="!$hasSelected(Parent.ItemsSource, null)" @click.stop.prevent="$openSelected('/catalog/company/show', Parent.ItemsSource, false, null)" v-settabindex><i class="ico ico-arrow-open"></i> Показати</button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button><div class="aligner"></div><textbox class="with-width" :tab-index="1" :has-clear="true" :has-search="true" :highlight="true" placeholder="Пошук" :item="Parent.Filter" prop="Fragment" style="width:20rem"></textbox></div><data-grid class="user-select data-grid-light" :compact="false" key="d21903f6-fb7f-40c8-903a-f261e557ae17" :fixed-header="true" :items-source="Parent.ItemsSource" :hover="true" :striped="false" :border="true" :sort="true" :route-query="$query" grid="Horizontal"><data-grid-column :fit="true" wrap="no-wrap" align="right" header="#" content="Id"></data-grid-column><data-grid-column header="Назва" content="Name"></data-grid-column><data-grid-column header="Префікс" content="Prefix"></data-grid-column><data-grid-column header="Примітка" content="Memo"></data-grid-column></data-grid><a2-pager :source="Parent.Pager"></a2-pager></div></template><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+	
+
+	const template = (function() {			
+	let module = { exports: undefined };
+	
+	(function(module, exports) {
+		const template = {
+    options: {
+        persistSelect: ['Companies']
+    },
+    properties: {
+        
+    },
+    commands: {
+        
+    },
+    events: {
+        
+    }
+};
+
+module.exports = template;
+
+
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Companies": [
+    {
+      "Id": 1001,
+      "Name": "Друга фірма з ПДВ",
+      "Memo": "",
+      "Prefix": "Ф2"
+    },
+    {
+      "Id": 1000,
+      "Name": "Моя фірма",
+      "Memo": "",
+      "Prefix": "МФ/"
+    }
+  ],
+  "Companies.$RowCount": 2,
+  "$ModelInfo": {
+    "Companies": {
+      "PageSize": 20,
+      "Offset": 0,
+      "SortOrder": "Id",
+      "SortDir": "desc",
+      "Filter": {
+        "Fragment": null
+      }
+    }
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Companies':TCompanyArray}}, false);
+
+function TCompany(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TCompany, {props: {'Id':Number,'Name':{type:String, len:255},'Memo':{type:String, len:255},'Prefix':{type:String, len:16}}, $id: 'Id',$name: 'Name'}, true);
+function TCompanyArray(source, path, parent) {
+return cmn.createArray(source, path, TCompany, TCompanyArray, parent);
+}
+
+const ctors = {TRoot,TCompany,TCompanyArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'catalog/company/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://catalog/company/index/
+</script>
