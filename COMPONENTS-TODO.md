@@ -18,7 +18,6 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 
 - [ ] `wizard.js` (226): `a2-wizard-panel`, `a2-wizard-page`
 - [ ] `megamenu.js` (69): `mega-menu`
-- [ ] `treeview.js` (257): `tree-view`
 - [ ] `dashboard.js` (383): `a2-dashboard`, `a2-dashboard-item`
 - [ ] `kanban.js` (113): `a2-kanban`
 - [ ] `graphics.js` (65): `a2-graphics`

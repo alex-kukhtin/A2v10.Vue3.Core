@@ -1,0 +1,227 @@
+<collection-view-server-url class="cw page absolute page-grid cw-absolute" id="el3879d055-8718-4a05-9310-66eb5bb76879" :items-source="Folders.Selected('Items')" :initial-filter="{Fragment: '',Unit: null,ItemCategory: null,VatRate: ''}" :persistent-filter="[]"><template v-slot="Parent"><a2-taskpad class="page-taskpad overflow no-collapsible" initial-width="22rem" position="right" :initial-collapsed="false" style="padding:.5rem 1rem;grid-column:2"><template><a2-panel class="trait-folders" :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Папки</div></template><div class="panel-content trait-folders"><template class="trait-folders"><div class="toolbar"><button class="btn first-elem btn-tb" @click.stop.prevent="$dialog('append', '/catalog/item/editFolder', $data.$SelectedPlace.SubItems, ()=>$data.$CreateArg, null)" :disabled="!$data.$SelectedPlace" v-settabindex><i class="ico ico-add"></i> Створити</button><button class="btn btn-tb btn-icon" title="Змінити" :disabled="!$data.$SelectedFolder" @click.stop.prevent="$dialog('edit-selected', '/catalog/item/editFolder', Folders, null, null)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-tb btn-icon" title="Видалити" :disabled="(!$canExecute('deleteFolder', null, null)) || null" @click.stop.prevent="$exec('deleteFolder', null, null, null)" v-settabindex><i class="ico ico-clear"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button></div><tree-view :items="Folders" :expand="$expand" :options="{folderSelect: true,subitems: 'SubItems',label: 'Name',hasIcon: true, icon: 'Icon'}" auto-select="first-item"></tree-view></template></div></a2-panel><a2-panel :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Фільтри</div></template><div class="panel-content"><template><a2-selector fetch-command="/catalog/unit/fetch" display="Name" :highlight="true" :has-clear="true" label="Одиниця виміру" placeholder="@Unit.All" :item="Parent.Filter" prop="Unit"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/unit/browse', Parent.Filter.Unit, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/itemcategory/fetch" display="Name" color-prop="Color" :highlight="true" :has-clear="true" label="Категорія" placeholder="Всі категорії" :item="Parent.Filter" prop="ItemCategory"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/itemcategory/browse', Parent.Filter.ItemCategory, null)"><i class="ico ico-search"></i> </a></a2-selector><select is="vue:combobox" v-cloak label="@VatRate" :highlight="true" :items-source="VatRates" :name-prop="'Name'" :value-prop="'Id'" :item="Parent.Filter" prop="VatRate"></select></template></div></a2-panel></template></a2-taskpad><div class="page-content"><template><div class="grid" style="height:100%;grid-template-rows:auto 1fr auto "><div class="toolbar"><button class="btn first-elem btn-tb" @click.stop.prevent="$dialog('append', '/catalog/item/edit', Parent.ItemsSource, ()=>$data.$CreateArg, null)" v-settabindex><i class="ico ico-add"></i> Створити</button><button class="btn btn-tb btn-icon" title="Змінити" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$dialog('edit-selected', '/catalog/item/edit', Parent.ItemsSource, null, null)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-tb btn-icon" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$dbRemoveSelected(Parent.ItemsSource, {message: 'Ви впевнені, що бажаєте видалити елемент?'}, null)" v-settabindex><i class="ico ico-clear"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$openSelected('/catalog/item/show', Parent.ItemsSource, false, null)" v-settabindex><i class="ico ico-arrow-open"></i> Показати</button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button><div class="aligner"></div><textbox class="with-width" :tab-index="1" :has-clear="true" :has-search="true" :highlight="true" placeholder="Пошук" :item="Parent.Filter" prop="Fragment" style="width:20rem"></textbox></div><data-grid class="user-select data-grid-light" :compact="false" key="86b5cadf-527a-4127-8f73-6e1a7161aab3" :fixed-header="true" :items-source="Parent.ItemsSource" :hover="true" :striped="false" :border="true" :sort="true" :route-query="$query" grid="Horizontal"><data-grid-column :fit="true" wrap="no-wrap" align="right" header="#" content="Id"></data-grid-column><data-grid-column header="Назва" content="Name"></data-grid-column><data-grid-column header="Папка" sort-prop="Folder" content="Folder.Name"></data-grid-column><data-grid-column header="Одиниця виміру" sort-prop="Unit" content="Unit.Name"></data-grid-column><data-grid-column header="Категорія" sort-prop="ItemCategory" id="col4"></data-grid-column><template v-slot:col4="cell"><span class="tag-label outline" v-if="cell.row.ItemCategory.Id" v-text="cell.row.ItemCategory.Name" :class="cell.row.ItemCategory.Color"></span></template><data-grid-column header="@VatRate" :sort="false" content="VatRate.Name"></data-grid-column><data-grid-column header="Примітка" content="Memo"></data-grid-column></data-grid><a2-pager :source="Parent.Pager"></a2-pager></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server-url><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = (function() {
+	let module = { exports: undefined };
+
+	(function(module, exports) {
+		const template = {
+    options: {
+        persistSelect: ['Folders']
+    },
+    properties: {
+        'TRoot.$SelectedPlace': selectedPlace,
+		'TRoot.$SelectedFolder': selectedFolder,
+		'TRoot.$CreateArg': createArg
+    },
+    commands: {
+        deleteFolder: {
+    exec: deleteFolder,
+    canExec: canDeleteFolder,
+    confirm: `Видалити папку?`
+}
+    },
+    events: {
+
+    }
+};
+
+module.exports = template;
+
+function selectedPlace() {
+    const f = this.Folders.$selected;
+    return !f || String(f.Id) === '0' ? null : f;
+}
+
+function selectedFolder() {
+    const f = this.$SelectedPlace;
+    return !f || String(f.Id) === '-2' ? null : f;
+}
+
+function createArg() {
+    const f = this.$SelectedFolder;
+    return f ? { Folder: f.Id } : {};
+}
+
+// a convenience: the server refuses a folder that is not empty whatever the page thinks
+function canDeleteFolder() {
+    const f = this.$SelectedFolder;
+    return !!f && !f.SubItems.length;
+}
+
+async function deleteFolder() {
+    const f = this.$SelectedFolder;
+    if (!f) return;
+    await this.$ctrl.$invoke('deleteFolder', { Id: f.Id });
+    f.$remove();
+}
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Folders": [
+    {
+      "Id": 0,
+      "Name": "Без групування",
+      "Icon": "folder-ban",
+      "SubItems": [],
+      "InitExpand": false,
+      "Items": []
+    },
+    {
+      "Id": -2,
+      "Name": "Об\u0027єкти обліку",
+      "Icon": "folder-outline",
+      "SubItems": [
+        {
+          "Id": 1003,
+          "Name": "Електроніка",
+          "Icon": "folder-outline",
+          "SubItems": [],
+          "InitExpand": false,
+          "Items": []
+        },
+        {
+          "Id": 1001,
+          "Name": "Паливо",
+          "Icon": "folder-outline",
+          "SubItems": [],
+          "InitExpand": false,
+          "Items": []
+        },
+        {
+          "Id": 1000,
+          "Name": "Продукти",
+          "Icon": "folder-outline",
+          "SubItems": [],
+          "InitExpand": false,
+          "Items": []
+        }
+      ],
+      "InitExpand": true,
+      "Items": []
+    }
+  ],
+  ".$RowCount": 0,
+  "VatRates": [
+    {
+      "Id": "",
+      "Name": "@VatRate.All"
+    },
+    {
+      "Id": "20",
+      "Name": "20%"
+    },
+    {
+      "Id": "7",
+      "Name": "7%"
+    },
+    {
+      "Id": "14",
+      "Name": "14%"
+    },
+    {
+      "Id": "901",
+      "Name": "0% (901)"
+    },
+    {
+      "Id": "902",
+      "Name": "0% (902)"
+    },
+    {
+      "Id": "903",
+      "Name": "Без ПДВ (903)"
+    }
+  ]
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Folders':TFolderArray,'VatRates':TVatRateArray}}, false);
+
+function TFolder(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TFolder, {props: {'Id':Number,'Name':{type:String, len:255},'Icon':{type:String, len:32},'SubItems':TFolderArray,'InitExpand':Boolean,'Items':TItemArray}, $id: 'Id',$name: 'Name',$items: 'SubItems',$expanded: 'InitExpand',$lazy: ['Items']}, true);
+function TFolderArray(source, path, parent) {
+return cmn.createArray(source, path, TFolder, TFolderArray, parent);
+}
+
+function TItem(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TItem, {props: {'Id':Number,'IsSystem':Boolean,'Name':{type:String, len:255},'Memo':{type:String, len:255},'Folder':TRItemFolder,'UserCreated':Number,'UtcDateCreated':Date,'UserModified':Number,'UtcDateModified':Date,'Unit':TRUnit,'ItemCategory':TRItemCategory,'VatRate':TRVatRate}, $id: 'Id',$name: 'Name'}, true);
+function TItemArray(source, path, parent) {
+return cmn.createArray(source, path, TItem, TItemArray, parent);
+}
+
+function TRItemFolder(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRItemFolder, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRItemFolderArray(source, path, parent) {
+return cmn.createArray(source, path, TRItemFolder, TRItemFolderArray, parent);
+}
+
+function TRUnit(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRUnit, {props: {'Id':Number,'Name':{type:String, len:8}}, $id: 'Id',$name: 'Name'}, true);
+function TRUnitArray(source, path, parent) {
+return cmn.createArray(source, path, TRUnit, TRUnitArray, parent);
+}
+
+function TRItemCategory(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRItemCategory, {props: {'Id':Number,'Name':{type:String, len:255},'Color':{type:String, len:32}}, $id: 'Id',$name: 'Name'}, true);
+function TRItemCategoryArray(source, path, parent) {
+return cmn.createArray(source, path, TRItemCategory, TRItemCategoryArray, parent);
+}
+
+function TRVatRate(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRVatRate, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRVatRateArray(source, path, parent) {
+return cmn.createArray(source, path, TRVatRate, TRVatRateArray, parent);
+}
+
+function TVatRate(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TVatRate, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TVatRateArray(source, path, parent) {
+return cmn.createArray(source, path, TVatRate, TVatRateArray, parent);
+}
+
+const ctors = {TRoot,TFolder,TFolderArray,TItem,TItemArray,TRItemFolder,TRItemFolderArray,TRUnit,TRUnitArray,TRItemCategory,TRItemCategoryArray,TRVatRate,TRVatRateArray,TVatRate,TVatRateArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'catalog/item/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://catalog/item/index/
+</script>

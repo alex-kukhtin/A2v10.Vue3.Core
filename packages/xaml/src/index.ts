@@ -25,5 +25,6 @@ import './colorpicker.js';
 import './colorcombobox.js';
 import './report.js';
 import './treegrid.js';
+import './treeview.js';
 import './texteditor.js';
 import './tags.js';

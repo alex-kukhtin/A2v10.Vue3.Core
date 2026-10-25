@@ -40,6 +40,7 @@ const FILES = {
 	'/_page/task/edit/104': [path.join(__dirname, 'pages/task-edit.html'), 'text/html; charset=utf-8'],
 	'/_page/catalog/agent/index/0': [path.join(__dirname, 'pages/catalog-agent-index.html'), 'text/html; charset=utf-8'],
 	'/_page/document/order/index/0': [path.join(__dirname, 'pages/document-order-index.html'), 'text/html; charset=utf-8'],
+	'/_page/catalog/item/index/0': [path.join(__dirname, 'pages/catalog-item-index.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']
 };
 
@@ -126,6 +127,16 @@ ${pageScript('_home/index/', {}, EMPTY_TYPES)}
 </script>`;
 }
 
+// catalog/item's Items of a folder: the answer had none (Core loads them lazily)
+function lazyRows(folderId) {
+	const n = Math.abs(folderId) % 4 + 1;
+	return Array.from({ length: n }, (_, i) => ({
+		Id: Math.abs(folderId) * 10 + i + 1, Name: `Item ${folderId}.${i + 1}`, Memo: '',
+		Folder: { Id: folderId, Name: `Folder ${folderId}` }, Unit: { Id: 1, Name: 'шт' },
+		ItemCategory: { Id: 0, Name: '', Color: '' }, VatRate: { Id: '20', Name: '20%' }
+	}));
+}
+
 const server = http.createServer((req, res) => {
 	const url = req.url.split('?')[0];
 	const file = FILES[url];
@@ -144,6 +155,17 @@ const server = http.createServer((req, res) => {
 	if (url === '/_page/_home/index/0') {
 		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
 		res.end(homeHtml());
+		return;
+	}
+	// a lazy array's rows (catalog/item: a folder's Items), as /_data/loadlazy answers: { [prop]: rows }
+	if (url === '/_data/loadlazy' && req.method === 'POST') {
+		let body = '';
+		req.on('data', chunk => body += chunk);
+		req.on('end', () => {
+			const { id, prop } = JSON.parse(body);
+			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+			res.end(JSON.stringify({ [prop]: lazyRows(id) }));
+		});
 		return;
 	}
 	// a page, or a dialog (the shell adds the argument's id as the last segment)
