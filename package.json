@@ -4,7 +4,7 @@
   "description": "The A2v10 client on Vue 3: one package per shelf (design/view-engines.md in A2v10.Core).",
   "scripts": {
     "build": "pnpm -r build && node scripts/copy-assets.mjs",
-    "test": "node test/model/smoke.js && node test/model/specs.js && node test/trace/model.js && node test/core/smoke.js && node test/core/bus.js && node test/core/http.js && node test/core/specs.js && node test/core/services.js && node test/shell/smoke.js",
+    "test": "node test/model/smoke.js && node test/model/specs.js && node test/trace/model.js && node test/trace/base.port.js && node test/core/smoke.js && node test/core/bus.js && node test/core/http.js && node test/core/specs.js && node test/core/services.js && node test/shell/smoke.js",
     "test:net48": "node test/net48/original.js",
     "trace:net48": "node test/trace/net48.js",
     "trace:base:net48": "node test/trace/base.net48.js",

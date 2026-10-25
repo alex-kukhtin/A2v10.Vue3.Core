@@ -1,0 +1,79 @@
+<div class="modal" id="el52ff2641-5a2a-4b93-95f4-588a6c359d5e" v-cloak><div class="modal-header" v-drag-window><span class="modal-title" v-text="$format(Company.Id, {format: `Компанія [{0}]`})"></span><button class="btnclose" tabindex="-1" @click.prevent="$modalClose(false)">&#x2715;</button></div><div class="load-indicator" v-show="$isLoading"></div><div class="modal-content overflow"><div class="grid"><div class="flow-container"><div class="flow-panel axis-columns label-at-top"><template><textbox class="bold dom-name" label="Назва" :tab-index="1" :item="Company" prop="Name"></textbox><textbox class="dom-prefix" label="Префікс" :item="Company" prop="Prefix"></textbox><a2-textarea class="dom-memo" label="Примітка" :rows="3" :item="Company" prop="Memo"></a2-textarea></template></div></div></div></div><div class="modal-footer"><button class="btn a2-inline btn-primary" :disabled="!$canSave" @click.stop.prevent="$modalSaveAndClose(true, null)" v-settabindex>Зберегти і закрити</button><button class="btn a2-inline" @click.stop.prevent="$modalClose(false)" v-settabindex>Скасувати</button></div></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+	
+
+	const template = (function() {			
+	let module = { exports: undefined };
+	
+	(function(module, exports) {
+		const template = {
+    properties: {
+        
+    },
+    validators: {
+        
+    },
+    events: {
+        
+    }
+};
+
+module.exports = template;
+
+
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Company": {
+    "Id": 1001,
+    "IsSystem": false,
+    "rv": "000000000000375C",
+    "Name": "Друга фірма з ПДВ",
+    "Memo": "",
+    "UserCreated": 99,
+    "UtcDateCreated": "2026-10-07T11:26:30.267",
+    "UserModified": 99,
+    "UtcDateModified": "2026-10-07T11:26:30.267",
+    "Prefix": "Ф2"
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Company':TCompany}, $main: 'Company'}, false);
+
+function TCompany(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TCompany, {props: {'Id':Number,'IsSystem':Boolean,'rv':{type:String, len:16},'Name':{type:String, len:255},'Memo':{type:String, len:255},'UserCreated':Number,'UtcDateCreated':Date,'UserModified':Number,'UtcDateModified':Date,'Prefix':{type:String, len:16}}, $id: 'Id',$name: 'Name'}, false);
+
+const ctors = {TRoot,TCompany};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {'ReadOnly': false}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'catalog/company/edit/1001/',
+	inDialog: true,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://catalog/company/edit/1001/
+</script>

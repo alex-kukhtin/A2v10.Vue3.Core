@@ -56,7 +56,8 @@ function* dataForVal(root: Root, path: string) {
 		yield* enumData(root, path.substring(0, ld), path.substring(ld + 1), '');
 }
 
-// Keeps an element's errors of one key; _errors_ is null when it has none.
+// Keeps an element's errors of one key; _errors_ is null when it has none. item: the raw element (platform.raw):
+// a control validates while it renders, and a write the runtime observes would render the others again, and so on.
 function saveErrors(item: Elem, path: string, errors: RuleErrors | null): RuleErrors | null | undefined {
 	if (!item._errors_ && !errors)
 		return; // already null
@@ -90,7 +91,7 @@ export function createValidation(ctx: ModelContext) {
 		}
 		const elemRules = rulesOf(item, path);
 		const res = elemRules ? rules.validate(elemRules, item, val, onAsyncError) : null;
-		return saveErrors(item, path, res);
+		return saveErrors(ctx.platform.raw(item), path, res);
 	}
 
 	function validateOneElement(root: Root, path: string, keyRules: Rule | Rule[]) {
@@ -99,7 +100,7 @@ export function createValidation(ctx: ModelContext) {
 		const errs: unknown[] = [];
 		for (const elem of dataForVal(root, path)) {
 			const res = rules.validate(keyRules, elem.item, elem.val);
-			saveErrors(elem.item, path, res);
+			saveErrors(ctx.platform.raw(elem.item), path, res);
 			if (res && res.length)
 				errs.push(...res);
 		}

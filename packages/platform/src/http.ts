@@ -80,7 +80,7 @@ export function createHttp(eventBus: EventBus) {
 		return doRequest('POST', url, data, raw, skipEvents);
 	}
 
-	// A status but 200 and 255 resolves with undefined (B27: the switch has no default).
+	// A status but 200 and 255 rejects with its text (B27, the upload half: as Net48 since 84e0f9ffb).
 	async function upload(url: string, data: BodyInit): Promise<any> {
 		eventBus.$emit('beginRequest', url);
 		try {
@@ -104,6 +104,8 @@ export function createHttp(eventBus: EventBus) {
 						txt = await response.text();
 					throw txt;
 				}
+				default:
+					throw response.statusText;
 			}
 		} finally {
 			eventBus.$emit('endRequest', url);

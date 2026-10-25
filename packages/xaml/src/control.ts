@@ -1,7 +1,9 @@
 // control (Net48 components/control.js), unchanged in behaviour: the base of the input controls (textbox, combobox,
 // datepicker…): label, validation, the masked or formatted value, the accelerator. Not a tag: app.components['control'],
 // which the controls and the applications extend. The item and prop are the derived control's props.
-// Vue 3: beforeDestroy is beforeUnmount; $children is gone (deferUpdate: forceUpdateChildren).
+// Vue 3: beforeDestroy is beforeUnmount; $children is gone (deferUpdate: forceUpdateChildren). itemToValidate and
+// propToValidate are a derived control's, when it declares them: read from $props, where an undeclared one is
+// undefined as in Vue 2, not through the instance, where Vue 3 warns while it renders.
 
 import { defineComponent, type ComponentInternalInstance, type VNode } from 'vue';
 import { app, require } from './platform.js';
@@ -53,7 +55,8 @@ export const control = defineComponent({
 		},
 		pathToValidate(): string {
 			const self = this as any;
-			return self.itemToValidate._path_ + '.' + self.propToValidate;
+			const p = self.$props;
+			return p.itemToValidate._path_ + '.' + p.propToValidate;
 		},
 		modelValue(): any {
 			const self = this as any;
@@ -87,8 +90,9 @@ export const control = defineComponent({
 			if (!root._validate_)
 				return null;
 			let err;
-			if (self.itemToValidate)
-				err = root._validate_(self.itemToValidate, this.pathToValidate, self.itemToValidate[self.propToValidate], this.deferUpdate);
+			const p = self.$props;
+			if (p.itemToValidate)
+				err = root._validate_(p.itemToValidate, this.pathToValidate, p.itemToValidate[p.propToValidate], this.deferUpdate);
 			else
 				err = root._validate_(self.item, this.path, this.modelValueRaw, this.deferUpdate);
 			return err;

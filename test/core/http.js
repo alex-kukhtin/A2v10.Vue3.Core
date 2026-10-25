@@ -69,7 +69,7 @@ const { loadCore } = require('./load.js');
 	reply = text('UI:Too big', 255);
 	assert.deepStrictEqual(await caught(http.upload('/_file/x', null)), { thrown: 'UI:Too big' });
 	reply = new Response('', { status: 500 });
-	assert.deepStrictEqual(await caught(http.upload('/_file/x', null)), { value: undefined }, 'upload 500: undefined (Net48)');
+	assert.deepStrictEqual(await caught(http.upload('/_file/x', null)), { thrown: '' }, 'upload 500: rejects with the status text (Net48 since 84e0f9ffb, B27)');
 
 	console.log('std:http: get, post, upload as Net48; bus events; refusals as text, 401 as __blank__');
 })().catch(e => {

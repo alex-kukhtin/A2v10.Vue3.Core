@@ -356,50 +356,152 @@
   ev Model.load(@Root, null, false)
   $dirty → false
 > $dialog("show", "/document/show", Document)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: undefined, rd: true}) → {Id: 5}
+  = Promise
+  resolved {Id: 5}
 > $showDialog("/document/show?Mode=1", Document, { Extra: 2 })
-  throws TypeError: vm.$showDialog is not a function
+  bus closeAllPopups()
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: {Mode: "1"}, rd: true}) → {Id: 5}
+  = Promise
+  resolved {Id: 5}
 > $dialog("show", …, query as a function)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: {Q: 1}, rd: true}) → {Id: 5}
+  = Promise
+  resolved {Id: 5}
 > $dialog("browse", "/agent/browse", Document.Agent)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/agent/browse", {promise: null, data: @Root.Document.Agent, query: undefined, rd: true}) → {Id: 7, Name: "Agent 7"}
+  = Promise
+  ev Model.dirty.change(true, "Document.Agent.Id")
+  ev Document.Agent.change(@Root.Document, @Root.Document.Agent, @Root.Document.Agent, "Agent")
+  resolved {Id: 7, Name: "Agent 7"}
+  $dirty → true
 > $dialog("browse", plain object)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/agent/browse", {promise: null, data: {Id: 0, Name: "", Memo: "x"}, query: undefined, rd: true}) → {Id: 7, Name: "Agent 7"}
+  = Promise
+  resolved {Id: 7, Name: "Agent 7"}
 > $dialog("edit", "/agent/edit", Document.Agent)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/agent/edit", {promise: null, data: @Root.Document.Agent, query: undefined, rd: true}) → {Id: 7, Name: "Agent 7 edited"}
+  = Promise
+  resolved {Id: 7, Name: "Agent 7 edited"}
 > $dialog("append", "/row/new", Rows)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/row/new", {promise: null, data: 0, query: undefined, rd: true}) → {Id: 5, Qty: 5}
+  = Promise
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Document.Rows[].adding(@Root.Document.Rows, @~Document.Rows[])
+  ev Document.Rows[].add(@Root.Document.Rows, @Root.Document.Rows[2], 2)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[2])
+  resolved {Id: 5, Qty: 5}
 > $dialog("new", "/row/new", Rows), nothing selected
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/row/new", {promise: null, data: 0, query: undefined, rd: true}) → {Id: 5, Qty: 5}
+  = Promise
+  resolved {Id: 5, Qty: 5}
 > Rows[0].$select()
   ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[0])
 > $dialog("edit-selected", "/row/edit", Rows)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/row/edit", {promise: null, data: @Root.Document.Rows[0], query: undefined, rd: true}) → {Id: 1, Qty: 10}
+  = Promise
+  ev Document.Rows[].change(@Root.Document.Rows, @Root.Document.Rows[0])
+  resolved {Id: 1, Qty: 10}
 > $dialog("show-selected", "/row/show", Rows) → "reload"
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/row/show", {promise: null, data: @Root.Document.Rows[0], query: undefined, rd: true}) → "reload"
+  = Promise
+  bus closeAllPopups()
+  bus beginRequest("/_data/reload")
+  fetch POST /_data/reload {"baseUrl":"/_page/document/edit/5"} → 200 {"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  resolved "reload"
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/edit/5")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  ev Model.dirty.change(false, undefined)
+  $dirty → false
 > $dialog("copy", "/row/copy", Rows[0])
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/row/copy", {promise: null, data: @Root.Document.Rows[0], query: undefined, rd: true}) → {Id: 6, Qty: 1}
+  = Promise
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Document.Rows[].adding(@Root.Document.Rows, @~Document.Rows[])
+  ev Model.dirty.change(true, "Document.Rows")
+  ev Document.Rows[].add(@Root.Document.Rows, @Root.Document.Rows[2], 2)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[2])
+  resolved {Id: 6, Qty: 1}
+  $dirty → true
 > $dialog("append", "/row/new", Rows, null, { reloadAfter: true })
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/row/new", {promise: null, data: 0, query: null, rd: true}) → {Id: 5, Qty: 5}
+  = Promise
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Document.Rows[].adding(@Root.Document.Rows, @~Document.Rows[])
+  ev Document.Rows[].add(@Root.Document.Rows, @Root.Document.Rows[3], 3)
+  ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[3])
+  bus closeAllPopups()
+  bus beginRequest("/_data/reload")
+  fetch POST /_data/reload {"baseUrl":"/_page/document/edit/5"} → 200 {"Document":{"Id":5,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  resolved {Id: 5, Qty: 5}
+  bus endRequest("/_data/reload")
+  bus pageReloaded("/_page/document/edit/5")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  bus isModalRequery({url: "/_page/document/edit/5", result: false})
+  ev Model.load(@Root, null, false)
+  ev Model.dirty.change(false, undefined)
+  $dirty → false
 > $dialog("show", "/document/cancel", Document) → false
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/document/cancel", {promise: null, data: @Root.Document, query: undefined, rd: true}) → false
+  = Promise
+  pending
 > $dialog("append", …, an object)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  console.error "$dialog.append. The argument is not an array"
 > $dialog("edit", …, an array)
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  console.error "$dialog.edit. The argument is not an object"
 > $dialog("edit", …, { checkPermission: "CanEdit" })
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  console.warn "[!!Permissions] not found"
+  bus confirm({promise: null, data: {message: "Доступ заборонено!", title: undefined, style: "alert", list: undefined}}) → true
 > $dialog("show", …, { validRequired: true })
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: null, rd: true}) → {Id: 5}
+  = Promise
+  resolved {Id: 5}
 > Document.Memo = "m"
   ev Document.Memo.changing(@Root.Document, "m", "", "Memo")
   ev Model.dirty.change(true, "Document.Memo")
   ev Document.Memo.change(@Root.Document, "m", "", "Memo")
   $dirty → true
 > $dialog("show", …, { saveRequired: true })
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"m","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":5,"Name":"Doc","Memo":"m","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  = Promise
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: null, rd: true}) → {Id: 5}
+  resolved {Id: 5}
+  $dirty → false
 > $dialog("show", …, { checkReadOnly: true }), not read-only
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: null, rd: true}) → {Id: 5}
+  = Promise
+  resolved {Id: 5}
 > data
   = TRoot {
       Document: TDocument {
@@ -411,7 +513,7 @@
           Name: ""
         }
         Rows: [
-          [0] TRow $selected {
+          [0] TRow {
             Id: 1
             Qty: 1
           }
@@ -439,7 +541,21 @@
 > $isDirty, $mainObject.$isNew
   = [false, true]
 > $dialog("show", "/document/show", Document, null, { saveRequired: true }), new and clean
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  ev Model.dirty.change(true, undefined)
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/new","data":{"Document":{"Id":0,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":8,"Name":"Doc","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  = Promise
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus setnewid({from: "", to: "8"})
+  bus modal("/document/show", {promise: null, data: @Root.Document, query: null, rd: true}) → {Id: 1}
+  resolved {Id: 1}
 
 ## $dialog, $report: validRequired on an invalid model; saveRequired refused
 > create
@@ -455,16 +571,26 @@
   ev Model.load(@Root, null, false)
   $dirty → false
 > $dialog("show", …, { validRequired: true }), invalid
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Спочатку виправте помилки", title: undefined, style: "alert", list: undefined}}) → true
 > $report("rep", Document, { validRequired: true }), invalid
-  throws TypeError: vm.$report is not a function
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Спочатку виправте помилки", title: undefined, style: "alert", list: undefined}}) → true
 > Document.Name = "1"
   ev Document.Name.changing(@Root.Document, "1", "Doc", "Name")
   ev Model.dirty.change(true, "Document.Name")
   ev Document.Name.change(@Root.Document, "1", "Doc", "Name")
   $dirty → true
 > $dialog("show", …, { saveRequired: true }), the save refused by the server
-  throws TypeError: vm.$dialog is not a function
+  bus closeAllPopups()
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"1","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 255 "UI:Cannot save"
+  = Promise
+  bus endRequest("/_data/save")
+  bus confirm({promise: null, data: {message: "Cannot save", title: undefined, style: "alert", list: undefined}}) → true
+  pending
 > create
   ev TAgent.construct(@~Document.Agent, "Agent")
   ev TRowArray.construct(@~Document.Rows)
@@ -478,7 +604,7 @@
   [R] ev Model.load(@Root, @Root, false)
   $dirty → false
 > R: $dialog("show", …, { saveRequired: true }), new and read-only: $save does not save
-  throws TypeError: ro.$dialog is not a function
+  bus closeAllPopups()
 
 ## $confirm, $alert, $msg, $toast, $remove
 > create
@@ -596,7 +722,17 @@
   bus confirm({promise: null, data: {message: "Msg", title: "Title", buttons: [{text: "Зберегти", result: "save"}, {text: "Не зберігати", result: "close"}, {text: "Скасувати", result: false}], style: "confirm"}}) → false
   = false
 > $saveAndClose()
-  throws TypeError: vm.$saveAndClose is not a function
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"3","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":5,"Name":"3","Memo":"","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus closePlain({root: vm:A})
+  $dirty → false
 
 ## $saveModified, $modal*: a dialog
 > create
@@ -653,23 +789,32 @@
   ev Document.Name.change(@Root.Document, "3", "2", "Name")
   $dirty → true
 > $modalSaveAndClose(true, { validRequired: true }), invalid
-  throws TypeError: vm.$modalSaveAndClose is not a function
+  bus confirm({promise: null, data: {message: "Спочатку виправте помилки", title: undefined, style: "alert", list: ["Memo is required"]}}) → true
 > Document.Memo = "m"
   ev Document.Memo.changing(@Root.Document, "m", "", "Memo")
   ev Document.Memo.change(@Root.Document, "m", "", "Memo")
 > $modalSaveAndClose(true)
-  throws TypeError: vm.$modalSaveAndClose is not a function
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_dialog/document/edit/5","data":{"Document":{"Id":5,"Name":"3","Memo":"m","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":5,"Name":"3","Memo":"m","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus modalClose({Id: 5, Name: "3", Memo: "m", Agent: {Id: 0, Name: ""}, Rows: [{Id: 1, Qty: 1}, {Id: 2, Qty: 2}]})
+  $dirty → false
 > $modalSaveAndClose("x"), not dirty
-  throws TypeError: vm.$modalSaveAndClose is not a function
+  bus modalClose("x")
 > $modalSelect(Rows), nothing selected
-  throws TypeError: vm.$modalSelect is not a function
+  bus modalClose(undefined)
 > Rows[1].$select(); $modalSelect(Rows)
   ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
-  throws TypeError: vm.$modalSelect is not a function
+  bus modalClose(@Root.Document.Rows[1])
 > $modalSelect(Document)
-  throws TypeError: vm.$modalSelect is not a function
+  console.error "Invalid array for $modalSelect"
 > $modalSelectChecked(Rows)
-  throws TypeError: vm.$modalSelectChecked is not a function
 > $setCurrentUrl("/document/edit/6")
   bus modalSetBase("/_dialog/document/edit/6")
 > $baseUrl
@@ -947,60 +1092,76 @@
   ev Model.load(@Root, null, false)
   $dirty → false
 > $exec("rename", Document)
-  throws TypeError: vm.$exec is not a function
+  bus closeAllPopups()
+  ev Document.Name.changing(@Root.Document, "Renamed", "Doc", "Name")
+  ev Model.dirty.change(true, "Document.Name")
+  ev Document.Name.change(@Root.Document, "Renamed", "Doc", "Name")
+  = "done"
+  $dirty → true
 > $exec("missing")
-  throws TypeError: vm.$exec is not a function
+  bus closeAllPopups()
+  console.error "Command \"missing\" not found"
 > $exec("rename", Document, "No?")
-  throws TypeError: vm.$exec is not a function
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "No?", style: "confirm"}}) → false
 > $exec("confirmed", Document)
-  throws TypeError: vm.$exec is not a function
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Sure?", style: "confirm"}}) → true
+  ev Document.Memo.changing(@Root.Document, "confirmed", "", "Memo")
+  ev Document.Memo.change(@Root.Document, "confirmed", "", "Memo")
 > $canExecute("guarded", Rows[0]), Rows[1]
-  throws TypeError: vm.$canExecute is not a function
+  = [false, true]
 > $canExecute("missing")
-  throws TypeError: vm.$canExecute is not a function
+  = false
 > $canExecSel("guarded", Rows), nothing selected
-  throws TypeError: vm.$canExecSel is not a function
+  = false
 > Rows[1].$select(); $execSelected("guarded", Rows)
   ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[1])
-  throws TypeError: vm.$execSelected is not a function
+  bus closeAllPopups()
+  ev Document.Rows[].Qty.changing(@Root.Document.Rows[1], 100, 2, "Qty")
+  ev Document.Rows[].Qty.change(@Root.Document.Rows[1], 100, 2, "Qty")
 > $execSelected("guarded", Rows, "Sure?")
-  throws TypeError: vm.$execSelected is not a function
+  bus closeAllPopups()
+  bus confirm({promise: null, data: {message: "Sure?", style: "confirm"}}) → true
 > $execSelected("guarded", Document)
-  throws TypeError: vm.$execSelected is not a function
+  console.error "Invalid argument for $execSelected"
 > $exec("rename", Document, null, { checkPermission: "CanEdit" })
-  throws TypeError: vm.$exec is not a function
+  console.warn "[!!Permissions] not found"
+  bus confirm({promise: null, data: {message: "Доступ заборонено!", title: undefined, style: "alert", list: undefined}}) → true
 > $isPermissionsDisabled({ checkPermission: "CanEdit" }, { $permissions: { CanEdit: true } })
-  throws TypeError: vm.$isPermissionsDisabled is not a function
+  = false
 > $delegate("filter")(Rows[0])
   = false
 > $delegate("missing")
   console.error "Delegate \"missing\" not found in the template"
 > $handleClick("click", event)
-  throws TypeError: vm.$handleClick is not a function
+  ev Document.Memo.changing(@Root.Document, "clicked click", "confirmed", "Memo")
+  ev Document.Memo.change(@Root.Document, "clicked click", "confirmed", "Memo")
+  = "clicked click"
 > $move("down", Rows[0]); $canMove("up", Rows[0])
-  throws TypeError: vm.$move is not a function
+  = false
 > $moveSelected("up", Rows); $canMoveSelected("up", Rows)
-  throws TypeError: vm.$moveSelected is not a function
+  = false
 > $hasSelected(Rows), $hasChecked(Rows)
-  throws TypeError: vm.$hasChecked is not a function
+  = [true, 0]
 > data
   = TRoot {
       Document: TDocument {
         Id: 5
-        Name: "Doc"
-        Memo: ""
+        Name: "Renamed"
+        Memo: "clicked click"
         Agent: TAgent {
           Id: 0
           Name: ""
         }
         Rows: [
-          [0] TRow {
+          [0] TRow $selected {
+            Id: 2
+            Qty: 100
+          }
+          [1] TRow {
             Id: 1
             Qty: 1
-          }
-          [1] TRow $selected {
-            Id: 2
-            Qty: 2
           }
         ]
       }
@@ -1020,19 +1181,20 @@
   ev Model.load(@Root, null, false)
   $dirty → false
 > $exec("readOnly", Document)
-  throws TypeError: vm.$exec is not a function
+  bus closeAllPopups()
+  ev Document.Memo.changing(@Root.Document, "ro", "", "Memo")
+  ev Document.Memo.change(@Root.Document, "ro", "", "Memo")
 > $exec("plain", Document, null, { checkReadOnly: true })
-  throws TypeError: vm.$exec is not a function
 > $exec("plain", Document)
-  throws TypeError: vm.$exec is not a function
+  bus closeAllPopups()
+  ev Document.Memo.changing(@Root.Document, "plain", "ro", "Memo")
+  ev Document.Memo.change(@Root.Document, "plain", "ro", "Memo")
 > $canExecute("readOnly", Document), $canExecute("plain", Document, { checkReadOnly: true })
-  throws TypeError: vm.$canExecute is not a function
+  = [false, false]
 > $navigate("/document/edit", 6, false, null, { checkReadOnly: true })
-  throws TypeError: vm.$navigate is not a function
 > $dialog("show", "/x", Document, null, { checkReadOnly: true })
-  throws TypeError: vm.$dialog is not a function
 > Document.Memo
-  = ""
+  = "plain"
 
 ## $navigate, files, reports, the side pane
 > create
@@ -1048,55 +1210,113 @@
   ev Model.load(@Root, null, false)
   $dirty → false
 > $href("/document/edit", Document), $href("/document/edit/new"), $href("/document/edit", { Id: 3, Mode: "x" })
-  throws TypeError: vm.$href is not a function
+  = ["/document/edit/5", "/document/edit/new", "/document/edit/3?Mode=x"]
 > $mailto("a@b.c", "Hi there"), $callphone("123")
-  throws TypeError: vm.$mailto is not a function
+  = ["mailto:a@b.c?subject=Hi%20there", "tel:123"]
 > $navigate("/document/edit", Document)
-  throws TypeError: vm.$navigate is not a function
+  bus closeAllPopups()
+  bus closeAllPopups()
+  bus modalCloseAll()
+  bus showSidePane(null)
+  bus navigateto({url: "/document/edit/5"})
 > $navigate("/document/edit", 6, true, Rows)
-  throws TypeError: vm.$navigate is not a function
+  bus closeAllPopups()
+  window.open("/document/edit/6", "_blank")
 > Document.Memo = "m"; $navigate(…, { saveRequired: true })
   ev Document.Memo.changing(@Root.Document, "m", "", "Memo")
   ev Model.dirty.change(true, "Document.Memo")
   ev Document.Memo.change(@Root.Document, "m", "", "Memo")
-  throws TypeError: vm.$navigate is not a function
-  $dirty → true
+  bus closeAllPopups()
+  bus closeAllPopups()
+  ev Model.beforeSave(@Root)
+  bus beginRequest("/_data/save")
+  fetch POST /_data/save {"baseUrl":"/_page/document/edit/5","data":{"Document":{"Id":5,"Name":"Doc","Memo":"m","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}} → 200 {"Document":{"Id":5,"Name":"Doc","Memo":"m","Agent":{"Id":0,"Name":""},"Rows":[{"Id":1,"Qty":1},{"Id":2,"Qty":2}]}}
+  bus endRequest("/_data/save")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev TRow.construct(@~Document.Rows[], "Rows[]")
+  ev Model.saved(@Root)
+  ev Model.dirty.change(false, undefined)
+  bus closeAllPopups()
+  bus modalCloseAll()
+  bus showSidePane(null)
+  bus navigateto({url: "/document/edit/6"})
 > $navigateSimple("/document/edit/7"), $navigateSimple("/x", true)
-  throws TypeError: vm.$navigateSimple is not a function
+  bus closeAllPopups()
+  bus closeAllPopups()
+  bus modalCloseAll()
+  bus showSidePane(null)
+  bus navigateto({url: "/document/edit/7"})
+  bus closeAllPopups()
+  window.open("/x", "_blank")
 > $navigateExternal("https://x"), $navigateExternal("https://y", true)
-  throws TypeError: vm.$navigateExternal is not a function
+  bus closeAllPopups()
+  location.assign("https://x")
+  bus closeAllPopups()
+  window.open("https://y", "_blank")
 > $openSelected("/row/edit", Rows), nothing selected
-  throws TypeError: vm.$openSelected is not a function
+  bus closeAllPopups()
 > Rows[0].$select(); $openSelected("/row/edit", Rows, true)
   ev Document.Rows[].select(@Root.Document.Rows, @Root.Document.Rows[0])
-  throws TypeError: vm.$openSelected is not a function
+  bus closeAllPopups()
+  bus closeAllPopups()
+  window.open("/row/edit/1", "_blank")
 > $openSelectedFrame("/row/frame", Rows)
-  throws TypeError: vm.$openSelectedFrame is not a function
+  bus openframe("/row/frame/1")
 > $download("/doc.pdf")
-  throws TypeError: vm.$download is not a function
+  bus closeAllPopups()
+  location =("/file/doc-pdf")
 > $file("/document/print", 5), { action: "download" }, { action: "print" }
-  throws TypeError: vm.$file is not a function
+  bus closeAllPopups()
+  window.open("/_file/document/print/5", "_blank")
+  bus closeAllPopups()
+  html.downloadUrl("/_file/document/print/5?Lang=uk&export=1")
+  bus closeAllPopups()
+  html.printDirect("/_file/document/print/5")
 > $attachment("/document/att", 3), { export: true }, { newWindow: true }, { print: true }
-  throws TypeError: vm.$attachment is not a function
+  bus closeAllPopups()
+  location.assign("/attachment/show/3?base=%2Fdocument%2Fatt")
+  bus closeAllPopups()
+  location.assign("/attachment/export/3?base=%2Fdocument%2Fatt")
+  bus closeAllPopups()
+  window.open("/attachment/show/3?base=%2Fdocument%2Fatt", "_blank")
+  bus closeAllPopups()
+  html.printDirect("/attachment/show/3?base=%2Fdocument%2Fatt")
 > $report("rep", Document)
-  throws TypeError: vm.$report is not a function
+  bus closeAllPopups()
+  window.open("/report/show/5?base=%2F_page%2Fdocument%2Fedit%2F5&rep=rep", "_blank")
 > $report("rep", Document, { export: true, format: "pdf" }), { print: true }, { attach: true }, { viewer: "v" }
-  throws TypeError: vm.$report is not a function
+  bus closeAllPopups()
+  location =("/report/export/5?base=%2F_page%2Fdocument%2Fedit%2F5&rep=rep&format=pdf")
+  bus closeAllPopups()
+  html.printDirect("/report/print/5?base=%2F_page%2Fdocument%2Fedit%2F5&rep=rep")
+  bus closeAllPopups()
+  bus closeAllPopups()
+  window.open("/v/show/5?base=document%2Fother%2Fedit%2F5&rep=rep&X=1", "_blank")
 > $report("rep", Document, { validRequired: true })
-  throws TypeError: vm.$report is not a function
+  bus closeAllPopups()
+  window.open("/report/show/5?base=%2F_page%2Fdocument%2Fedit%2F5&rep=rep", "_blank")
 > $export(Document, "/document/exp", { F: 1 }), $export()
-  throws TypeError: vm.$export is not a function
+  location =("/_export/document/exp/5?F=1")
+  location =("/_export/document/edit/5")
 > $showSidePane("/agent/pane", 7, { X: 1 }); $hideSidePane()
-  throws TypeError: vm.$showSidePane is not a function
+  bus showSidePane("/_navpane/agent/pane/7?X=1")
+  bus showSidePane(null)
 > $shareUrl()
   bus activeTabUrl({url: ""}) → "/document/edit/5"
   = "/document/edit/5"
 > $showHelp("/doc"), $helpHref("/doc")
-  throws TypeError: vm.$showHelp is not a function
+  console.warn "help url is not specified"
+  window.open("", "_blank")
+  console.warn "help url is not specified"
+  = ""
 > $print()
   window.print()
 > $inlineOpen("dlg"); $inlineClose("dlg", 1); $inlineDepth(); $closeAllPopups()
-  throws TypeError: vm.$inlineOpen is not a function
+  bus inlineDialog({cmd: "open", id: "dlg"})
+  bus inlineDialog({cmd: "close", id: "dlg", result: 1})
+  bus inlineDialogCount({count: 0})
+  bus closeAllPopups()
+  = 0
 > create
   ev TDocumentArray.construct(@~Documents)
   ev TDocument.construct(@~Documents[], "Documents[]")
@@ -1106,10 +1326,16 @@
   bus registerData(vm:L, {caller: null}) → vm:A
   bus isModalRequery({url: "/_page/document/index/0", result: false})
   [L] ev Model.load(@Root, @Root, false)
-  $dirty → false
 > L: Documents[0].$select(); $openSelected("{Name}", Documents); $openSelected("{Missing}", Documents)
   [L] ev Documents[].select(@Root.Documents, @Root.Documents[0])
-  throws TypeError: l.$openSelected is not a function
+  bus closeAllPopups()
+  bus closeAllPopups()
+  bus closeAllPopups()
+  bus modalCloseAll()
+  bus showSidePane(null)
+  bus navigateto({url: "/One/1"})
+  bus closeAllPopups()
+  throws Error: Property 'Missing' not found in TDocument object
 
 ## $upload, $uploadBlob, $uploadBlobFile
 > create
@@ -1125,19 +1351,63 @@
   ev Model.load(@Root, null, false)
   $dirty → false
 > $upload("/document/upload", "image/*", { Key: "k" })
-  throws TypeError: vm.$upload is not a function
+  bus closeAllPopups()
+  html.uploadFile("image/*", "/document/upload") → File("a.txt")
+  = Promise
+  bus beginRequest("/_file/document/upload/new?Key=k")
+  fetch POST /_file/document/upload/new?Key=k FormData(file, Key) → 200 {"Id":100}
+  bus endRequest("/_file/document/upload/new?Key=k")
+  resolved {Id: 100}
 > $upload(…) → 255 UI:
-  throws TypeError: vm.$upload is not a function
+  bus closeAllPopups()
+  html.uploadFile("image/*", "/document/upload") → File("a.txt")
+  = Promise
+  bus beginRequest("/_file/document/upload/new?Key=k")
+  fetch POST /_file/document/upload/new?Key=k FormData(file, Key) → 255 "UI:Too big"
+  bus endRequest("/_file/document/upload/new?Key=k")
+  bus confirm({promise: null, data: {message: "Too big", title: undefined, style: "alert", list: undefined}}) → true
+  resolved false
 > $upload(…) → 500
-  throws TypeError: vm.$upload is not a function
+  bus closeAllPopups()
+  html.uploadFile("image/*", "/document/upload") → File("a.txt")
+  = Promise
+  bus beginRequest("/_file/document/upload/new?Key=k")
+  fetch POST /_file/document/upload/new?Key=k FormData(file, Key) → 500 ""
+  bus endRequest("/_file/document/upload/new?Key=k")
+  alert("unknown error")
+  resolved false
 > $upload(…) → network failure
-  throws TypeError: vm.$upload is not a function
+  bus closeAllPopups()
+  html.uploadFile("image/*", "/document/upload") → File("a.txt")
+  = Promise
+  bus beginRequest("/_file/document/upload/new?Key=k")
+  fetch POST /_file/document/upload/new?Key=k FormData(file, Key) → fails fetch failed
+  bus endRequest("/_file/document/upload/new?Key=k")
+  alert("fetch failed")
+  resolved false
 > $upload(…, { catchError: true }) → network failure
-  throws TypeError: vm.$upload is not a function
+  bus closeAllPopups()
+  html.uploadFile("image/*", "/document/upload") → File("a.txt")
+  = Promise
+  bus beginRequest("/_file/document/upload/new?Key=k")
+  fetch POST /_file/document/upload/new?Key=k FormData(file, Key) → fails fetch failed
+  bus endRequest("/_file/document/upload/new?Key=k")
+  rejected TypeError("fetch failed")
 > $uploadBlob("/document/blob", "*", { Base: "B", Id: 5 })
-  throws TypeError: vm.$uploadBlob is not a function
+  bus closeAllPopups()
+  html.uploadFile("*") → File("a.txt")
+  = Promise
+  bus beginRequest("/_blob/document/blob?base=B&owner=5")
+  fetch POST /_blob/document/blob?base=B&owner=5 FormData(file) → 200 {"Id":200}
+  bus endRequest("/_blob/document/blob?base=B&owner=5")
+  resolved {Id: 200}
 > $uploadBlobFile("/document/blob", file, { Base: "B", Id: 5 }) → 255
-  throws TypeError: vm.$uploadBlobFile is not a function
+  bus beginRequest("/_blob/document/blob?base=B&owner=5")
+  fetch POST /_blob/document/blob?base=B&owner=5 FormData(file) → 255 "UI:No"
+  = Promise
+  bus endRequest("/_blob/document/blob?base=B&owner=5")
+  bus confirm({promise: null, data: {message: "No", title: undefined, style: "alert", list: undefined}}) → true
+  resolved false
 
 ## $eusign
 > create
@@ -1153,7 +1423,9 @@
   ev Model.load(@Root, null, false)
   $dirty → false
 > $eusign("/document/sign", 3)
-  throws TypeError: vm.$eusign is not a function
+  bus modal("/eusign/index", {promise: null, data: 3, query: {base: "/document/sign"}, raw: true}) → {signed: true}
+  = Promise
+  resolved {signed: true}
 
 ## a dialog and its caller: saveEvent, $emitCaller, $saveCaller, $dirtyCaller
 > create
@@ -1295,53 +1567,49 @@
   ev Model.load(@Root, null, false)
   $dirty → false
 > $format(1234.5, "Currency"), $format(0, { dataType: "Number", hideZeros: true }), $format("x", { format: "[{0}]" })
-  throws TypeError: vm.$format is not a function
+  = ["1 234,50", "", "[x]"]
 > $format(new Date(2026, 0, 15), { dataType: "Date" }), $format(5), $format(5, { mask: "##-##" })
-  throws TypeError: vm.$format is not a function
+  = ["15.01.2026", 5, "12-34"]
 > $getNegativeRedClass(-1), (1), ("x")
-  throws TypeError: vm.$getNegativeRedClass is not a function
+  = ["negative-red", "", ""]
 > $maxChars("abcdef", 3), $toJson({ A: 1 }), $sanitize("<b>x</b>")
-  throws TypeError: vm.$maxChars is not a function
+  = ["ab…", "{\n  \"A\": 1\n}", "<b>x</b>"]
 > $hasError("Document.Memo"), $errorMessage("Document.Memo")
-  throws TypeError: vm.$hasError is not a function
+  = [false, ""]
 > $getErrors(), $getErrors("warning"), $getErrors(["error"])
-  throws TypeError: vm.$getErrors is not a function
+  = [[{path: {x: "Document.Memo", e: …}, msg: "Memo is required", severity: "error", index: 0}], null, [{path: {x: "Document.Memo", e: …}, msg: "Memo is required", severity: "error", index: 0}]]
 > $hasError, $errorMessage after $getErrors
-  throws TypeError: vm.$hasError is not a function
+  = [1, "Memo is required"]
 > $hasSelected(Rows, { validRequired: true })
   = false
 > $nodirty(async: Memo = "m")
-  throws TypeError: vm.$nodirty is not a function
+  ev Document.Memo.changing(@Root.Document, "m", "", "Memo")
+  ev Model.dirty.change(true, "Document.Memo")
+  ev Document.Memo.change(@Root.Document, "m", "", "Memo")
+  = Promise
+  ev Model.dirty.change(false, undefined)
+  resolved undefined
 > $isDirty, $isPristine, $canSave, $isLoading, $modelInfo, $indirectUrl, $query
   = [false, true, false, false, {}, "", {}]
 > $clearObject(Document.Agent); $clearObject(Rows); $clearObject({ A: 1 }); $clearObject(null)
-  throws TypeError: vm.$clearObject is not a function
+  ev Model.dirty.change(true, "Document.Rows")
+  = {A: null}
+  $dirty → true
 > $defer(fn)
   ev Document.Name.changing(@Root.Document, "deferred", "Doc", "Name")
-  ev Model.dirty.change(true, "Document.Name")
   ev Document.Name.change(@Root.Document, "deferred", "Doc", "Name")
-  $dirty → true
 > $ctrl members
-  = ["$save", "$ensureSaved", "$savePart", "$invoke", "$close", "$modalClose", "$msg", "$alert", "$confirm", "$saveModified", "$asyncValid", "$toast", "$requery", "$reload", "$notifyOwner", "$defer", "$setFilter", "$clearFilter", "$expand", "$emitCaller", "$emitSaveEvent", "$emitGlobal", "$emitParentTab", "$longOperation", "$requeryNew", "$saveCaller", "$dirtyCaller", "$shareUrl", "$isDirty", "$isPristine"]
+  = ["$save", "$ensureSaved", "$savePart", "$invoke", "$close", "$modalClose", "$msg", "$alert", "$confirm", "$showDialog", "$inlineOpen", "$inlineClose", "$inlineDepth", "$saveModified", "$asyncValid", "$toast", "$requery", "$reload", "$notifyOwner", "$navigate", "$defer", "$setFilter", "$clearFilter", "$expand", "$focus", "$report", "$upload", "$uploadBlob", "$uploadBlobFile", "$file", "$emitCaller", "$emitSaveEvent", "$emitGlobal", "$emitParentTab", "$nodirty", "$showSidePane", "$hideSidePane", "$longOperation", "$requeryNew", "$saveCaller", "$dirtyCaller", "$shareUrl", "$isDirty", "$isPristine"]
 > data
   = TRoot {
       Document: TDocument {
         Id: 5
         Name: "deferred"
-        Memo: ""
+        Memo: "m"
         Agent: TAgent {
           Id: 0
           Name: ""
         }
-        Rows: [
-          [0] TRow {
-            Id: 1
-            Qty: 1
-          }
-          [1] TRow {
-            Id: 2
-            Qty: 2
-          }
-        ]
+        Rows: []
       }
     }

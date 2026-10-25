@@ -2,8 +2,8 @@
 // over the page's reactive model root, created by the page's component (page.ts), which forwards its $-members to
 // the template. It is the page for everyone else: the model ($vm), the template code ($ctrl, its face), the shell
 // (tab.root, registerData, closePlain), the components (inject '$page').
-// Ported member by member, as base.js has them (the trace: test/trace/base.net48.trace); step B1: the page's
-// life, what the shell asks of a page, the messages. Its methods are bound to it, as Vue 2 bound a component's.
+// Ported member by member, as base.js has them, every one (the trace: test/trace/base.port.js against
+// base.net48.trace). Its methods are bound to it, as Vue 2 bound a component's.
 
 import { markRaw, nextTick, shallowReactive } from 'vue';
 import { bus } from '../bus.js';
@@ -25,6 +25,9 @@ const std = {
 	get utils() { return require('std:utils') as any; },
 	get modelInfo() { return require('std:modelInfo') as any; },
 	get dataservice() { return require('std:dataservice') as any; },
+	get mask() { return require('std:mask') as any; },
+	get html() { return require('std:html') as any; },
+	get http() { return require('std:http') as any; },
 	get locale() { return window.$$locale as any; },
 	get store() { return app.components['std:store'] as any; }
 };
@@ -45,6 +48,24 @@ function isPermissionsDisabled(opts: any, arg: any): boolean {
 	if (prop in perm)
 		return !perm[prop];
 	return true;
+}
+
+// The shell's modal (bus 'modal'): resolves with the dialog's result after cb has it; never, if the dialog is
+// cancelled (the shell does not settle the promise).
+function __runDialog(url: string, arg: unknown, query: unknown, cb: (result: any) => void): Promise<unknown> {
+	if (url.indexOf('?') !== -1) {
+		const x = std.url.parseUrlAndQuery(url);
+		url = x.url;
+		query = x.query;
+	}
+	return new Promise(function (resolve) {
+		const dlgData = { promise: null as Promise<unknown> | null, data: arg, query: query, rd: true };
+		bus.$emit('modal', url, dlgData);
+		dlgData.promise!.then(function (result) {
+			cb(result);
+			resolve(result);
+		});
+	});
 }
 
 function treeNormalPath(path: string): string | undefined {
@@ -174,6 +195,150 @@ export class Controller {
 		bus.$emit('toast', toast);
 	}
 
+	// --- dialogs --------------------------------------------------------------------------------------------------
+
+	$showDialog(url: string, arg?: unknown, query?: unknown, opts?: any): Promise<unknown> | undefined {
+		return this.$dialog('show', url, arg, query, opts);
+	}
+
+	$inlineOpen(id: string): void {
+		bus.$emit('inlineDialog', { cmd: 'open', id: id });
+	}
+
+	$inlineClose(id: string, result?: unknown): void {
+		bus.$emit('inlineDialog', { cmd: 'close', id: id, result: result });
+	}
+
+	$inlineDepth(): number {
+		const opts = { count: 0 };
+		bus.$emit('inlineDialogCount', opts);
+		return opts.count;
+	}
+
+	$closeAllPopups(): void {
+		bus.$emit('closeAllPopups');
+	}
+
+	// command: new, append, browse, edit-selected, show-selected, edit, copy; else a plain show. The result of the
+	// dialog is merged where the command says. saveRequired: the page is saved first, the dialog opens if it was (B22).
+	$dialog(command: string, url: string, arg?: any, query?: any, opts?: any): Promise<unknown> | undefined {
+		if (this.$isReadOnly(opts))
+			return;
+		const that = this;
+		bus.$emit('closeAllPopups');
+		function argIsNotAnArray() {
+			if (!std.utils.isArray(arg)) {
+				console.error(`$dialog.${command}. The argument is not an array`);
+				return true;
+			}
+		}
+		function argIsNotAnObject() {
+			if (!std.utils.isObjectExact(arg)) {
+				console.error(`$dialog.${command}. The argument is not an object`);
+				return true;
+			}
+		}
+
+		function simpleMerge(target: any, src: any) {
+			for (const p in target) {
+				if (p in src)
+					target[p] = src[p];
+				else
+					target[p] = undefined;
+			}
+		}
+
+		function doDialog(): Promise<unknown> | undefined {
+			// result always is raw data
+			if (that.$isDisabledAlert(opts, arg))
+				return;
+			if (std.utils.isFunction(query))
+				query = query();
+			const reloadAfter = opts && opts.reloadAfter;
+			switch (command) {
+				case 'new':
+					if (argIsNotAnArray()) return;
+					return __runDialog(url, 0, query, (result) => {
+						const sel = arg.$selected;
+						if (sel)
+							sel.$merge(result);
+					});
+				case 'append':
+					if (argIsNotAnArray()) return;
+					return __runDialog(url, 0, query, (result) => {
+						arg.$append(result);
+						if (reloadAfter)
+							that.$reload();
+					});
+				case 'browse':
+					if (!std.utils.isObject(arg)) {
+						console.error(`$dialog.${command}. The argument is not an object`);
+						return;
+					}
+					return __runDialog(url, arg, query, (result) => {
+						if (arg.$merge) {
+							arg.$merge(result);
+						} else if (result !== false) {
+							simpleMerge(arg, result);
+						}
+					});
+				case 'edit-selected':
+					if (argIsNotAnArray()) return;
+					if (!arg.$selected) return;
+					if (that.$isDisabledAlert(opts, arg.$selected))
+						return;
+					return __runDialog(url, arg.$selected, query, (result) => {
+						arg.$selected.$merge(result);
+						arg.__fireChange__('selected');
+						if (reloadAfter)
+							that.$reload();
+					});
+				case 'show-selected':
+					if (argIsNotAnArray()) return;
+					if (!arg.$selected) return;
+					return __runDialog(url, arg.$selected, query, (result) => {
+						if (result === 'reload' || reloadAfter)
+							that.$reload();
+					});
+				case 'edit':
+					if (argIsNotAnObject()) return;
+					return __runDialog(url, arg, query, (result) => {
+						if (arg.$merge && std.utils.isObjectExact(result))
+							arg.$merge(result);
+						if (result === 'reload' || reloadAfter)
+							that.$reload();
+					});
+				case 'copy': {
+					if (argIsNotAnObject()) return;
+					const arr = arg.$parent;
+					return __runDialog(url, arg, query, (result) => {
+						arr.$append(result);
+						if (reloadAfter)
+							that.$reload();
+					});
+				}
+				default: // simple show dialog
+					return __runDialog(url, arg, query, () => {
+						if (reloadAfter)
+							that.$reload();
+					});
+			}
+		}
+
+		if (opts && opts.validRequired && this.$data.$invalid) {
+			this.$alert(std.locale.$MakeValidFirst);
+			return;
+		}
+
+		const mo = this.$data.$mainObject;
+		if (opts && opts.saveRequired && (this.$isDirty || mo && mo.$isNew)) {
+			this.$data.$setDirty(true);
+			const saving = this.$save();
+			return saving ? saving.then(() => doDialog()) : undefined;
+		}
+		return doDialog();
+	}
+
 	// --- closing --------------------------------------------------------------------------------------------------
 
 	$close(): void {
@@ -183,6 +348,50 @@ export class Controller {
 
 	$modalClose(result?: unknown): void {
 		bus.$emit('modalClose', result);
+	}
+
+	// A dialog's OK: saved first if dirty (valid first, if asked); the modal closes with the saved element.
+	$modalSaveAndClose(result?: unknown, opts?: any): void {
+		if (this.$isDirty) {
+			const root = this.$data;
+			if (opts && opts.validRequired && root.$invalid) {
+				const errs = makeErrors(root.$forceValidate());
+				this.$alert(std.locale.$MakeValidFirst, undefined, errs);
+				return;
+			}
+			this.$save()!.then((result) => bus.$emit('modalClose', result));
+		}
+		else
+			bus.$emit('modalClose', result);
+	}
+
+	$modalSelect(array: any, opts?: any): void {
+		if (!('$selected' in array)) {
+			console.error('Invalid array for $modalSelect');
+			return;
+		}
+		if (opts && opts.validRequired) {
+			const root = this.$data;
+			if (!root.$valid) return;
+		}
+		this.$modalClose(array.$selected);
+	}
+
+	$modalSelectChecked(array: any): void {
+		if (!('$checked' in array)) {
+			console.error('invalid array for $modalSelectChecked');
+			return;
+		}
+		const chArray = array.$checked;
+		if (chArray.length > 0)
+			this.$modalClose(chArray);
+	}
+
+	$saveAndClose(opts?: any): void {
+		if (this.$isDirty)
+			this.$save(opts)!.then(() => this.$close());
+		else
+			this.$close();
 	}
 
 	$saveModified(message?: string, title?: string, validRequired?: boolean): boolean {
@@ -288,6 +497,581 @@ export class Controller {
 
 	$delegate(name: string): unknown {
 		return this.$data._delegate_(name);
+	}
+
+	// --- commands: the template's (root._exec_, _canExec_), moves, delegates ----------------------------------------
+
+	$marker(): boolean {
+		return true;
+	}
+
+	$exec(cmd: string, arg?: unknown, confirm?: unknown, opts?: any): unknown {
+		if (this.$isReadOnly(opts)) return;
+		if (this.$isLoading) return;
+
+		if (this.$isDisabledAlert(opts, arg))
+			return;
+
+		bus.$emit('closeAllPopups');
+		const root = this.$data;
+		return root._exec_(cmd, arg, confirm, opts);
+	}
+
+	$execSelected(cmd: string, arg: any, confirm?: unknown): void {
+		if (this.$isLoading) return;
+		const root = this.$data;
+		if (!std.utils.isArray(arg)) {
+			console.error('Invalid argument for $execSelected');
+			return;
+		}
+		bus.$emit('closeAllPopups');
+		if (!confirm)
+			root._exec_(cmd, arg.$selected);
+		else
+			this.$confirm(confirm).then(() => root._exec_(cmd, arg.$selected));
+	}
+
+	$isPermissionsDisabled(opts: any, arg: any): boolean {
+		return isPermissionsDisabled(opts, arg);
+	}
+
+	$canExecute(cmd: string, arg?: unknown, opts?: any): boolean {
+		//if (this.$isLoading) return false; // do not check here. avoid blinking
+		if (this.$isReadOnly(opts))
+			return false;
+		const root = this.$data;
+		return root._canExec_(cmd, arg, opts);
+	}
+
+	$canExecSel(cmd: string, arg: any, opts?: any): boolean {
+		if (!arg) return false;
+		const sel = arg.$selected;
+		if (!sel) return false;
+		return this.$canExecute(cmd, sel, opts);
+	}
+
+	$move(dir: string, arg: any): void {
+		if (!arg) return;
+		arg.$parent.$move(arg, dir);
+	}
+
+	$moveSelected(dir: string, arg: any): void {
+		if (!arg) return;
+		const sel = arg.$selected;
+		if (sel)
+			arg.$move(sel, dir);
+	}
+
+	$canMove(dir: string, arg: any): boolean {
+		if (!arg) return false;
+		return arg.$parent.$canMove(arg, dir);
+	}
+
+	$canMoveSelected(dir: string, arg: any): boolean {
+		if (!arg) return false;
+		const sel = arg.$selected;
+		if (!sel) return false;
+		return arg.$canMove(sel, dir);
+	}
+
+	// A delegate of the template (delegates[name]) called with the clicked element.
+	$handleClick(name: string, ev: Event): void {
+		ev.preventDefault();
+		ev.stopPropagation();
+		const tml = this.$data.$template;
+		if (!tml) return;
+		const cmd = tml.delegates;
+		if (!cmd) return;
+		const func = cmd[name];
+		if (!func) return;
+		func.call(this.$data, ev.target, name);
+	}
+
+	$hasChecked(arr: any): unknown {
+		return arr && arr.$checked && arr.$checked.length;
+	}
+
+	$sanitize(text: string): string {
+		return std.utils.text.sanitize(text);
+	}
+
+	// The element of id htmlid, or its first input, gets the focus after the update.
+	$focus(htmlid: string): void {
+		const elem = document.querySelector('#' + htmlid) as HTMLElement | null;
+		if (!elem) return;
+		const ch = elem.querySelector('input, textarea, button, select') as HTMLElement | null;
+		this.$defer(() => {
+			if (ch && ch.focus)
+				ch.focus();
+			else if (elem.focus)
+				elem.focus();
+		});
+	}
+
+	$toJson(data: unknown): string {
+		return std.utils.toJson(data);
+	}
+
+	$maxChars(text: string, length: number): string {
+		return std.utils.text.maxChars(text, length);
+	}
+
+	// --- navigation -----------------------------------------------------------------------------------------------
+
+	$mailto(arg: string, subject?: string): string {
+		let href = 'mailto:' + arg;
+		if (subject)
+			href += '?subject=' + std.url.encodeUrl(subject);
+		return href;
+	}
+
+	$callphone(phone: string): string {
+		return `tel:${phone}`;
+	}
+
+	$href(url: string, data?: unknown): string {
+		return std.url.createUrlForNavigate(url, data);
+	}
+
+	// A new window gets this page's token: its saves come back through childrenSaved (__notified).
+	$navigate(url: string, data?: unknown, newWindow?: boolean, update?: unknown, opts?: any): void {
+		if (this.$isReadOnly(opts)) return;
+		bus.$emit('closeAllPopups');
+
+		const doNavigate = () => {
+			const urlToNavigate = std.url.createUrlForNavigate(url, data);
+			if (newWindow === true) {
+				const nwin = window.open(urlToNavigate, '_blank') as any;
+				if (nwin)
+					nwin.$$token = { token: this.__currentToken__, update: update };
+			}
+			else
+				this.$store.commit('navigate', { url: urlToNavigate });
+		};
+		if (opts && opts.saveRequired && this.$isDirty)
+			this.$save()!.then(() => doNavigate());
+		else
+			doNavigate();
+	}
+
+	$navigateSimple(url: string, newWindow?: boolean, update?: unknown): void {
+		bus.$emit('closeAllPopups');
+		if (newWindow === true) {
+			const nwin = window.open(url, '_blank') as any;
+			if (nwin)
+				nwin.$$token = { token: this.__currentToken__, update: update };
+		}
+		else
+			this.$store.commit('navigate', { url: url });
+	}
+
+	$navigateExternal(url: string, newWindow?: boolean): void {
+		bus.$emit('closeAllPopups');
+		if (newWindow === true) {
+			window.open(url, '_blank');
+		}
+		else
+			window.location.assign(url);
+	}
+
+	$openSelectedFrame(url: string, arr: any): void {
+		url = url || '';
+		const sel = arr.$selected;
+		if (!sel)
+			return;
+		const urlToNavigate = std.url.createUrlForNavigate(url, sel.$id);
+		bus.$emit('openframe', urlToNavigate);
+	}
+
+	// url '{Prop}': the selected element's property holds it.
+	$openSelected(url: string, arr: any, newwin?: boolean, update?: unknown): void {
+		bus.$emit('closeAllPopups');
+		url = url || '';
+		const sel = arr.$selected;
+		if (!sel)
+			return;
+		if (url.startsWith('{')) { // decorated. defer evaluate
+			url = url.substring(1, url.length - 1);
+			const nUrl = std.utils.eval(sel, url);
+			if (!nUrl)
+				throw new Error(`Property '${url}' not found in ${sel.constructor.name} object`);
+			url = nUrl;
+		}
+		this.$navigate(url, sel.$id, newwin, update);
+	}
+
+	// The side pane of the shell: _navpane/url/arg?data; null hides it.
+	$showSidePane(url: string, arg?: unknown, data?: object): void {
+		const newurl = std.url.combine('_navpane', url, arg || '0') + std.url.makeQueryString(data);
+		bus.$emit('showSidePane', newurl);
+	}
+
+	$hideSidePane(): void {
+		bus.$emit('showSidePane', null);
+	}
+
+	$showHelp(path: string): void {
+		const w = window as any;
+		if (w.$$helpWindow && !w.$$helpWindow.closed)
+			w.$$helpWindow.close();
+		w.$$helpWindow = window.open(this.$helpHref(path), '_blank');
+	}
+
+	$helpHref(path: string): string {
+		return std.url.helpHref(path);
+	}
+
+	// --- files, exports, reports ----------------------------------------------------------------------------------
+
+	$download(url: string): void {
+		bus.$emit('closeAllPopups');
+		const root = window.$$rootUrl;
+		url = std.url.combine('/file', url.replace('.', '-'));
+		(window as any).location = root + url;
+	}
+
+	async $uploadBlob(url: string, accept?: string, data?: any, opts?: any): Promise<unknown> {
+		bus.$emit('closeAllPopups');
+		try {
+			const file = await std.html.uploadFile(accept);
+			return await this.$uploadBlobFile(url, file, data, { catchError: true });
+		} catch (err) {
+			err = err || 'unknown error';
+			if (opts && opts.catchError)
+				throw err;
+			else
+				this.$alertUi(err);
+			return false;
+		}
+	}
+
+	// a ready file (paste, drop): no picker. No closeAllPopups either — the editor may itself live in a popup
+	async $uploadBlobFile(url: string, file: File, data?: any, opts?: any): Promise<unknown> {
+		const root = window.$$rootUrl;
+		try {
+			const dat = new FormData();
+			dat.append('file', file, file.name);
+			// an attachment: exactly Id and Base of data, nothing else reaches the query
+			const qry = data ? { base: data.Base, owner: data.Id } : null;
+			const uploadUrl = std.url.combine(root, '_blob', url) + std.url.makeQueryString(qry);
+			return await std.http.upload(uploadUrl, dat);
+		} catch (err) {
+			err = err || 'unknown error';
+			if (opts && opts.catchError)
+				throw err;
+			else
+				this.$alertUi(err);
+			return false;
+		}
+	}
+
+	async $upload(url: string, accept?: string, data?: any, opts?: any): Promise<unknown> {
+		bus.$emit('closeAllPopups');
+		const root = window.$$rootUrl;
+		try {
+			const file = await std.html.uploadFile(accept, url);
+			const dat = new FormData();
+			dat.append('file', file, file.name);
+			if (data)
+				dat.append('Key', data.Key || null);
+			let uploadUrl = std.url.combine(root, '_file', url);
+			uploadUrl = std.url.createUrlForNavigate(uploadUrl, data);
+			return await std.http.upload(uploadUrl, dat);
+		} catch (err) {
+			err = err || 'unknown error';
+			if (opts && opts.catchError)
+				throw err;
+			else
+				this.$alertUi(err);
+			return false;
+		}
+	}
+
+	// _file/url/id: opened, downloaded (action 'download') or printed (action 'print'); the element's $token goes too.
+	$file(url: string, arg: any, opts?: any, dat?: Record<string, unknown>): void {
+		bus.$emit('closeAllPopups');
+		const doFile = () => {
+			const root = window.$$rootUrl;
+			let id = arg;
+			let token = undefined;
+			if (arg && std.utils.isObject(arg)) {
+				id = std.utils.getStringId(arg);
+				if (arg._meta_ && arg._meta_.$token)
+					token = arg[arg._meta_.$token];
+			}
+			let fileUrl = std.url.combine(root, '_file', url, id);
+			const qry = dat || {};
+			const action = (opts || {}).action;
+			if (token)
+				qry.token = token;
+			if (action == 'download')
+				qry.export = 1;
+			fileUrl += std.url.makeQueryString(qry);
+			switch (action) {
+				case 'download':
+					std.html.downloadUrl(fileUrl);
+					break;
+				case 'print':
+					std.html.printDirect(fileUrl);
+					break;
+				default:
+					window.open(fileUrl, '_blank');
+			}
+		};
+		if (opts && opts.saveRequired && this.$isDirty) {
+			this.$save()!.then(() => {
+				doFile();
+			});
+		} else
+			doFile();
+	}
+
+	$attachment(url: string, arg: any, opts?: any): void {
+		bus.$emit('closeAllPopups');
+		const root = window.$$rootUrl;
+		const cmd = opts && opts.export ? 'export' : 'show';
+		let id = arg;
+		let token = undefined;
+		if (arg && std.utils.isObject(arg)) {
+			id = std.utils.getStringId(arg);
+			if (arg._meta_ && arg._meta_.$token)
+				token = arg[arg._meta_.$token];
+		}
+		let attUrl = std.url.combine(root, 'attachment', cmd, id);
+		const qry: Record<string, unknown> = { base: url };
+		if (token)
+			qry.token = token;
+		attUrl = attUrl + std.url.makeQueryString(qry);
+		if (opts && opts.newWindow)
+			window.open(attUrl, '_blank');
+		else if (opts && opts.print)
+			std.html.printDirect(attUrl);
+		else
+			window.location.assign(attUrl);
+	}
+
+	// The signing dialog (eusign/index) over the attachment arg; its result. Net48 called an undeclared cb and
+	// alerted (B25): fixed, the dialog's promise is returned.
+	$eusign(baseurl: string, arg: unknown): Promise<unknown> {
+		const dlgData = {
+			promise: null as Promise<unknown> | null, data: arg, query: { base: baseurl }, raw: true
+		};
+		bus.$emit('modal', '/eusign/index', dlgData);
+		return dlgData.promise!;
+	}
+
+	// _export/url/id (or this page's url): the browser goes there, to show the server's errors.
+	$export(arg: any, url?: string, dat?: object, opts?: any): void {
+		if (this.$isLoading) return;
+		const doExport = () => {
+			let id = arg || '0';
+			if (arg && std.utils.isObject(arg))
+				id = std.utils.getStringId(arg);
+			const root = window.$$rootUrl;
+			let newurl = url ? std.url.combine('/_export', url, id) : this.$baseUrl.split('?')[0].replace('/_page/', '/_export/');
+			newurl = std.url.combine(root, newurl) + std.url.makeQueryString(dat);
+			(window as any).location = newurl; // to display errors
+		};
+
+		if (opts && opts.saveRequired && this.$isDirty) {
+			this.$save()!.then(() => {
+				doExport();
+			});
+		}
+		else {
+			doExport();
+		}
+	}
+
+	// The page's sheet (.sheet-page table), measured and purged, to the server's exportTo: a file comes back.
+	$exportTo(format: string, fileName?: string): void {
+		const root = window.$$rootUrl;
+		const htmlTools = require('std:html', true) as any;
+		const locale = std.locale;
+		const elem = this.$el!.getElementsByClassName('sheet-page');
+		if (!elem.length) {
+			console.error('element not found (.sheet-page)');
+			return;
+		}
+		const table = elem[0];
+		const tbls = table.getElementsByTagName('table');
+		if (tbls.length == 0) {
+			console.error('element not found (.sheet-page table)');
+			return;
+		}
+		let tbl: Element = tbls[0];
+		if (htmlTools) {
+			htmlTools.getColumnsWidth(tbl);
+			// attention! from css!
+			const padding = tbl.classList.contains('compact') ? 4 : 12;
+			htmlTools.getRowHeight(tbl, padding);
+			// after colWidth, rowHeight!
+			tbl = htmlTools.purgeTable(tbl);
+		}
+		const dateLocale = locale.$DateLocale || locale.$Locale;
+		const numLocale = locale.$NumberLocale || locale.$Locale;
+		const html = `<table data-num-locale="${numLocale}" data-date-locale="${dateLocale}">${tbl.innerHTML}</table>`;
+		const data = { format, html, fileName, zoom: +(window.devicePixelRatio).toFixed(2) };
+		std.dataservice.post(dataUrl('exportTo'), std.utils.toJson(data), true).then(function (blob: Blob) {
+			if (htmlTools)
+				htmlTools.downloadBlob(blob, fileName, format);
+		}).catch(function (error: unknown) {
+			alert(error);
+		});
+	}
+
+	// <viewer>/<cmd>/<id>?base&rep: shown in a new window (no opts), exported, printed, or attached.
+	$report(rep: string, arg: any, opts?: any, repBaseUrl?: string, data?: object): void {
+		if (this.$isReadOnly(opts)) return;
+		if (this.$isLoading) return;
+		bus.$emit('closeAllPopups');
+		let cmd = 'show';
+		let fmt = '';
+		let viewer = 'report';
+		if (opts) {
+			if (opts.export) {
+				cmd = 'export';
+				fmt = opts.format || '';
+			} else if (opts.attach)
+				cmd = 'attach';
+			else if (opts.print)
+				cmd = 'print';
+			if (opts.viewer && cmd === 'show')
+				viewer = opts.viewer;
+		}
+
+		const doReport = () => {
+			let id = arg;
+			if (arg && std.utils.isObject(arg))
+				id = std.utils.getStringId(arg);
+			const root = window.$$rootUrl;
+			let url = `${root}/${viewer}/${cmd}/${id}`;
+			const reportUrl = std.url.removeFirstSlash(repBaseUrl) || this.$indirectUrl || this.$baseUrl;
+			const baseUrl = std.url.makeBaseUrl(reportUrl);
+			const qry: Record<string, unknown> = Object.assign({}, { base: baseUrl, rep: rep }, data);
+			if (fmt)
+				qry.format = fmt;
+			url = url + std.url.makeQueryString(qry);
+			// open in new window
+			if (!opts) {
+				window.open(url, '_blank');
+				return;
+			}
+			if (opts.export)
+				(window as any).location = url;
+			else if (opts.print)
+				std.html.printDirect(url);
+			else if (opts.attach)
+				return; // do nothing
+			else
+				window.open(url, '_blank');
+		};
+
+		if (opts && opts.validRequired && this.$data.$invalid) {
+			this.$alert(std.locale.$MakeValidFirst);
+			return;
+		}
+
+		if (opts && opts.saveRequired && this.$isDirty) {
+			this.$save()!.then(() => {
+				doReport();
+			});
+		} else
+			doReport();
+	}
+
+	// --- helpers --------------------------------------------------------------------------------------------------
+
+	$clearObject(obj: any): void {
+		if (!obj) return;
+		if (obj.$empty)
+			obj.$empty();
+		else {
+			for (const k of Object.keys(obj))
+				obj[k] = null;
+		}
+	}
+
+	// The callback's changes leave the dirtiness as it was.
+	async $nodirty(callback: () => unknown): Promise<void> {
+		const wasDirty = this.$data.$dirty;
+		await callback();
+		if (!this.$data) return;
+		this.$defer(() => this.$data ? this.$data.$setDirty(wasDirty) : undefined);
+	}
+
+	// path: 'Object.Prop' of the page's data; its element's errors of that key.
+	$hasError(path: string): unknown {
+		const ps = std.utils.text.splitPath(path);
+		const err = this.$data[ps.obj]._errors_;
+		if (!err) return false;
+		const arr = err[path];
+		return arr && arr.length;
+	}
+
+	$errorMessage(path: string): string {
+		const ps = std.utils.text.splitPath(path);
+		const err = this.$data[ps.obj]._errors_;
+		if (!err) return '';
+		const arr = err[path];
+		if (arr && arr.length)
+			return arr[0].msg;
+		return '';
+	}
+
+	// Every error of the model now (validated anew), of the severities asked; null when none.
+	$getErrors(severity?: string | string[]): unknown[] | null {
+		const errs = this.$data.$forceValidate();
+		if (!errs || !errs.length)
+			return null;
+
+		if (severity && !std.utils.isArray(severity))
+			severity = [severity as string];
+
+		function isInclude(sev: string) {
+			if (!severity)
+				return true; // include
+			if ((severity as string[]).indexOf(sev) !== -1)
+				return true;
+			return false;
+		}
+
+		const result = [];
+		for (const x of errs) {
+			for (let ix = 0; ix < x.e.length; ix++) {
+				const y = x.e[ix];
+				if (isInclude(y.severity))
+					result.push({ path: x, msg: y.msg, severity: y.severity, index: ix });
+			}
+		}
+		return result.length ? result : null;
+	}
+
+	// opts: a dataType, or { dataType, format, mask, hideZeros }; format 'ToString', or with {0}.
+	$format(value: any, opts?: any): unknown {
+		const utils = std.utils;
+		if (!opts) return value;
+		if (utils.isString(opts))
+			opts = { dataType: opts };
+		if (!opts.format && !opts.dataType && !opts.mask)
+			return value;
+		if (opts.format === 'ToString')
+			return utils.convertToString(value, opts);
+		if (opts.mask)
+			return value ? std.mask.getMasked(opts.mask, value) : value;
+		if (opts.dataType)
+			return utils.format(value, opts.dataType, { hideZeros: opts.hideZeros, format: opts.format });
+		if (opts.format && opts.format.indexOf('{0}') !== -1)
+			return opts.format.replace('{0}', value);
+		if (utils.isDate(value) && opts.format)
+			return utils.format(value, 'DateTime', { format: opts.format });
+		return value;
+	}
+
+	$getNegativeRedClass(value: unknown): string {
+		if (std.utils.isNumber(value))
+			return (value as number) < 0 ? 'negative-red' : '';
+		return '';
 	}
 
 	// --- the data: _data/save, reload, invoke, expand, loadlazy, dbRemove -------------------------------------------
@@ -859,7 +1643,6 @@ export class Controller {
 	}
 
 	// $ctrl: the face the template code gets ($ctrl.$save…): base.js's list, its members bound to this page.
-	// A member the port has not reached yet is absent (steps B2-B4).
 	__createController__(): object {
 		const self = this as any;
 		const ctrl: Record<string, unknown> = {};

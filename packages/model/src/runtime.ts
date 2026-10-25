@@ -7,6 +7,9 @@ export interface Platform {
 	set(target: object, prop: string, value: unknown): void;
 	// Run after the runtime's current update (Vue: nextTick; server: at once).
 	defer(fn: () => void): void;
+	// The object itself, past the runtime's observation (Vue 3: toRaw; server: the object). What the model keeps
+	// for itself is written there, unobserved, as Vue 2 did not observe its hidden members (_errors_).
+	raw<T>(obj: T): T;
 	// The file constructor; a model property of this type holds a file and starts null.
 	File: Function;
 	performance: { now(): number };

@@ -1,0 +1,332 @@
+<div class="page absolute page-grid" id="el8b8765cc-9d29-48b9-9ec1-6ce0ceab78ab"><div class="toolbar page-toolbar"><button class="btn first-elem btn-tb" :disabled="!$canSave" @click.stop.prevent="$saveAndClose({toast: null})" v-settabindex><i class="ico ico-save-close-outline"></i> Зберегти і закрити</button><button class="btn btn-tb btn-icon" :disabled="!$canSave" @click.stop.prevent="$save({toast: null, options:null})" v-settabindex><i class="ico ico-save-outline"></i> </button><div class="divider" role="separator"></div><div class="dropdown dir-down" v-dropdown><button class="btn btn-tb" toggle v-settabindex><i class="ico ico-print"></i> Друк<span class="caret"></span></button><div class="dropdown-menu menu" role="menu"><template><button class="dropdown-item" @click.stop.prevent="$navigate('/document/waybillin/print/{0}?Form=printform1', Document, false, null, {saveRequired: true})" :href="$href('/document/waybillin/print/{0}?Form=printform1', Document)" v-disable>Прибуткова накладна</button><button class="dropdown-item" @click.stop.prevent="$navigate('/document/waybillin/print/{0}?Form=printform2', Document, false, null, {saveRequired: true})" :href="$href('/document/waybillin/print/{0}?Form=printform2', Document)" v-disable>Прибуткова накладна (Page)</button></template></div></div><div class="divider" role="separator"></div><button class="btn btn-tb" v-if="!Document.Done" :disabled="!$canExecute('post', Document, {saveRequired: true,validRequired: true})" @click.stop.prevent="$exec('post', Document, {message: 'Провести документ?'}, {saveRequired: true,validRequired: true})" v-settabindex><i class="ico ico-apply"></i> Провести</button><button class="btn btn-tb" v-if="Document.Done" :disabled="!$canExecute('unPost', Document, null)" @click.stop.prevent="$exec('unPost', Document, {message: 'Скасувати проведення документу?'}, null)" v-settabindex><i class="ico ico-unapply"></i> Скасувати проведення</button><button class="btn btn-tb" v-if="Document.Done" @click.stop.prevent="$dialog('show', '/document/waybillin/showtrans', Document, null, null)" v-settabindex><i class="ico ico-apply"></i> Проводки</button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$dialog('show', '/attachment/index?Base=/document', Document, null, {saveRequired: true})" v-settabindex><i class="ico ico-attach"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button></div><div class="page-content"><template><div class="grid" style="padding:20px;height:100%;grid-template-rows:auto auto 1fr auto "><div class="flow-container"><div class="flow-panel axis-rows label-at-left"><template><h3 class="a2-header" v-text="Document.Operation.Name"></h3><textbox class="dom-autonum" label="Номер" placeholder="Автоматично" :item="Document" prop="Number"></textbox><a2-date-picker class="dom-date" label="Дата" align="center" :item="Document" prop="Date" data-type="Date" view="day"></a2-date-picker></template></div></div><div class="flow-container"><div class="flow-panel axis-rows label-at-top"><template><a2-selector class="dom-company" fetch-command="/catalog/company/fetch" display="Name" label="Компанія" :item="Document" prop="Company"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/company/browse', Document.Company, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector class="dom-ref" fetch-command="/catalog/store/fetch" display="Name" label="Склад куди" :item="Document" prop="StoreTo"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/store/browse', Document.StoreTo, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector class="dom-ref" fetch-command="/catalog/agent/fetch" display="Name" label="Контрагент" :item="Document" prop="Agent"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/agent/browse', Document.Agent, null)"><i class="ico ico-search"></i> </a></a2-selector><static class="dom-amount" label="Сума" :item="Document" prop="Sum" data-type="Currency" align="right" :text="$format(Document.Sum, {dataType: 'Currency'})"></static></template></div></div><div class="grid" style="height:100%;min-height:0;grid-template-rows:auto 1fr "><div class="a2-tab-bar"><div class="a2-tab-bar-item" :class="{'active': 'StockRows' == Document.$$TabStockRows}"><a class="a2-tab-button" :class="{'active': 'StockRows' == Document.$$TabStockRows}" @click.stop.prevent="$closeAllPopups(); Document.$$TabStockRows='StockRows'"><span class="content">Запаси</span><span class="tb-badge" v-text="Document.StockRows.Count" v-if="Document.StockRows.Count"></span></a></div><div class="a2-tab-bar-item" :class="{'active': 'ServiceRows' == Document.$$TabStockRows}"><a class="a2-tab-button" :class="{'active': 'ServiceRows' == Document.$$TabStockRows}" @click.stop.prevent="$closeAllPopups(); Document.$$TabStockRows='ServiceRows'"><span class="content">Послуги</span><span class="tb-badge" v-text="Document.ServiceRows.Count" v-if="Document.ServiceRows.Count"></span></a></div></div><template v-if ="('' + Document.$$TabStockRows) === 'StockRows'"><div class="grid" style="height:100%;min-height:0;grid-template-rows:auto 1fr "><div class="toolbar"><button class="btn first-elem btn-tb" @click.stop.prevent="Document.StockRows.$append()" v-settabindex><i class="ico ico-plus"></i> Додати рядок</button></div><div class="a2-sticky-container" style="height:100%"><table class="a2-table sticky grid-both" v-lazy="Document.StockRows"><thead><tr><td>#</td><td>Об'єкт обліку</td><td>Одиниця виміру</td><td>Кількість</td><td>Ціна</td><td>Сума</td><td>@VatRate</td><td></td></tr></thead><tbody><tr v-for="(row, rowIndex) in Document.StockRows"><td class="dom-rownumber text-right" v-text="$format(row.RowNo, {dataType: 'Number'})"></td><td class="ctrl"><a2-selector class="dom-ref" fetch-command="/catalog/item/fetch" display="Name" :fetch-command-data="{inherit: 'Unit,VatRate'}" :item="row" prop="Item"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/item/browse', row.Item, {inherit: 'Unit,VatRate'})"><i class="ico ico-search"></i> </a></a2-selector></td><td class="ctrl"><a2-selector class="dom-ref" fetch-command="/catalog/unit/fetch" display="Name" :item="row" prop="Unit"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/unit/browse', row.Unit, null)"><i class="ico ico-search"></i> </a></a2-selector></td><td class="ctrl"><textbox class="dom-qty" align="right" :item="row" prop="Qty" data-type="Number"></textbox></td><td class="ctrl"><textbox class="dom-price" align="right" :item="row" prop="Price" data-type="Currency"></textbox></td><td class="ctrl"><static class="dom-amount" :item="row" prop="Sum" data-type="Currency" align="right" :text="$format(row.Sum, {dataType: 'Currency'})"></static></td><td class="ctrl"><select class="dom-enum" is="vue:combobox" v-cloak :items-source="$data.VatRates" :item="row" prop="VatRate"></select></td><td class="text-center"><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" @click.stop.prevent="$remove(row, {message: 'Видалити рядок?'})">✕</a></td></tr></tbody></table></div></div></template><template v-else-if="('' + Document.$$TabStockRows) === 'ServiceRows'"><div class="grid" style="height:100%;min-height:0;grid-template-rows:auto 1fr "><div class="toolbar"><button class="btn first-elem btn-tb" @click.stop.prevent="Document.ServiceRows.$append()" v-settabindex><i class="ico ico-plus"></i> Додати рядок</button></div><div class="a2-sticky-container" style="height:100%"><table class="a2-table sticky grid-both" v-lazy="Document.ServiceRows"><thead><tr><td>#</td><td>Об'єкт обліку</td><td>Одиниця виміру</td><td>Кількість</td><td>Ціна</td><td>Сума</td><td>@VatRate</td><td></td></tr></thead><tbody><tr v-for="(row, rowIndex) in Document.ServiceRows"><td class="dom-rownumber text-right" v-text="$format(row.RowNo, {dataType: 'Number'})"></td><td class="ctrl"><a2-selector class="dom-ref" fetch-command="/catalog/item/fetch" display="Name" :fetch-command-data="{inherit: 'Unit,VatRate'}" :item="row" prop="Item"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/item/browse', row.Item, {inherit: 'Unit,VatRate'})"><i class="ico ico-search"></i> </a></a2-selector></td><td class="ctrl"><a2-selector class="dom-ref" fetch-command="/catalog/unit/fetch" display="Name" :item="row" prop="Unit"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/unit/browse', row.Unit, null)"><i class="ico ico-search"></i> </a></a2-selector></td><td class="ctrl"><textbox class="dom-qty" align="right" :item="row" prop="Qty" data-type="Number"></textbox></td><td class="ctrl"><textbox class="dom-price" align="right" :item="row" prop="Price" data-type="Currency"></textbox></td><td class="ctrl"><static class="dom-amount" :item="row" prop="Sum" data-type="Currency" align="right" :text="$format(row.Sum, {dataType: 'Currency'})"></static></td><td class="ctrl"><select class="dom-enum" is="vue:combobox" v-cloak :items-source="$data.VatRates" :item="row" prop="VatRate"></select></td><td class="text-center"><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" @click.stop.prevent="$remove(row, {message: 'Видалити рядок?'})">✕</a></td></tr></tbody></table></div></div></template></div><div class="flow-container"><div class="flow-panel axis-rows label-at-left"><template><a2-textarea class="dom-memo" label="Примітка" :rows="3" :item="Document" prop="Memo"></a2-textarea></template></div></div></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = (function() {
+	let module = { exports: undefined };
+
+	(function(module, exports) {
+		const template = {
+    options: {
+        globalSaveEvent: 'g.document.saved'
+    },
+    properties: {
+        'TDocument.$$TabStockRows': {type: String, value: 'StockRows'},
+		'TDocument.Sum'() { return this.StockRows.$sum(r => r.Sum) + this.ServiceRows.$sum(r => r.Sum); },
+		'TStockRow.Sum'() { return this.Qty * this.Price; },
+		'TServiceRow.Sum'() { return this.Qty * this.Price; },
+		'TDocument.$ContractOwners'() { return { Agent: this.Agent.$id, Company: this.Company.$id }; },
+		'TStockRow.$ContractOwners'() { return { Agent: this.$root.Document.Agent.$id, Company: this.$root.Document.Company.$id }; },
+		'TServiceRow.$ContractOwners'() { return { Agent: this.$root.Document.Agent.$id, Company: this.$root.Document.Company.$id }; }
+    },
+    validators: {
+        'Document.Date': `Обов'язкове поле`,
+		'Document.StoreTo': `Обов'язкове поле`,
+		'Document.Agent': `Обов'язкове поле`,
+		'Document.StockRows[].Item': `Обов'язкове поле`,
+		'Document.StockRows[].Qty': `Обов'язкове поле`,
+		'Document.StockRows[].Price': `Обов'язкове поле`,
+		'Document.ServiceRows[].Item': `Обов'язкове поле`
+    },
+    events: {
+        'Document.StockRows[].Item.change'(row) { row.Unit = row.Item.Unit; row.VatRate = row.Item.VatRate; },
+		'Document.ServiceRows[].Item.change'(row) { row.Unit = row.Item.Unit; row.VatRate = row.Item.VatRate; }
+    },
+    commands: {
+        post,
+        unPost
+    }
+};
+
+module.exports = template;
+
+async function post() {
+    const ctrl = this.$ctrl;
+    await ctrl.$invoke('post', {Id: this.Document.Id}, '/document/waybillin');
+	this.Document.Done = true;
+    ctrl.$emitGlobal('g.document.posted', this);
+    ctrl.$requery();
+}
+
+async function unPost() {
+    const ctrl = this.$ctrl;
+    await ctrl.$invoke('unpost', {Id: this.Document.Id}, '/document/waybillin');
+	this.Document.Done = false;
+    ctrl.$emitGlobal('g.document.posted', this);
+    ctrl.$requery();
+}
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Document": {
+    "Id": 1007,
+    "Done": false,
+    "Date": "2026-09-28T00:00:00",
+    "rv": "0000000000017ED3",
+    "Memo": null,
+    "UserCreated": 99,
+    "UtcDateCreated": "2026-09-28T10:03:36.63",
+    "UserModified": 99,
+    "UtcDateModified": "2026-10-24T03:51:59.98",
+    "UserPosted": null,
+    "UtcDatePosted": null,
+    "Number": null,
+    "Operation": {
+      "Id": "waybillin",
+      "Name": "Прибуткова накладна"
+    },
+    "Company": {
+      "Id": 1000,
+      "Name": "Моя фірма"
+    },
+    "StoreFrom": {},
+    "StoreTo": {
+      "Id": 1000,
+      "Name": "Основний"
+    },
+    "Agent": {
+      "Id": 1004,
+      "Name": "Основний"
+    },
+    "Contract": {},
+    "Sum": 2299.0000,
+    "BaseOrder": {},
+    "StockRows": [
+      {
+        "Id": 1096,
+        "RowNo": 1,
+        "Qty": 44.000000,
+        "Price": 22.000000,
+        "Sum": 968.0000,
+        "Item": {
+          "Id": 1000,
+          "Name": "Перший товар",
+          "Unit": {
+            "Id": 1000,
+            "Name": "Шт"
+          },
+          "VatRate": {
+            "Id": "20",
+            "Name": "20%"
+          }
+        },
+        "Unit": {
+          "Id": 1000,
+          "Name": "Шт"
+        },
+        "VatRate": {
+          "Id": "20",
+          "Name": "20%"
+        },
+        "Contract": {}
+      },
+      {
+        "Id": 1097,
+        "RowNo": 2,
+        "Qty": 33.000000,
+        "Price": 33.000000,
+        "Sum": 1089.0000,
+        "Item": {
+          "Id": 1002,
+          "Name": "Третій товар",
+          "Unit": {},
+          "VatRate": {
+            "Id": "20",
+            "Name": "20%"
+          }
+        },
+        "Unit": {},
+        "VatRate": {
+          "Id": "20",
+          "Name": "20%"
+        },
+        "Contract": {}
+      },
+      {
+        "Id": 1098,
+        "RowNo": 3,
+        "Qty": 11.000000,
+        "Price": 22.000000,
+        "Sum": 242.0000,
+        "Item": {
+          "Id": 1001,
+          "Name": "Другий товар",
+          "Unit": {},
+          "VatRate": {
+            "Id": "20",
+            "Name": "20%"
+          }
+        },
+        "Unit": {},
+        "VatRate": {
+          "Id": "20",
+          "Name": "20%"
+        },
+        "Contract": {}
+      }
+    ],
+    "ServiceRows": []
+  },
+  "VatRates": [
+    {
+      "Id": "20",
+      "Name": "20%"
+    },
+    {
+      "Id": "7",
+      "Name": "7%"
+    },
+    {
+      "Id": "14",
+      "Name": "14%"
+    },
+    {
+      "Id": "901",
+      "Name": "0% (901)"
+    },
+    {
+      "Id": "902",
+      "Name": "0% (902)"
+    },
+    {
+      "Id": "903",
+      "Name": "Без ПДВ (903)"
+    }
+  ]
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Document':TDocument,'VatRates':TVatRateArray}, $main: 'Document'}, false);
+
+function TDocument(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TDocument, {props: {'Id':Number,'Done':Boolean,'Date':Date,'rv':{type:String, len:16},'Memo':{type:String, len:255},'UserCreated':Number,'UtcDateCreated':Date,'UserModified':Number,'UtcDateModified':Date,'UserPosted':Number,'UtcDatePosted':Date,'Number':{type:String, len:64},'Operation':TROperation,'Company':TRCompany,'StoreFrom':TRStore,'StoreTo':TRStore,'Agent':TRAgent,'Contract':TRContract,'Sum':Number,'BaseOrder':TROrder,'StockRows':TStockRowArray,'ServiceRows':TServiceRowArray}, $id: 'Id'}, false);
+
+function TROperation(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TROperation, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TROperationArray(source, path, parent) {
+return cmn.createArray(source, path, TROperation, TROperationArray, parent);
+}
+
+function TRCompany(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRCompany, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRCompanyArray(source, path, parent) {
+return cmn.createArray(source, path, TRCompany, TRCompanyArray, parent);
+}
+
+function TRStore(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRStore, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRStoreArray(source, path, parent) {
+return cmn.createArray(source, path, TRStore, TRStoreArray, parent);
+}
+
+function TRAgent(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRAgent, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRAgentArray(source, path, parent) {
+return cmn.createArray(source, path, TRAgent, TRAgentArray, parent);
+}
+
+function TRContract(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRContract, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRContractArray(source, path, parent) {
+return cmn.createArray(source, path, TRContract, TRContractArray, parent);
+}
+
+function TROrder(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TROrder, {props: {'Id':Number,'Name':{type:String, len:64},'Done':Boolean,'$Url':{type:String, len:20},'$Icon':{type:String, len:22}}, $id: 'Id',$name: 'Name'}, true);
+function TROrderArray(source, path, parent) {
+return cmn.createArray(source, path, TROrder, TROrderArray, parent);
+}
+
+function TStockRow(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TStockRow, {props: {'Id':Number,'RowNo':Number,'Qty':Number,'Price':Number,'Sum':Number,'Item':TRItem,'Unit':TRUnit,'VatRate':TRVatRate,'Contract':TRContract}, $id: 'Id',$rowNo: 'RowNo'}, true);
+function TStockRowArray(source, path, parent) {
+return cmn.createArray(source, path, TStockRow, TStockRowArray, parent);
+}
+
+function TServiceRow(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TServiceRow, {props: {'Id':Number,'RowNo':Number,'Qty':Number,'Price':Number,'Sum':Number,'Item':TRItem,'Unit':TRUnit,'VatRate':TRVatRate,'Contract':TRContract}, $id: 'Id',$rowNo: 'RowNo'}, true);
+function TServiceRowArray(source, path, parent) {
+return cmn.createArray(source, path, TServiceRow, TServiceRowArray, parent);
+}
+
+function TRItem(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRItem, {props: {'Id':Number,'Name':{type:String, len:255},'Unit':TRUnit,'VatRate':TRVatRate}, $id: 'Id',$name: 'Name'}, true);
+function TRItemArray(source, path, parent) {
+return cmn.createArray(source, path, TRItem, TRItemArray, parent);
+}
+
+function TRUnit(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRUnit, {props: {'Id':Number,'Name':{type:String, len:8}}, $id: 'Id',$name: 'Name'}, true);
+function TRUnitArray(source, path, parent) {
+return cmn.createArray(source, path, TRUnit, TRUnitArray, parent);
+}
+
+function TRVatRate(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRVatRate, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRVatRateArray(source, path, parent) {
+return cmn.createArray(source, path, TRVatRate, TRVatRateArray, parent);
+}
+
+function TVatRate(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TVatRate, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TVatRateArray(source, path, parent) {
+return cmn.createArray(source, path, TVatRate, TVatRateArray, parent);
+}
+
+const ctors = {TRoot,TDocument,TROperation,TROperationArray,TRCompany,TRCompanyArray,TRStore,TRStoreArray,TRAgent,TRAgentArray,TRContract,TRContractArray,TROrder,TROrderArray,TStockRow,TStockRowArray,TServiceRow,TServiceRowArray,TRItem,TRItemArray,TRUnit,TRUnitArray,TRVatRate,TRVatRateArray,TVatRate,TVatRateArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {'ReadOnly': false}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'document/waybillin/edit/1007/',
+	inDialog: false,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://document/waybillin/edit/1007/
+</script>

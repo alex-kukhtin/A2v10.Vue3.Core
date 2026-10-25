@@ -23,6 +23,7 @@ function serverRuntime(locale) {
 			// as server/platform.js, a sloppy-mode assignment
 			set(target, prop, value) { Reflect.set(target, prop, value); },
 			defer(fn) { fn(); },
+			raw(obj) { return obj; },
 			File: function () { return this; },
 			performance: { now: () => 0 }
 		},

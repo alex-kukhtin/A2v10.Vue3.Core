@@ -5,6 +5,7 @@ import { createModel } from '@a2v10/model';
 import { createAccel } from './accel.js';
 import { bus } from './bus.js';
 import { withControls } from './controls.js';
+import { createHtml } from './html.js';
 import { createHttp } from './http.js';
 import { createConsole, createLog } from './log.js';
 import { createMask } from './mask.js';
@@ -13,6 +14,7 @@ import { platform } from './platform.js';
 import { createPopup } from './popup.js';
 import { createSignalR } from './signalr.js';
 import { store } from './store.js';
+import { createTools } from './tools.js';
 import { createUrl } from './url.js';
 
 type Model = ReturnType<typeof createModel>;
@@ -58,6 +60,8 @@ Object.assign(app.modules, {
 	},
 	'std:routing': () => ({ dataUrl: () => '_data' }),
 	'std:popup': createPopup,
+	'std:html': createHtml,
+	'std:tools': createTools,
 	'std:mask': createMask,
 	'std:accel': createAccel,
 	'std:signalR': () => createSignalR(bus)

@@ -1,5 +1,5 @@
-// v-focus, v-settabindex (Net48 directives/focus.js), unchanged in behaviour. Vue 2's bind is created, inserted is
-// mounted.
+// v-focus, v-settabindex (Net48 directives/focus.js), v-disable (directives/disable.js), unchanged in behaviour.
+// Vue 2's bind is created, inserted is mounted.
 
 import { vocabulary } from './platform.js';
 
@@ -46,6 +46,21 @@ vocabulary.directive('focus', {
 				if (el.select) el.select();
 			}, 0);
 		}
+	}
+});
+
+// v-disable (Net48 directives/disable.js): a click on a disabled element stops in the capture phase
+vocabulary.directive('disable', {
+	created(el: HTMLElement) {
+		function doDisable(this: HTMLElement, event: Event) {
+			if (this.getAttribute('disabled')) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				return false;
+			}
+		}
+		// with capture !!!
+		el.addEventListener('click', doDisable, true);
 	}
 });
 

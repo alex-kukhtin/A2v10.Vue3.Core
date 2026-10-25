@@ -8,11 +8,28 @@
 // __empty__, not $empty; Net48's $empty marked the model dirty, and a load then cleaned it (Model.load).
 const B7 = 'B7';
 
+// B25: $eusign returns the signing dialog's promise; Net48 called an undeclared cb (ReferenceError, unhandled).
+const B25 = 'B25';
+
 // seal: no Object.seal at load (packages/model/NET48.md, "Dropped for Vue 3"): an undeclared property is added,
 // a map grows after load.
 const SEAL = 'seal';
 
 const DIVERGENCES = [
+	{
+		id: B25, trace: 'page',
+		net48: [
+			'> $eusign("/document/sign", 3)',
+			'  bus modal("/eusign/index", {promise: null, data: 3, query: {base: "/document/sign"}, raw: true}) → {signed: true}',
+			'  unhandled rejection ReferenceError("cb is not defined")'
+		],
+		ours: [
+			'> $eusign("/document/sign", 3)',
+			'  bus modal("/eusign/index", {promise: null, data: 3, query: {base: "/document/sign"}, raw: true}) → {signed: true}',
+			'  = Promise',
+			'  resolved {signed: true}'
+		]
+	},
 	{
 		id: SEAL, trace: 'model',
 		net48: [

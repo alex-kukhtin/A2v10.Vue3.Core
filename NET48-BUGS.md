@@ -4,7 +4,7 @@ Found while porting the model core to `@a2v10/model` (2026-10), while tracing th
 
 Each entry: where, what, what follows from it, what the package does now, the fix proposed or decided. An ID is cited in the package's code and in `test/trace/divergences.js`.
 
-An entry is deleted when done: Net48 and the package agree, and `test/trace/divergences.js` does not cite it. Its history is in git; delete its citations in the code with it. An ID is never reused: the next are B34 and Q4.
+An entry is deleted when done: Net48 and the package agree, and `test/trace/divergences.js` does not cite it. Its history is in git; delete its citations in the code with it. An ID is never reused: the next are B35 and Q4.
 
 The package's rule: a crash is fixed at once; any other defect is kept as Net48 has it until decided here, since an application may depend on it. Deciding: fix it in the package (and in Net48, if it is critical there), add or change the scenario in `test/trace/scenarios.js`, record the divergence in `test/trace/divergences.js`; once Net48 has the fix too, drop the divergence and delete the entry.
 
@@ -33,6 +33,11 @@ The page controller is not ported yet, the platform is being ported (`@a2v10/pla
 - Port: fixed at once, `canResult.then(...)` (`packages/shell-tabbed/src/shell.ts`, `_eventModalClose`).
 - Fix: the same in A2v10.Core.
 
+**B34** `services/html.js:119-123` `removePrintFrame`: `window.frames[frameId]` is the frame's window (named access to an iframe gives its browsing context), not the element; `document.body.removeChild` of it throws TypeError.
+- Follows: once a direct print made the frame, the next `printDirect` throws before printing, and a page closing (base.js `destroyed`: `htmlTools.removePrintFrame()`) throws in its hook.
+- Port: fixed at once: `document.getElementById(frameId)` (`packages/platform/src/html.ts`).
+- Fix: the same in Net48.
+
 ## Wrong behaviour
 
 **B7** `services/datamodel.js:1102` (`$set`), `services/impl/array.js:72` (`$copy`), `:171` (`$empty`), `:274` (`$remove`) check `this.$root.isReadOnly`; no member has that name (the root's is `$readOnly`: `__modelInfo.ReadOnly` or `StateReadOnly`).
@@ -58,7 +63,7 @@ The page controller is not ported yet, the platform is being ported (`@a2v10/pla
 
 **B27** `services/http.js:95-123` `upload`: the `switch` has cases 200 and 255 only; `doRequest` (`:62-69`) breaks out of 473 when the text is not `Unauthorized`.
 - Follows: `upload` on any other status (500, 413, 401) and a request answered 473 otherwise resolve with `undefined`: the caller takes a failure for an empty success. `$upload` returns it to the application.
-- Port: kept (`packages/platform/src/http.ts`). Test: `test/core/http.js`, "upload 500", "473 not Unauthorized".
+- Port: the upload half follows Net48 (`packages/platform/src/http.ts`); the 473 half kept. Test: `test/core/http.js`, "upload 500", "473 not Unauthorized".
 - Net48: half fixed 2026-10-24 (`84e0f9ffb`): `upload` has `default: throw response.statusText` (`:117-118`). `doRequest`'s 473 not `Unauthorized` still breaks out of the switch (`:62-70`) and resolves `undefined`.
 - Fix (left): in the 473 branch, `throw response.statusText` after the `Unauthorized` check. The port follows each half as Net48 gets it.
 

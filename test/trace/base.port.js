@@ -3,7 +3,7 @@
 // divergences.js ('page'). A page is mounted as include
 // mounts it (pageComponent: the controller created over the reactive root, its life in Vue 2's order), by a
 // renderer of Vue's own over plain objects: no DOM. The scenarios drive it as they drive base.js.
-// Run: node test/trace/base.port.js        → writes test/trace/base.port.trace; prints the sections that differ
+// Run: node test/trace/base.port.js        → writes test/trace/base.port.trace; prints the sections; exit 1 if any differs
 
 'use strict';
 
@@ -162,6 +162,8 @@ pr.api.run(PAGES).then(text => {
 	}
 	const divergences = DIVERGENCES.filter(d => d.trace === 'page').length;
 	process.stdout.write(`${lines.join('\n')}\n${equal} of ${net48.size} sections equal to Net48 but for ${divergences} divergences\n`);
+	if (equal !== net48.size)
+		process.exitCode = 1;
 }, e => {
 	process.stderr.write(`${e.stack || e}\n`);
 	process.exitCode = 1;

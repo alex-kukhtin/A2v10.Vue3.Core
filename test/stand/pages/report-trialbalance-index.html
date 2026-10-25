@@ -1,0 +1,126 @@
+<div class="page absolute page-grid background-white report-page user-select" id="el4475949b-0509-41e4-87e7-3e1acc7f6487"><a2-document-title page-title="Оборотно-сальдова відомість"></a2-document-title><div class="toolbar page-toolbar report-toolbar bg-primary"><button class="btn first-elem btn-tb" :disabled="!$canExecute('generate', null, null)" @click.stop.prevent="$exec('generate', null, null, null)" v-settabindex><i class="ico ico-play-outline"></i> Сформувати</button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$print()" v-settabindex><i class="ico ico-print"></i> </button><button class="btn btn-tb btn-icon" @click.stop.prevent="$exportTo('Excel', '@Report')" v-settabindex><i class="ico ico-export-excel"></i> </button><div class="aligner"></div><div class="a2-alert warning drop-shadow shadow1" role="alert" v-if="$data.$AlertVisible" style="margin:0 .5rem 0 0"><span><span>Параметри змінено.</span>&#160;<a class="a2-hyperlink" href="javascript:void(0)" draggable="false" :disabled="!$canExecute('generate', null, null)" @click.stop.prevent="$exec('generate', null, null, null)">Сформувати зараз</a></span></div></div><a2-taskpad class="page-taskpad report-taskpad bg-primary overflow no-collapsible" initial-width="24rem" position="right" :initial-collapsed="false" style="padding:.5rem 1rem;grid-column:2"><template class="report-taskpad bg-primary"><div class="grid"><a2-period-picker class="drop-bottom-right" display="name" label="Період" :description="Filter.Period.Name" align="center" :item="Filter" prop="Period"></a2-period-picker></div></template></a2-taskpad><div class="page-content user-select report-page"><template class="user-select report-page"><div class="sheet-page sheet-report"><a2-sheet class="no-wrap grid-both" v-if="Filter.Run" :stale="$data.$AlertVisible"><template v-slot:columns><colgroup><col class="fit"/><col class="fit"/><col style="width:auto"/><col class="gray" style="width:auto"/><col class="gray" style="width:auto"/><col style="width:auto"/><col style="width:auto"/><col class="gray" style="width:auto"/><col class="gray" style="width:auto"/></colgroup></template><template v-slot:body><a2-sheet-section><template><tr class="no-wrap row-header"><td colspan="3">Рахунок</td><td colspan="2">Сальдо на початок</td><td colspan="2">Обороти за період</td><td colspan="2">Сальдо на кінець</td></tr><tr class="row-header"><td colspan="1">Код</td><td colspan="2">Назва</td><td colspan="1">Дебет</td><td colspan="1">Кредит</td><td colspan="1">Дебет</td><td colspan="1">Кредит</td><td colspan="1">Дебет</td><td colspan="1">Кредит</td></tr></template></a2-sheet-section><a2-sheet-section><template><tr class="no-wrap row-total text-right"><td class="text-default" colspan="3">Разом</td><td v-text="$format(RepData.DtStart, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(RepData.DtStart)"></td><td v-text="$format(RepData.CtStart, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(RepData.CtStart)"></td><td v-text="$format(RepData.DtSum, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(RepData.DtSum)"></td><td v-text="$format(RepData.CtSum, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(RepData.CtSum)"></td><td v-text="$format(RepData.DtEnd, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(RepData.DtEnd)"></td><td v-text="$format(RepData.CtEnd, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(RepData.CtEnd)"></td></tr></template></a2-sheet-section><a2-sheet-section><template v-for="(item, itemIndex) of RepData.Items"><tr class="no-wrap text-right"><td class="text-center" v-text="item.Id"></td><td class="wrap text-default" :title="item.Name" colspan="2" v-text="item.Name" style="min-width:20rem"></td><td v-text="$format(item.DtStart, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(item.DtStart)"></td><td v-text="$format(item.CtStart, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(item.CtStart)"></td><td v-text="$format(item.DtSum, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(item.DtSum)"></td><td v-text="$format(item.CtSum, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(item.CtSum)"></td><td v-text="$format(item.DtEnd, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(item.DtEnd)"></td><td v-text="$format(item.CtEnd, {dataType: 'Currency',hideZeros: true})" data-type="currency" :class="$getNegativeRedClass(item.CtEnd)"></td></tr></template></a2-sheet-section></template><template v-slot:col-shadow><tbody class="col-shadow"><tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr></tbody></template><template v-slot:header><tr class="row-title"><td colspan="6"></td></tr><tr class="row-parameter"><td colspan="2">Період</td><td class="bold" colspan="4" v-text="Filter.Period.Name"></td></tr><tr class="row-divider"></tr></template></a2-sheet></div><div class="empty-panel" v-if="!Filter.Run" style="margin:10rem 0"><i class="ico ico-warning-outline"></i> <div class="empty-panel-content"><span><span class="block">Звіт ще не сформовано.</span><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" :disabled="!$canExecute('generate', null, null)" @click.stop.prevent="$exec('generate', null, null, null)">Сформувати зараз</a></span></div></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = (function() {
+	let module = { exports: undefined };
+
+	(function(module, exports) {
+		const utils = require("std:utils");
+const template = {
+    options: {
+        noDirty: true
+    },
+    properties: {
+        'TRoot.$$Dirty': Boolean,
+        'TRoot.$$Loading': Boolean,
+        'TRoot.$AlertVisible'() { return this.$$Dirty && !this.$$Loading && this.Filter.Run; },
+        'TRoot.$SheetPageClass'() { return this.$AlertVisible ? 'sheet-dirty' : undefined },
+
+    },
+    commands: {
+        generate
+    },
+    events: {
+        'Model.dirty.change': modelChanged
+    }
+};
+
+module.exports = template;
+
+function modelChanged(dirty, prop) {
+	if (!dirty) return;
+	if (prop === 'Filter.Tab')
+		return;
+	this.$$Dirty = true;
+}
+
+function generate() {
+    const ctrl = this.$ctrl;
+
+    let repFilter = this.Filter;
+
+let filter = {
+    Run : true,
+    Tab : repFilter.Tab
+};
+    this.$$Loading = true;
+    let defNames = ['Run', 'Tab'];
+
+    for (let fld of Object.getOwnPropertyNames(repFilter)
+        .filter(f => !f.startsWith('_') && !f.startsWith('$') && !defNames.includes(f))) {
+        if (fld === 'Period')
+            filter[fld] = repFilter.Period.format('DateUrl');
+        else if (utils.isObjectExact(repFilter[fld]))
+            filter[fld] = repFilter[fld].Id;
+    }
+    ctrl.$requery(filter);
+}
+
+
+
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Filter": {
+    "Period": {
+      "From": "2026-10-01T00:00:00",
+      "To": "2026-10-31T00:00:00"
+    },
+    "Run": null,
+    "Tab": null
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'RepData':TRepData,'Filter':TFilter}}, false);
+
+function TRepData(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRepData, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255},'DtStart':Number,'CtStart':Number,'DtSum':Number,'CtSum':Number,'DtEnd':Number,'CtEnd':Number,'Items':TRepDataArray}, $id: 'Id',$items: 'Items',$group: true}, true);
+function TRepDataArray(source, path, parent) {
+return cmn.createArray(source, path, TRepData, TRepDataArray, parent);
+}
+
+function TFilter(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TFilter, {props: {'Period':{type: uPeriod.constructor},'Run':Boolean,'Tab':{type:String, len:255}}}, false);
+
+function TPeriod(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TPeriod, {props: {'From':Date,'To':Date}}, false);
+
+const ctors = {TRoot,TRepData,TRepDataArray,TFilter,TPeriod};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {'Levels': {"TRepData":["Acc"]}}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'report/trialbalance/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://report/trialbalance/index/
+</script>

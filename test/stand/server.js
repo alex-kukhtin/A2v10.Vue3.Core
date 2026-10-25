@@ -32,6 +32,10 @@ const FILES = {
 	'/a2v10-xaml.js.map': [path.join(XAML, 'a2v10-xaml.js.map'), 'application/json'],
 	// pages as A2v10.Core sends them (MetaAppStand, seen 2026-10-25), with v-slot for slot-scope as Core is to send
 	'/_page/catalog/company/index/0': [path.join(__dirname, 'pages/catalog-company-index.html'), 'text/html; charset=utf-8'],
+	'/_dialog/catalog/company/edit/1001': [path.join(__dirname, 'pages/catalog-company-edit.html'), 'text/html; charset=utf-8'],
+	'/_page/document/waybillin/index/0': [path.join(__dirname, 'pages/document-waybillin-index.html'), 'text/html; charset=utf-8'],
+	'/_page/document/waybillin/edit/1007': [path.join(__dirname, 'pages/document-waybillin-edit.html'), 'text/html; charset=utf-8'],
+	'/_page/report/trialbalance/index/0': [path.join(__dirname, 'pages/report-trialbalance-index.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']
 };
 
