@@ -1,0 +1,128 @@
+<div class="page absolute page-grid" id="el009bfcde-2321-4789-a30c-25aa5f6aa965"><a2-document-title :page-title="$format(Task.Id, {format: `Задача [{0}]`})"></a2-document-title><div class="toolbar page-toolbar"><button class="btn first-elem btn-tb" :disabled="(!$canSave) || null" @click.stop.prevent="$save({toast: null, options:null})" v-settabindex><i class="ico ico-save"></i> Зберегти</button><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button></div><div class="page-content"><template><div class="stack-panel vertical" style="padding:1rem;gap:1rem;width:60rem"><template><textbox class="bold" label="Назва" :item="Task" prop="Name"></textbox><a2-text-editor :item="Task" prop="Text" placeholder="Опис задачі" :delegates="$data.$TextDelegates"></a2-text-editor><div v-if="Task.Id"><h4 class="a2-header">Коментарі</h4><template v-for="(elem, elemIndex) in Comments"><div class="stack-panel vertical" :key="elemIndex" style="padding:.5rem 0;gap:.5rem"><template><div class="stack-panel horizontal align-center" style="gap:1rem"><template><div class="a2-label" v-text="$format(elem.UtcDateCreated, {dataType: 'DateTime'})"></div><button class="btn a2-inline" v-if="!elem.$$Edit" :disabled="(!$canExecute('editComment', elem, null)) || null" @click.stop.prevent="$exec('editComment', elem, null, null)" v-settabindex>Редагувати</button></template></div><a2-text-view v-if="!elem.$$Edit" :value="elem.Text" :delegates="$data.$TextDelegates"></a2-text-view><div class="stack-panel vertical" v-if="elem.$$Edit" style="gap:.5rem"><template v-if="elem.$$Edit"><a2-text-editor :item="elem" prop="$$Draft" :delegates="$data.$TextDelegates"></a2-text-editor><div class="stack-panel horizontal" style="gap:.5rem"><template><button class="btn a2-inline btn-primary" :disabled="(!$canExecute('saveComment', elem, null)) || null" @click.stop.prevent="$exec('saveComment', elem, null, null)" v-settabindex>Зберегти</button><button class="btn a2-inline" :disabled="(!$canExecute('cancelComment', elem, null)) || null" @click.stop.prevent="$exec('cancelComment', elem, null, null)" v-settabindex>Скасувати</button></template></div></template></div></template></div></template><div class="stack-panel vertical" style="gap:.5rem"><template><a2-text-editor :item="$data" prop="$$NewComment" placeholder="Коментар… Ctrl+Enter — надіслати" :delegates="$data.$CommentDelegates"></a2-text-editor><button class="btn a2-inline btn-primary" :disabled="(!$canExecute('addComment', null, null)) || null" @click.stop.prevent="$exec('addComment', null, null, null)" v-settabindex>Надіслати</button></template></div></div></template></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+	const template = define(["require", "exports"], function (require, exports) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const BASE = '/task';
+const urltools = require('std:url');
+const template = {
+	options: { skipDirty: ['Comments', 'Comments[].Text', 'Attachments'] },
+	properties: {
+		'TRoot.$$NewComment': String,
+		'TRoot.$$Uploading': Number,
+		'TRoot.$$Sending': Boolean,
+		'TComment.$$Edit': Boolean,
+		'TComment.$$Draft': String,
+		'TRoot.$TextDelegates'() { return textDelegates; },
+		'TRoot.$CommentDelegates'() { return commentDelegates; }
+	},
+	commands: {
+		addComment: { exec: addComment, canExec() { return !!this.$$NewComment && !this.$$Uploading && !this.$$Sending; } },
+		editComment(c) { c.$$Draft = c.Text; c.$$Edit = true; },
+		cancelComment(c) { c.$$Edit = false; },
+		saveComment: { exec: saveComment, canExec() { return !this.$$Uploading; } }
+	}
+};
+exports.default = template;
+const textDelegates = {
+	async UploadImage(file) {
+		this.$$Uploading += 1;
+		try {
+			if (!await this.$ctrl.$ensureSaved()) return null;
+			const row = await this.$ctrl.$uploadBlobFile('/attachment/upload', file, { Id: this.Task.Id, Base: BASE });
+			if (!row) return null;
+			this.Attachments.$append(row);
+			return '_blob/' + row.Blob.Id;
+		} finally {
+			this.$$Uploading -= 1;
+		}
+	},
+	ImageUrl(src) {
+		const m = /^_blob\/(\d+)$/.exec(src);
+		const a = m && this.Attachments.find(x => x.Blob.Id == +m[1]);
+		return a ? urltools.blobUrl(a.Blob) : null;
+	}
+};
+const commentDelegates = Object.assign({}, textDelegates, { Submit: addComment });
+async function addComment() {
+	if (!this.$$NewComment || this.$$Uploading || this.$$Sending) return;
+	this.$$Sending = true;
+	const res = await this.$ctrl.$invoke('addComment', { Id: this.Task.Id, Text: this.$$NewComment });
+	this.Comments.$append(res.Comment);
+	this.$$NewComment = '';
+	this.$$Sending = false;
+}
+async function saveComment(c) {
+	const res = await this.$ctrl.$invoke('updateComment', { Id: c.Id, Text: c.$$Draft });
+	c.Text = res.Comment.Text;
+	c.$$Edit = false;
+}
+});;
+	const rawData = {
+  "Task": {
+    "Id": 104,
+    "Name": "Вставка из Excel",
+    "Text": "![Знімок 2026-10-15 06-56-50.png](_blob/1036)\n\nhttps://github.com/alex-kukhtin/A2v10.Core/pull/18\n\nВставляет картинку"
+  },
+  "Comments": [
+    {
+      "Id": 105,
+      "Text": "![Знімок 2026-10-15 06-57-10.png](_blob/1037)",
+      "UtcDateCreated": "2026-10-15T03:57:11.133"
+    }
+  ],
+  "Attachments": [
+    {
+      "Id": 1022,
+      "Blob": {
+        "Id": 1036,
+        "Name": "Знімок 2026-10-15 06-56-50.png",
+        "Mime": "image/png",
+        "Token": "4IswIVVgFub0YSZvReW-159oIl-eDKMvRjU7Y8WWu-g"
+      }
+    },
+    {
+      "Id": 1023,
+      "Blob": {
+        "Id": 1037,
+        "Name": "Знімок 2026-10-15 06-57-10.png",
+        "Mime": "image/png",
+        "Token": "z-ekBDgUn2GchzayTef05HxetBo3dECTup5Lz6CJE_g"
+      }
+    }
+  ]
+};
+function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRoot, {props: {'Task':TTask,'Comments':TCommentArray,'Attachments':TAttachmentArray}}, false);
+function TTask(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TTask, {props: {'Id':Number,'Name':{type:String, len:255},'Text':{type:String, len:2147483647}}, $id: 'Id',$name: 'Name'}, false);
+function TComment(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TComment, {props: {'Id':Number,'Text':{type:String, len:2147483647},'UtcDateCreated':Date}, $id: 'Id'}, true);
+function TCommentArray(source, path, parent) { return cmn.createArray(source, path, TComment, TCommentArray, parent); }
+function TAttachment(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TAttachment, {props: {'Id':Number,'Blob':TBlob}, $id: 'Id'}, true);
+function TAttachmentArray(source, path, parent) { return cmn.createArray(source, path, TAttachment, TAttachmentArray, parent); }
+function TBlob(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TBlob, {props: {'Id':Number,'Name':{type:String, len:255},'Mime':{type:String, len:255},'Token':{type:String, len:16}}, $id: 'Id',$token: 'Token'}, true);
+function TBlobArray(source, path, parent) { return cmn.createArray(source, path, TBlob, TBlobArray, parent); }
+const ctors = {TRoot,TTask,TComment,TCommentArray,TAttachment,TAttachmentArray,TBlob,TBlobArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {'ReadOnly': false}, rawData);return root;}
+	return { dataModel: modelData(template, rawData) };
+};
+return {
+	baseUrl: 'task/edit/104/',
+	inDialog: false,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://task/edit/104/
+</script>

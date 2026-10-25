@@ -1,0 +1,132 @@
+<div class="page absolute" id="elcceeadb5-bd64-4c08-a5fa-9f68604f0005"><template><div class="grid" style="height:100%;grid-template-rows:auto 1fr "><div class="toolbar"><button class="btn first-elem btn-tb btn-icon" title="Змінити" :disabled="(!$hasSelected(Accounts, null)) || null" @click.stop.prevent="$dialog('edit-selected', '/accplan/national/edit', Accounts, null, null)" v-settabindex><i class="ico ico-edit"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button></div><div class="a2-sticky-container" style="height:100%"><tree-grid class="tree-grid sticky hover" folder-style="none" grid-lines="gl-h" :root="Accounts" item="Items"><template v-slot:row="row"><td class="gl-h no-wrap indent"><span class="overlay"><span class="mark"><a class="toggle" href v-if="row.that.hasChildren(row.itm)" @click.stop.prevent="row.that.toggle(row.itm)" :class="row.that.toggleClass(row.itm)"></a></span><span class="toggle-content" v-text="row.itm.Id"></span></span></td><td class="gl-h" v-text="row.itm.Name"></td><td class="gl-h" v-text="row.itm.AccountType"></td><td class="gl-h" v-text="row.itm.NormalBalance"></td><td class="gl-h" v-text="row.itm.SplitBy"></td></template><template v-slot:header="hdr"><th class="gl-h no-wrap fit"><div class="h-holder">Код</div></th><th class="gl-h"><div class="h-holder">Назва</div></th><th class="gl-h"><div class="h-holder">Тип рахунку</div></th><th class="gl-h"><div class="h-holder">Сальдо</div></th><th class="gl-h"><div class="h-holder">Розгорнуто за</div></th></template><template v-slot:columns="cols"><col :class="cols.that.columnClass('Id', true)"></col><col :class="cols.that.columnClass('Name', false)"></col><col :class="cols.that.columnClass('AccountType', false)"></col><col :class="cols.that.columnClass('NormalBalance', false)"></col><col :class="cols.that.columnClass('SplitBy', false)"></col></template></tree-grid></div></div></template><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = (function() {
+	let module = { exports: undefined };
+
+	(function(module, exports) {
+		const template = {
+    options: {
+        persistSelect: ['Accounts']
+    },
+    properties: {
+
+    },
+    commands: {
+
+    },
+    events: {
+
+    }
+};
+
+module.exports = template;
+
+
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Accounts": [
+    {
+      "Id": "13",
+      "Name": "Знос (амортизація) необоротних активів",
+      "DisplayName": "13 Знос (амортизація) необоротних активів",
+      "AccountType": "Активи",
+      "NormalBalance": "Кредитове",
+      "SplitBy": null,
+      "Items": [
+        {
+          "Id": "131",
+          "Name": "Знос основних засобів",
+          "DisplayName": "131 Знос основних засобів",
+          "AccountType": "Активи",
+          "NormalBalance": "Кредитове",
+          "SplitBy": null,
+          "Items": []
+        }
+      ]
+    },
+    {
+      "Id": "28",
+      "Name": "Товари",
+      "DisplayName": "28 Товари",
+      "AccountType": "Активи",
+      "NormalBalance": "Дебетове",
+      "SplitBy": null,
+      "Items": [
+        {
+          "Id": "281",
+          "Name": "Товари на складі",
+          "DisplayName": "281 Товари на складі",
+          "AccountType": "Активи",
+          "NormalBalance": "Дебетове",
+          "SplitBy": null,
+          "Items": []
+        }
+      ]
+    },
+    {
+      "Id": "63",
+      "Name": "Розрахунки з постачальниками та підрядниками",
+      "DisplayName": "63 Розрахунки з постачальниками та підрядниками",
+      "AccountType": "Зобов'язання",
+      "NormalBalance": "Розгорнуте",
+      "SplitBy": "Agent",
+      "Items": [
+        {
+          "Id": "631",
+          "Name": "Розрахунки з вітчизняними постачальниками",
+          "DisplayName": "631 Розрахунки з вітчизняними постачальниками",
+          "AccountType": "Зобов'язання",
+          "NormalBalance": "Розгорнуте",
+          "SplitBy": "Agent",
+          "Items": []
+        }
+      ]
+    }
+  ]
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Accounts':TAccountArray}}, false);
+
+function TAccount(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAccount, {props: {'Id':{type:String, len:64},'Name':{type:String, len:255},'DisplayName':{type:String, len:320},'AccountType':{type:String, len:31},'NormalBalance':{type:String, len:33},'SplitBy':{type:String, len:255},'Items':TAccountArray}, $id: 'Id',$name: 'Name',$items: 'Items'}, true);
+function TAccountArray(source, path, parent) {
+return cmn.createArray(source, path, TAccount, TAccountArray, parent);
+}
+
+const ctors = {TRoot,TAccount,TAccountArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'accplan/national/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://accplan/national/index/
+</script>

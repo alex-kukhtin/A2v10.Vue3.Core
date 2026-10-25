@@ -22,3 +22,6 @@ import './blobimage.js';
 import './blobpreview.js';
 import './list.js';
 import './colorpicker.js';
+import './report.js';
+import './treegrid.js';
+import './texteditor.js';
