@@ -12,6 +12,7 @@ The A2v10 client on Vue 3: the port of Net48 `Scripts/tabmain.js` and A2v10.Core
 - NET48-BUGS.md: defects of the Net48 sources, what the port does with each, its rules (IDs, next free ones).
 - packages/model/NET48.md: what the model changed on purpose.
 - COMPONENTS-TODO.md: the components not ported yet.
+- PLAN.md: work decided but not started (the 1C dialect).
 
 ## Rules
 
