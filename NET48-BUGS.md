@@ -8,7 +8,7 @@ An entry is deleted when done: Net48 and the package agree, and `test/trace/dive
 
 The package's rule: a crash is fixed at once; any other defect is kept as Net48 has it until decided here, since an application may depend on it. Deciding: fix it in the package (and in Net48, if it is critical there), add or change the scenario in `test/trace/scenarios.js`, record the divergence in `test/trace/divergences.js`; once Net48 has the fix too, drop the divergence and delete the entry.
 
-The page controller is not ported yet, the platform is being ported (`@a2v10/platform`): their entries say what the port does, and cite where the defect shows: a section and operation of `test/trace/base.net48.trace` (scenarios: `test/trace/pages.js`), or a test of `test/core/`.
+The page controller and the platform are ported (`@a2v10/platform`): their entries say what the port does, and cite where the defect shows: a section and operation of `test/trace/base.net48.trace` (scenarios: `test/trace/pages.js`), or a test of `test/core/`.
 
 ## Crashes
 

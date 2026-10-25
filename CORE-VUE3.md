@@ -4,7 +4,7 @@ The contract between A2v10.Core (`C:\A2v10_Net6\A2v10.Core`) and this repository
 
 Decided: one app per document, the shell's (2026-10-24); a page script returns a descriptor, not a component (2026-10-24); three files: the core, the shell, the XAML components (2026-10-25).
 
-Seen working in A2v10.Core (MetaAppStand, 2026-10-25): the shell; `_home`; `catalog/company` (index, the edit dialog); `document/waybillin` (the journal with its filters, the form with its rows, posting); the browse dialog of a selector.
+Seen working in A2v10.Core (MetaAppStand, 2026-10-25): the shell, its debug pane's data model; `_home`; `catalog/company` (index, the edit dialog); `catalog/agent` (index with tags); `document/waybillin` (the journal with its filters, the form with its rows, posting, the print form); `document/order` (the journal, its state filter); `report/trialbalance`; `accplan/national` (tree); `task/edit` (comments, text editor); the dialogs: browse of a selector, the agent's blob, attachments, item category.
 
 ## 1. The files
 
