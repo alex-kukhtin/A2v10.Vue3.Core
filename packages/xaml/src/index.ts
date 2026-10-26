@@ -34,6 +34,7 @@ import './inlinedialog.js';
 import './kanban.js';
 import './timepicker.js';
 import './dashboard.js';
-import './filepreview.js';
+import './upload.js';
+import './image.js';
 import './bigcalendar.js';
 import './multiselect.js';

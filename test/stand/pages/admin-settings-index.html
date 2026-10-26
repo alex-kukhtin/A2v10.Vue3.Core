@@ -1,0 +1,80 @@
+<div class="page absolute" id="el97e9d3c9-b8f8-4619-879b-89731daa9751" style="padding:2rem 0"><a2-document-title page-title="Application Settings"></a2-document-title><template><div class="grid" style="grid-gap:2rem;grid-auto-flow:row"><div class="grid" style="padding:0;width:30rem;grid-template-columns:auto 1fr "><div class="a2-label" style="grid-row:1;grid-column:1">StartDate</div><static class="with-width" :item="SysParams" prop="StartDate" data-type="Date" align="center" :text="$format(SysParams.StartDate, {dataType: 'Date'})" style="width:15rem;grid-row:1;grid-column:2"></static></div><h3 class="a2-header no-bold">Company Logo</h3><div style="width:20rem"><a2-image height="20rem" :limit="0" :read-only="false" :item="Company" prop="Logo" base="/admin/settings"></a2-image></div><h3 class="a2-header no-bold">Факсиміле</h3><div style="width:20rem"><a2-image height="10rem" :limit="0" :read-only="false" :item="Company" prop="Facsimile" base="/admin/settings"></a2-image></div></div></template><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const template = {
+    options: {
+        noDirty: true
+    }
+};
+exports.default = template;
+
+});;
+
+	const rawData = {
+  "SysParams": {
+    "StartDate": "2024-01-01T00:00:00"
+  },
+  "Company": {
+    "Id": 100,
+    "Logo": {
+      "Id": 1,
+      "Token": "YRU_7TGTyZtn4GWwur9_Mt1zuVsQYyr7ypyrzqek-IY"
+    },
+    "Facsimile": {
+      "Id": 2,
+      "Token": null
+    }
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'SysParams':TSysParam,'Company':TCompany}}, false);
+
+function TSysParam(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TSysParam, {props: {'StartDate':Date}}, false);
+
+function TCompany(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TCompany, {props: {'Id':Number,'Logo':TImage,'Facsimile':TImage}, $id: 'Id'}, false);
+
+function TImage(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TImage, {props: {'Id':Number,'Token':{type:String, len:16}}, $id: 'Id',$token: 'Token'}, false);
+
+const ctors = {TRoot,TSysParam,TCompany,TImage};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'admin/settings/index/',
+	inDialog: false,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://admin/settings/index/
+</script>

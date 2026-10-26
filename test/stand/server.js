@@ -47,6 +47,7 @@ const FILES = {
 	'/_page/attachment/partial/100': [path.join(__dirname, 'pages/attachment-partial.html'), 'text/html; charset=utf-8'],
 	'/_page/task/calendar/index/0': [path.join(__dirname, 'pages/task-calendar-index.html'), 'text/html; charset=utf-8'],
 	'/_page/catalog/tender/index/0': [path.join(__dirname, 'pages/catalog-tender-index.html'), 'text/html; charset=utf-8'],
+	'/_page/admin/settings/index/0': [path.join(__dirname, 'pages/admin-settings-index.html'), 'text/html; charset=utf-8'],
 	// task/kanban's card 101 opens it; the answer is task 1825's as Core sent it
 	'/_dialog/task/edit/101': [path.join(__dirname, 'pages/task-edit-dialog.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand
@@ -229,6 +230,20 @@ ${pageScript(url, { Budgets: BUDGETS }, BUDGET_TYPES)}
 </script>`;
 }
 
+// admin/settings's images (/_image/admin/settings/{prop}/{id}?token=…): Logo 1 as the answer's token; an upload
+// (POST) is kept here by its id and answers as ImageController.ImagePost; without a token Core throws, so 404
+const IMAGES = {
+	1: ['YRU_7TGTyZtn4GWwur9_Mt1zuVsQYyr7ypyrzqek-IY', 'image/svg+xml', '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200"><rect width="320" height="200" fill="#dce"/><text x="40" y="110" font-size="28">Logo 1</text></svg>']
+};
+
+function multipartFile(body, contentType) {
+	const boundary = '--' + /boundary=(.+)$/.exec(contentType)[1];
+	const part = body.toString('latin1').split(boundary)[1];
+	const head = part.indexOf('\r\n\r\n');
+	const mime = /Content-Type: (.+)/i.exec(part.substring(0, head))[1].trim();
+	return [mime, Buffer.from(part.substring(head + 4, part.length - 2), 'latin1')];
+}
+
 // catalog/item's Items of a folder: the answer had none (Core loads them lazily)
 function lazyRows(folderId) {
 	const n = Math.abs(folderId) % 4 + 1;
@@ -275,6 +290,31 @@ const server = http.createServer((req, res) => {
 		const [mime, body] = ATTACHMENT_FILES[attachment[1]];
 		res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-store' });
 		res.end(body);
+		return;
+	}
+	const image = /^\/_image\/admin\/settings\/\w+(?:\/(\d+))?$/.exec(url);
+	if (image && req.method === 'POST') {
+		const chunks = [];
+		req.on('data', chunk => chunks.push(chunk));
+		req.on('end', () => {
+			const id = +(image[1] || 0) || 3;
+			const token = crypto.randomUUID();
+			IMAGES[id] = [token, ...multipartFile(Buffer.concat(chunks), req.headers['content-type'])];
+			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+			res.end(JSON.stringify({ status: 'OK', elems: [{ Id: id, Token: token }] }));
+		});
+		return;
+	}
+	if (image) {
+		const token = new URL(req.url, 'http://stand').searchParams.get('token');
+		const img = IMAGES[image[1]];
+		if (img && token === img[0]) {
+			res.writeHead(200, { 'Content-Type': img[1], 'Cache-Control': 'no-store' });
+			res.end(img[2]);
+		} else {
+			res.writeHead(404, { 'Content-Type': 'text/plain' });
+			res.end('Invalid image token');
+		}
 		return;
 	}
 	const widget = /^\/_page\/dashboard\/widget\/(\w+)\/(\d+)$/.exec(url);
