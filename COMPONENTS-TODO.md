@@ -8,7 +8,7 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 - [ ] `tab.js` (209): `a2-tab-panel`, `a2-tab-item` — XAML `TabPanel`
 - [ ] `upload.js` (172): `a2-upload`, `a2-simple-upload`
 - [ ] `fileupload.js` (107): `a2-file-upload`
-- [ ] `image.js` (223): `a2-image`, `a2-file-image`, `a2-file-preview`, `a2-static-image`
+- [ ] `image.js` (223): `a2-image`, `a2-file-image`, `a2-static-image` — `a2-file-preview` is ported (`filepreview.ts`)
 - [ ] `resize.js` (158): `v-resize` — the splitter of panes
 
 ## When a page needs it

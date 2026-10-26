@@ -44,6 +44,7 @@ const FILES = {
 	'/_page/service/service/index/0': [path.join(__dirname, 'pages/service-service-index.html'), 'text/html; charset=utf-8'],
 	'/_page/task/kanban/0': [path.join(__dirname, 'pages/task-kanban.html'), 'text/html; charset=utf-8'],
 	'/_page/dashboard/index/0': [path.join(__dirname, 'pages/dashboard-index.html'), 'text/html; charset=utf-8'],
+	'/_page/attachment/partial/100': [path.join(__dirname, 'pages/attachment-partial.html'), 'text/html; charset=utf-8'],
 	// task/kanban's card 101 opens it; the answer is task 1825's as Core sent it
 	'/_dialog/task/edit/101': [path.join(__dirname, 'pages/task-edit-dialog.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand
@@ -175,6 +176,33 @@ const WIDGET_TYPES = `		function TWidget(source, path, parent) { cmn.createObjec
 		cmn.defineObject(TRoot, {props: {'Widget':TWidget}}, false);
 		const ctors = {"TWidget":TWidget,"TRoot":TRoot};`;
 
+// attachment/partial's files (/_file/attachment/upload/{id}), by the rows written in its page: 1 an image, 2 a pdf;
+// 3 (docx) has no preview and no file
+function pdfFile() {
+	const objs = [
+		'<< /Type /Catalog /Pages 2 0 R >>',
+		'<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+		'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 200] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+		'<< /Length 44 >>\nstream\nBT /F1 24 Tf 40 100 Td (Contract 2) Tj ET\nendstream',
+		'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'
+	];
+	let pdf = '%PDF-1.4\n';
+	const offsets = objs.map((o, i) => {
+		const at = pdf.length;
+		pdf += `${i + 1} 0 obj\n${o}\nendobj\n`;
+		return at;
+	});
+	const xref = pdf.length;
+	pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offsets.map(o => `${String(o).padStart(10, '0')} 00000 n \n`).join('');
+	pdf += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+	return pdf;
+}
+
+const ATTACHMENT_FILES = {
+	1: ['image/svg+xml', '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200"><rect width="320" height="200" fill="#cde"/><text x="40" y="110" font-size="28">Scan 1</text></svg>'],
+	2: ['application/pdf', pdfFile()]
+};
+
 // catalog/item's Items of a folder: the answer had none (Core loads them lazily)
 function lazyRows(folderId) {
 	const n = Math.abs(folderId) % 4 + 1;
@@ -214,6 +242,13 @@ const server = http.createServer((req, res) => {
 			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
 			res.end(JSON.stringify({ [prop]: prop === 'Widgets' ? WIDGETS : lazyRows(id) }));
 		});
+		return;
+	}
+	const attachment = /^\/_file\/attachment\/upload\/(\d+)$/.exec(url);
+	if (attachment && ATTACHMENT_FILES[attachment[1]]) {
+		const [mime, body] = ATTACHMENT_FILES[attachment[1]];
+		res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-store' });
+		res.end(body);
 		return;
 	}
 	const widget = /^\/_page\/dashboard\/widget\/(\w+)\/(\d+)$/.exec(url);

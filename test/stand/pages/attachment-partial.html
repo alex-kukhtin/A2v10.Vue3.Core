@@ -1,0 +1,92 @@
+<div class="page partial h-100" id="elca9e3415-0746-4f34-84b8-6bd7ecadf3c3"><template class="h-100"><div class="grid" style="padding:0;height:100%;grid-template-columns:20rem 1px 1fr ;align-items:stretch"><div class="grid" style="height:100%;grid-template-rows:auto 1fr ;align-items:stretch;grid-column:1"><div class="toolbar" style="grid-row:1"><button class="btn first-elem btn-tb" :disabled="(!$canExecute('addAttachment', null, null)) || null" @click.stop.prevent="$exec('addAttachment', null, null, null)" v-settabindex><i class="ico ico-add"></i> Додати</button><button class="btn btn-tb btn-icon" :disabled="(!$canExecSel('removeAttachment', Attachments, null)) || null" @click.stop.prevent="$execSelected('removeAttachment', Attachments, null)" v-settabindex><i class="ico ico-delete"></i> </button></div><a2-list class="list" :items-source="Attachments" v-lazy="Attachments" auto-select="first-item" style="grid-row:2"><template v-slot:items="listItem"><div class="list-item-simple"><i class="ico ico-file-preview list-item-simple-icon"></i> <div class="list-item-simple-body" v-text="listItem.item.Name"></div></div></template></a2-list></div><div class="grid-divider" style="grid-column:2"></div><template v-if="!!Attachments.$selected" v-for="__si__0 in [Attachments.$selected]" style="grid-column:3"><div class="grid" style="padding:0;height:100%;grid-template-rows:1fr auto ;align-items:stretch;grid-column:3"><a2-file-preview url="/attachment/upload" :value="__si__0" style="grid-row:1"></a2-file-preview><div class="stack-panel button-stack horizontal" style="grid-row:2"><template class="button-stack"><button class="btn a2-inline" v-if="__si__0.$CanPrint" @click.stop.prevent="$file('/attachment/upload', __si__0, {action: 'show'}, null)" v-settabindex>Відкрити</button><button class="btn a2-inline" v-if="__si__0.$CanPrint" @click.stop.prevent="$file('/attachment/upload', __si__0, {action: 'print'}, null)" v-settabindex>Друк</button><button class="btn a2-inline" @click.stop.prevent="$file('/attachment/upload', __si__0, {action: 'download'}, null)" v-settabindex>Завантажити</button></template></div></div></template><template v-if="!Attachments.$selected"><div class="empty-panel" style="margin:10rem 0"><div class="empty-panel-content">There are no attachemts for this element yet</div></div></template></div></template></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const template = {
+    properties: {
+        'TAttachment.$CanPrint'() { return this.Mime.startsWith('image') || this.Mime.endsWith('pdf'); }
+    },
+    validators: {},
+    commands: {
+        addAttachment,
+        removeAttachment
+    }
+};
+exports.default = template;
+async function addAttachment() {
+    const ctrl = this.$ctrl;
+    let res = await ctrl.$upload('/attachment/upload', null, { Id: this.Params.KeyId, Key: this.Params.Key });
+    let na = this.Attachments.$append(res);
+    na.FileName = na.Name;
+}
+async function removeAttachment(arg) {
+    const ctrl = this.$ctrl;
+    await ctrl.$confirm('Ви впевнені що бажаєте видалити елемент?');
+    await ctrl.$invoke("remove", { Id: arg.Id, Source: this.Params.Key }, '/attachment');
+    this.Attachments.$remove(arg);
+}
+
+});;
+
+	// Attachments: the answer had none, rows written on the stand (their files: /_file/attachment/upload/{id})
+	const rawData = {
+  "Attachments": [
+    { "Id": 1, "Name": "scan.svg", "Mime": "image/svg+xml", "Token": "tok1" },
+    { "Id": 2, "Name": "contract.pdf", "Mime": "application/pdf", "Token": "tok2" },
+    { "Id": 3, "Name": "notes.docx", "Mime": "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "Token": "tok3" }
+  ],
+  "Params": {
+    "Key": "ContractRequest",
+    "KeyId": 100,
+    "ReadOnly": false
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Attachments':TAttachmentArray,'Params':TParam}}, false);
+
+function TAttachment(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAttachment, {props: {'Id':Number,'Name':{type:String, len:255},'Mime':{type:String, len:255},'Token':{type:String, len:16}}, $id: 'Id',$token: 'Token'}, true);
+function TAttachmentArray(source, path, parent) {
+return cmn.createArray(source, path, TAttachment, TAttachmentArray, parent);
+}
+
+function TParam(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TParam, {props: {'Key':{type:String, len:255},'KeyId':Number,'ReadOnly':Boolean}}, false);
+
+const ctors = {TRoot,TAttachment,TAttachmentArray,TParam};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'attachment/partial/100/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://attachment/partial/100/
+</script>
