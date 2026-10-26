@@ -43,6 +43,8 @@ const FILES = {
 	'/_page/catalog/item/index/0': [path.join(__dirname, 'pages/catalog-item-index.html'), 'text/html; charset=utf-8'],
 	'/_page/service/service/index/0': [path.join(__dirname, 'pages/service-service-index.html'), 'text/html; charset=utf-8'],
 	'/_page/task/kanban/0': [path.join(__dirname, 'pages/task-kanban.html'), 'text/html; charset=utf-8'],
+	// task/kanban's card 101 opens it; the answer is task 1825's as Core sent it
+	'/_dialog/task/edit/101': [path.join(__dirname, 'pages/task-edit-dialog.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand
 	'/_page/finance/transaction/index/0': [path.join(__dirname, 'pages/finance-transaction-index.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']

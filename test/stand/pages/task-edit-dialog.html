@@ -1,0 +1,202 @@
+<div class="modal" id="el45dc7eb4-995a-4093-915e-ed988e9bf5e2" v-cloak v-modal-width="{width:'60rem'}"><div class="modal-header" v-drag-window><span class="modal-title" v-text="$format(Task.Id, {format: `Задача [{0}]`})"></span><button class="btnclose" tabindex="-1" @click.prevent="$modalClose(false)">&#x2715;</button></div><div class="load-indicator" v-show="$isLoading"></div><div class="modal-content overflow"><div class="dialog-grid"><div class="dialog-grid-content"><div class="grid" style="grid-template-columns:10rem 7rem 1fr ;grid-gap:1rem"><a2-textarea class="bold" label="Задача" :tab-index="1" :rows="3" :item="Task" prop="Text" style="grid-column:span 3"></a2-textarea><a2-selector fetch-command="/catalog/user/fetch" display="Name" label="Виконавець" :item="Task" prop="Assignee" style="grid-row:2;grid-column:1/ span 2"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/user/browse', Task.Assignee, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-date-picker label="Дата" align="center" :item="Task" prop="StartAt" view="day" style="grid-row:3;grid-column:1"></a2-date-picker><a2-time-picker label="Час" align="center" :item="Task" prop="StartAt" style="grid-row:3;grid-column:2"></a2-time-picker><label class="checkbox" label="Додати в календар" style="margin:0 0 7px 0;grid-row:3;grid-column:3"><input type="checkbox" v-settabindex v-model="Task.InCalendar" v-bind:xcheck="Task.InCalendar"/><span>Додати в календар</span></label><div class="grid" style="grid-template-columns:1fr ;grid-row:4;grid-column:span 3"><div class="a2-tab-bar"><div class="a2-tab-bar-item" :class="{'active': '' == $data.$$Tab}"><a class="a2-tab-button" :class="{'active': '' == $data.$$Tab}" @click.stop.prevent="$closeAllPopups(); $data.$$Tab=''"><span class="content">Links</span></a></div><div class="divider" role="separator"></div><div class="a2-tab-description"><button class="btn a2-inline btn-toolbar" v-settabindex><i class="ico ico-add"></i> Add Link</button></div></div><div class="a2-sticky-container" style="height:10rem"><table class="a2-table sticky table-separate-border table-cell-spacing-medium grid-horizontal" v-lazy="Task.Links"><colgroup><col style="width:auto"/><col style="width:100%"/><col style="width:25px"/></colgroup><thead><tr><td>Тип</td><td>Посилання</td><td></td></tr></thead><tbody><tr v-for="(row, rowIndex) in Task.Links"><td class="bg-white no-wrap" v-text="row.$Kind"></td><td class="bg-white"><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" :disabled="(!$canExecute('openLink', row, {saveRequired: true})) || null" @click.stop.prevent="$exec('openLink', row, null, {saveRequired: true})"><span v-text="row.Text"></span></a></td><td class="bg-white"><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" @click.stop.prevent="$remove(row, {message: 'Ви впевнені що бажаєте видалити елемент?'})">✕</a></td></tr></tbody></table></div></div><a2-textarea label="Примітка" :rows="3" :item="Task" prop="Memo" style="grid-row:5;grid-column:span 3"></a2-textarea></div></div><a2-taskpad class="overflow no-collapsible" position="right" :initial-collapsed="false" style="padding:1rem;grid-column:2"><template><a2-color-combobox v-cloak label="Стан" :items-source="States" :name-prop="'Name'" :value-prop="''" :color-prop="'Color'" :item="Task" prop="State"></a2-color-combobox><static label="Created At" :item="Task" prop="DateCreated" data-type="DateTime2" align="center" :text="$format(Task.DateCreated, {dataType: 'DateTime2'})"></static><static label="Created By" :item="Task.UserCreated" prop="Name" :text="Task.UserCreated.Name"></static></template></a2-taskpad></div></div><div class="modal-footer"><button class="btn a2-inline btn-primary" :disabled="(!$canSave) || null" @click.stop.prevent="$modalSaveAndClose(true, {validRequired: true, })" v-settabindex>Зберегти та закрити</button><button class="btn a2-inline" @click.stop.prevent="$modalClose(false)" v-settabindex>Скасувати</button></div></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const du = require('std:utils').date;
+const template = {
+    options: {
+        globalSaveEvent: 'g.task.saved'
+    },
+    properties: {
+        'TRoot.$$Tab': String,
+        'TTaskLink.$Kind': taskKind
+    },
+    validators: {
+        'Task.Text': 'Поле має бути заповнено',
+    },
+    defaults: {
+        'Task.Assignee'() { return this.Params.Manager; },
+        'Task.State'() { return this.States[0]; },
+        'Task.StartAt'() { return du.isZero(this.Params.StartAt) ? du.now() : this.Params.StartAt; },
+        'Task.InCalendar'() { return !du.isZero(this.Params.StartAt); }
+    },
+    commands: {
+        openLink
+    }
+};
+const urlMap = {
+    Redirection: {
+        Title: 'Перенаправлення',
+        Show: null,
+        Edit: '/service/redirect/edit',
+        Browse: null
+    },
+    Service: {
+        Title: 'Перенаправлення',
+        Show: 'service/request/edit',
+        Edit: null,
+        Browse: null
+    },
+    URL: {
+        Title: 'Узгодження платежу',
+        Show: null,
+        Edit: null,
+        Browse: null
+    }
+};
+function taskKind() {
+    return urlMap[this.Kind].Title;
+}
+function openLink(link) {
+    let ctrl = this.$ctrl;
+    let item = urlMap[link.Kind];
+    if (item.Edit)
+        ctrl.$showDialog(item.Edit, { Id: link.LinkId });
+    else if (item.Show) {
+        ctrl.$navigate(item.Show, { Id: link.LinkId });
+        ctrl.$modalClose(true);
+    }
+    else if (link.Kind === 'URL') {
+        ctrl.$navigate(link.Url, { Id: link.LinkId });
+        ctrl.$modalClose(true);
+    }
+    else
+        alert('yet not implemented');
+}
+exports.default = template;
+
+});;
+
+	const rawData = {
+  "Task": {
+    "Id": 1825,
+    "Text": "Потрібно узгодження заявки",
+    "Memo": null,
+    "StartAt": null,
+    "InCalendar": false,
+    "Assignee": {},
+    "State": {
+      "Id": 30,
+      "Name": "Виконана",
+      "Color": "seagreen",
+      "Kind": "S"
+    },
+    "UserCreated": {
+      "Id": 0,
+      "Name": "System"
+    },
+    "DateCreated": "2025-09-18T11:48:13.937",
+    "Links": [
+      {
+        "Id": 1757,
+        "Kind": "URL",
+        "LinkId": 317,
+        "Text": "Узгодження платежу",
+        "Url": "/approval/inbox/leadmanager/supplier"
+      }
+    ]
+  },
+  "Params": {
+    "Manager": {
+      "Id": 99,
+      "Name": "System administrator"
+    },
+    "StartAt": null
+  },
+  "States": [
+    {
+      "Id": 10,
+      "Name": "Нова",
+      "Color": "blue",
+      "Kind": "I"
+    },
+    {
+      "Id": 20,
+      "Name": "Виконується",
+      "Color": "orange",
+      "Kind": "P"
+    },
+    {
+      "Id": 30,
+      "Name": "Виконана",
+      "Color": "seagreen",
+      "Kind": "S"
+    },
+    {
+      "Id": 40,
+      "Name": "Скасована",
+      "Color": "red",
+      "Kind": "F"
+    }
+  ]
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Task':TTask,'Params':TParam,'States':TStateArray}}, false);
+
+function TTask(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TTask, {props: {'Id':Number,'Text':{type:String, len:255},'Memo':{type:String, len:255},'StartAt':Date,'InCalendar':Boolean,'Assignee':TManager,'State':TState,'UserCreated':TManager,'DateCreated':Date,'Links':TTaskLinkArray}, $id: 'Id',$name: 'Text'}, false);
+
+function TManager(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TManager, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TManagerArray(source, path, parent) {
+return cmn.createArray(source, path, TManager, TManagerArray, parent);
+}
+
+function TState(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TState, {props: {'Id':Number,'Name':{type:String, len:255},'Color':{type:String, len:32},'Kind':{type:String, len:1}}, $id: 'Id',$name: 'Name'}, true);
+function TStateArray(source, path, parent) {
+return cmn.createArray(source, path, TState, TStateArray, parent);
+}
+
+function TTaskLink(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TTaskLink, {props: {'Id':Number,'Kind':{type:String, len:255},'LinkId':Number,'Text':{type:String, len:255},'Url':{type:String, len:255}}, $id: 'Id'}, true);
+function TTaskLinkArray(source, path, parent) {
+return cmn.createArray(source, path, TTaskLink, TTaskLinkArray, parent);
+}
+
+function TParam(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TParam, {props: {'Manager':TManager,'StartAt':Date}}, false);
+
+const ctors = {TRoot,TTask,TManager,TManagerArray,TState,TStateArray,TTaskLink,TTaskLinkArray,TParam};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'task/edit/1825/',
+	inDialog: true,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://task/edit/1825/
+</script>
