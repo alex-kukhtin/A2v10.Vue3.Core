@@ -16,5 +16,5 @@ export type { AppRegistry } from './modules.js';
 export * as vocabulary from './vocabulary.js';
 export { attach } from './app.js';
 // for a renderer of pages other than include (the tests: test/trace/base.port.js)
-export { pageComponent, type LoadedPage } from './page.js';
+export { pageComponent, type ScriptedPage } from './page.js';
 export { Controller } from './controller/controller.js';

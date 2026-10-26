@@ -312,6 +312,13 @@ const server = http.createServer((req, res) => {
 		});
 		return;
 	}
+	// a page whose load threw: A2v10.Core answers 200 with this fragment, no script (BaseController.WriteHtmlException,
+	// debug); {{ }} in the text stays text
+	if (/^\/_(?:page|dialog)\/stand\/exception\//.test(url)) {
+		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+		res.end(`<div class="app-exception"><div class="message">Service type for key &#39;stand.handler&#39; is not registered</div><div class="stack-trace">   at A2v10.Stand.Handler.Render() in {{ Handler.cs }}:line 42</div></div>`);
+		return;
+	}
 	// a page, or a dialog (the shell adds the argument's id as the last segment)
 	const m = /^\/_(?:page|dialog)\/stand\/(page|inner)\/(\d+)(?:\/\d+)?$/.exec(url);
 	if (m) {

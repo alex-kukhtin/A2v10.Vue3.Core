@@ -6,7 +6,7 @@
 import { defineComponent, type Component } from 'vue';
 import { bus } from './bus.js';
 import { require } from './modules.js';
-import { loadPage, pageComponent } from './page.js';
+import { loadPage, pageComponent, staticComponent } from './page.js';
 import type { createUrl } from './url.js';
 import { component } from './vocabulary.js';
 
@@ -24,15 +24,22 @@ interface Host {
 const lastLoad = new WeakMap<object, number>();
 
 // Loads url into the host. Resolves with the page (its controller) once it is mounted, as Vue 2's load resolved once
-// the page's script had mounted it; what the host does then (loaded, complete) runs in this chain, and a throw there
-// reaches the host's error, as it did (.then(loaded).catch(error)). Never settles for an answer dropped.
-function show(host: Host, url: string, hideIndicator: boolean | undefined): Promise<object> {
+// the page's script had mounted it; with null at once for a static page, as it resolved with no script found.
+// What the host does then (loaded, complete) runs in this chain, and a throw there reaches the host's error, as it
+// did (.then(loaded).catch(error)). Never settles for an answer dropped.
+function show(host: Host, url: string, hideIndicator: boolean | undefined): Promise<object | null> {
 	const id = (lastLoad.get(host) || 0) + 1;
 	lastLoad.set(host, id);
 	return loadPage(url, hideIndicator, () => lastLoad.get(host) === id).then(page =>
-		new Promise<object>(resolve => {
-			if (page && lastLoad.get(host) === id)
+		new Promise<object | null>(resolve => {
+			if (!page || lastLoad.get(host) !== id)
+				return;
+			if ('descriptor' in page)
 				host.page = pageComponent(page, resolve);
+			else {
+				host.page = staticComponent(page);
+				resolve(null);
+			}
 		}));
 }
 

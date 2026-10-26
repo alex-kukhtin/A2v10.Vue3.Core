@@ -1,9 +1,11 @@
 // A page as the server sends it: the HTML of its root element (from XAML) and a <script> whose body returns the
 // page's descriptor (Vue3DataScripter's FOOTER). The template is the root element whole: the root carries bindings
 // of its own (v-cloak, v-maximize, data-controller-attr), or is a component itself (collection-view).
+// A page without a descriptor is static: shown as it came, as Net48's load inserted the root and found no script to
+// run. The server answers so when the page's load throws (BaseController.WriteHtmlException: div.app-exception).
 // Nothing is registered and nothing mounted here: include renders what this returns, and drops it to close it.
 
-import { markRaw, type Component } from 'vue';
+import { h, markRaw, type Component } from 'vue';
 import { bus } from './bus.js';
 import { Controller, PAGE_GETTERS, PAGE_METHODS } from './controller/controller.js';
 import type { createHttp } from './http.js';
@@ -17,11 +19,18 @@ export interface PageDescriptor {
 	createModel(): object;
 }
 
-export interface LoadedPage {
+export interface ScriptedPage {
 	url: string;
 	template: string;
 	descriptor: PageDescriptor;
 }
+
+export interface StaticPage {
+	url: string;
+	root: Element;
+}
+
+export type LoadedPage = ScriptedPage | StaticPage;
 
 // Null where Net48's load (services/http.js:126-207) never settled: a 401 (handled), an empty answer, a login page
 // (it navigates away), an answer no longer wanted (isCurrent: include has asked for another url since).
@@ -63,10 +72,8 @@ export async function loadPage(url: string, hideIndicator: boolean | undefined, 
 			if (rv !== undefined)
 				descriptor = rv;
 		}
-		if (!descriptor)
-			throw new Error(`page ${url}: its script returned no descriptor`);
 		bus.$emit('endLoad');
-		return { url, template: root.outerHTML, descriptor };
+		return descriptor ? { url, template: root.outerHTML, descriptor } : { url, root };
 	} catch (err) {
 		bus.$emit('endLoad');
 		throw err;
@@ -82,7 +89,7 @@ const controllerOf = (vm: object) => controllers.get(vm)!;
 // The page's life goes as Vue 2's did with base.js and the FOOTER: created (registerData, the bus, the store);
 // mounted, then the host, __doInit__ (Model.load), what the loader set (the url, the query), then onMounted
 // is told, with the controller. onMounted must not throw (it runs inside Vue's hook).
-export function pageComponent(page: LoadedPage, onMounted: (page: Controller) => void): Component {
+export function pageComponent(page: ScriptedPage, onMounted: (page: Controller) => void): Component {
 	const { url, template, descriptor } = page;
 	const methods: Record<string, Function> = {};
 	for (const name of PAGE_METHODS)
@@ -138,5 +145,17 @@ export function pageComponent(page: LoadedPage, onMounted: (page: Controller) =>
 		unmounted(this: object) {
 			controllerOf(this).destroyed();
 		}
+	});
+}
+
+// A static page's component: its root as it came. A render function, not a template: the text is the server's
+// (an exception's message, its stack), and {{ }} in it is text.
+export function staticComponent(page: StaticPage): Component {
+	const { root } = page;
+	const attrs: Record<string, string> = {};
+	for (const attr of root.attributes)
+		attrs[attr.name] = attr.value;
+	return markRaw({
+		render: () => h(root.localName, { ...attrs, innerHTML: root.innerHTML })
 	});
 }
