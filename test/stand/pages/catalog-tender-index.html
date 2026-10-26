@@ -1,0 +1,1003 @@
+<collection-view-server-url class="cw page absolute page-grid cw-absolute" id="el4721db19-52c7-4357-b77b-ef1358680cb2" :items-source="Tenders" :initial-filter="{Id: 0,Fragment: '',Period: period.all(),Period2: period.all(),Period3: period.all(),Applicant: null,ProcurementManager: null,ApplicantDepartment: null,Budgets: '',ExpectedBudgetCompare: 0,ExpectedBudgetUAH: 0,ContractValueCompare: 0,ContractValue: 0,ProcurementMethod: null,GoodsOrServicesCategory: null,Winner: null,Status: 0}" :persistent-filter="[]"><template v-slot="Parent"><a2-document-title page-title="Тендери"></a2-document-title><a2-taskpad class="page-taskpad overflow collapsible" title="Taskpad" initial-width="24rem" position="right" :initial-collapsed="false" style="padding:11px 1rem 1rem 1rem;grid-column:2"><template><a2-panel :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Фільтри</div></template><div class="panel-content" style="gap:.25rem"><template><a2-period-picker class="drop-bottom-right" label="Період" align="center" :item="Parent.Filter" prop="Period"></a2-period-picker><a2-period-picker class="drop-bottom-right" label="Початок процесу" align="center" :item="Parent.Filter" prop="Period2"></a2-period-picker><a2-period-picker class="drop-bottom-right" label="Дата закриття тендеру" align="center" :item="Parent.Filter" prop="Period3"></a2-period-picker><a2-selector fetch-command="/catalog/person/fetch" display="Name" :has-clear="true" label="Відповідальний закупівельник" :item="Parent.Filter" prop="ProcurementManager"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/person/browse', Parent.Filter.ProcurementManager, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/person/fetch" display="Name" :has-clear="true" label="Заявник" :item="Parent.Filter" prop="Applicant"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/person/browse', Parent.Filter.Applicant, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-color-combobox v-cloak label="Стан" :items-source="FTenderStatus" :name-prop="'Name'" :value-prop="'Id'" :color-prop="'Color'" :item="Parent.Filter" prop="Status"></a2-color-combobox><a2-multiselect label="Бюджети" :item="Parent.Filter" prop="Budgets" url="/finance/budget"></a2-multiselect><a2-selector fetch-command="/catalog/tendermethod/fetch" display="Name" :has-clear="true" label="Метод закупівлі" :item="Parent.Filter" prop="ProcurementMethod"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/tendermethod/browse', Parent.Filter.ProcurementMethod, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/tendergoodsorservicescategory/fetch" display="Name" :has-clear="true" label="Категорія" :item="Parent.Filter" prop="GoodsOrServicesCategory"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/tendergoodsorservicescategory/browse', Parent.Filter.GoodsOrServicesCategory, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/agent/fetch" display="Name" :has-clear="true" label="Переможець(ці)" :item="Parent.Filter" prop="Winner"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/agent/browse', Parent.Filter.Winner, null)"><i class="ico ico-search"></i> </a></a2-selector></template></div></a2-panel><a2-panel :initial-collapsed="true" :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Additional Filters</div></template><div class="panel-content" style="gap:.25rem"><template><a2-selector fetch-command="/catalog/department/fetch" display="Name" :has-clear="true" label="Організаційний відділ заявника" :item="Parent.Filter" prop="ApplicantDepartment"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/department/browse', Parent.Filter.ApplicantDepartment, null)"><i class="ico ico-search"></i> </a></a2-selector><span>Очікуваний бюджет</span><div class="stack-panel horizontal" style="gap:6px"><template><div class="a2-label bold">Value</div><select class="with-width" is="vue:combobox" v-cloak :item="Parent.Filter" prop="ExpectedBudgetCompare" style="width:7rem"><option value="0">Empty</option><option value="1"> = </option><option value="2"> > </option><option value="3"> < </option></select><textbox class="with-width" :has-clear="true" align="right" :item="Parent.Filter" prop="ExpectedBudgetUAH" data-type="Number" style="width:10rem"></textbox></template></div><span style="padding:10px 0 0 0">Сума договору</span><div class="stack-panel horizontal" style="gap:6px"><template><div class="a2-label bold">Value</div><select class="with-width" is="vue:combobox" v-cloak :item="Parent.Filter" prop="ContractValueCompare" style="width:7rem"><option value="0">Empty</option><option value="1"> = </option><option value="2"> > </option><option value="3"> < </option></select><textbox class="with-width" :has-clear="true" align="right" :item="Parent.Filter" prop="ContractValue" data-type="Number" style="width:10rem"></textbox></template></div></template></div></a2-panel><template v-if="!!Tenders.$selected" v-for="__si__0 in [Tenders.$selected]"><a2-panel :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Звіти</div></template><div class="panel-content" style="gap:.5rem"><template><h4 class="a2-header no-bold" v-text="__si__0.Name" style="margin:0"></h4></template></div></a2-panel></template></template></a2-taskpad><div class="page-content"><template><div class="grid" style="height:100%;grid-template-rows:auto 1fr auto "><div class="toolbar"><button class="btn first-elem btn-tb" @click.stop.prevent="$navigate('/catalog/tender/edit', '0', false, null, null)" :href="$href('/catalog/tender/edit', '0')" v-settabindex><i class="ico ico-add"></i> Створити</button><button class="btn btn-tb btn-icon" :disabled="(!$hasSelected(Tenders, null)) || null" @click.stop.prevent="$openSelected('/catalog/tender/edit', Tenders, false, null)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-tb btn-icon" :disabled="(!$hasSelected(Tenders, {checkPermission: 'canDelete'})) || null" @click.stop.prevent="$dbRemoveSelected(Tenders, {message: 'Ви впевнені що бажаєте видалити елемент?'}, {checkPermission: 'canDelete'})" v-settabindex><i class="ico ico-delete"></i> </button><button class="btn btn-tb btn-icon" title="Скопіювати" :disabled="(!$canExecSel('copy', Tenders, {checkPermission: 'canView'})) || null" @click.stop.prevent="$execSelected('copy', Tenders, {message: 'Ви впевнені?'})" v-settabindex><i class="ico ico-copy"></i> </button><div class="dropdown dir-down" v-dropdown><button class="btn btn-tb" toggle v-settabindex><i class="ico ico-file-link"></i> Створити<span class="caret"></span></button><div class="dropdown-menu menu" role="menu"><template><button class="dropdown-item" :disabled="(!$canExecSel('createRequest', Tenders, {checkPermission: 'canView'})) || null" @click.stop.prevent="$execSelected('createRequest', Tenders, {message: 'Ви впевнені?'})" v-disable>Створити ПАВ</button><button class="dropdown-item" :disabled="(!$canExecSel('createCR', Tenders, {checkPermission: 'canView'})) || null" @click.stop.prevent="$execSelected('createCR', Tenders, null)" v-disable>Створити запит на договір</button></template></div></div><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" title="Досьє об'єкта" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$dialog('show-selected', '/admin/objectlog/tender', Parent.ItemsSource, null, null)" v-settabindex><i class="ico ico-history"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button><div class="aligner"></div><textbox class="with-width" :tab-index="1" :has-clear="true" :has-search="true" placeholder="Пошук" :item="Parent.Filter" prop="Fragment" style="width:20rem"></textbox><div class="dropdown dir-down" v-dropdown><button class="btn btn-tb btn-icon" toggle v-settabindex><i class="ico ico-ellipsis-vertical"></i> </button><div class="dropdown-menu menu down-left" role="menu"><template><button class="dropdown-item" @click.stop.prevent="$export(null, '/catalog/tender/index', Tenders.$ModelInfo.Filter, null)" v-disable><i class="ico ico-export-excel"></i> <span>Export to Excel</span></button><button class="dropdown-item" :disabled="(!$canExecute('uploadFromExcel', null, null)) || null" @click.stop.prevent="$exec('uploadFromExcel', null, null, null)" v-disable><i class="ico ico-upload"></i> <span>Upload from file</span></button></template></div></div></div><data-grid class="user-select data-grid-light" :compact="false" key="49749975-2b73-44c8-8699-59cae2d488b9" :fixed-header="true" :items-source="Parent.ItemsSource" :hover="true" :striped="false" :border="true" :sort="true" :route-query="$query" :doubleclick="() => $openSelected('/catalog/tender/edit', Tenders, false, null)" grid="Horizontal"><data-grid-column :fit="true" wrap="no-wrap" align="right" header="#" content="Id"></data-grid-column><data-grid-column header="Номер" :sort="true" sort-prop="tendernumber" content="TenderNumber"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" align="center" header="Дата" :sort="true" sort-prop="date" content="Date" data-type="Date"></data-grid-column><data-grid-column header="Дата закриття тендеру" :sort="false" :fit="true" wrap="no-wrap" align="center" id="col3"></data-grid-column><template v-slot:col3="cell"><div class="stack-panel vertical align-start"><template><span class="tag-label" v-text="cell.row.TenderStatus.Name" :class="cell.row.TenderStatus.Color"></span><span class="tag-label bold outline green" v-if="cell.row.$isClosed" v-text="$format(cell.row.TenderClosureDate, {dataType: 'Date'})"></span></template></div></template><data-grid-column header="U/C" :sort="false" id="col4"></data-grid-column><template v-slot:col4="cell"><div class="stack-panel vertical align-start"><template><span class="tag-label bold outline red" v-if="cell.row.Urgency">Терміново</span><span class="tag-label bold outline green" v-if="cell.row.Printed">Перевірено</span></template></div></template><data-grid-column header="Відповідальний закупівельник" :sort="false" :max-chars="40" wrap="no-wrap" content="ProcurementManager.Name"></data-grid-column><data-grid-column header="Метод закупівлі" :sort="false" id="col6"></data-grid-column><template v-slot:col6="cell"><div class="stack-panel vertical align-start"><template><span v-text="cell.row.ProcurementMethod.Name"></span><span class="tag-label bold outline purple" v-if="cell.row.Waiver">Вейвер</span></template></div></template><data-grid-column header="Внутрішній аудит" :sort="false" content="InternalAuditDate" data-type="Date"></data-grid-column><data-grid-column header="Категорія" :sort="false" :max-chars="12" wrap="no-wrap" content="Categories"></data-grid-column><data-grid-column header="Опис" :sort="false" :max-chars="40" :line-clamp="2" wrap="no-wrap" content="ShortDescription"></data-grid-column><data-grid-column header="Бюджет" :fit="true" wrap="no-wrap" id="col10"></data-grid-column><template v-slot:col10="cell"><template><span v-if="!cell.row.$IsMultiplyBudget" v-text="cell.row.$BudgetName"></span><popover class="a2-inline po-bottom-right" v-if="cell.row.$IsMultiplyBudget" :content="cell.row.$BudgetName"><div class="a2-popup" ondblclick="event.stopPropagation()" id="el4721db19-52c7-4357-b77b-ef1358680cb2"><template><table class="prop-grid compact grid-horizontal"><colgroup><col class="prop-name"/><col class="prop-value"/></colgroup><tbody><tr class="no-wrap" v-for="(prop, propIndex) in cell.row.Budgets" :key="propIndex"><td class="prop-name" v-text="prop.BudgetName"></td><td class="prop-value bold"></td></tr></tbody></table></template></div></popover></template></template><data-grid-column header="Переможець(ці)" :sort="false" :line-clamp="3" min-width="20rem" content="WinnerName"></data-grid-column><data-grid-column header="Створено" :sort="false" wrap="no-wrap" content="Owner.Name"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" id="col13"></data-grid-column><template v-slot:col13="cell"><div class="commandbar visible-hover"><template><button class="btn btn-cb btn-icon" @click.stop.prevent="$navigate('/catalog/tender/edit', cell.row, false, null, null)" :href="$href('/catalog/tender/edit', cell.row)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-cb btn-icon" :disabled="($isPermissionsDisabled({checkPermission: 'canDelete'}, cell.row)) || null" @click.stop.prevent="$dbRemove(cell.row, {message: 'Ви впевнені що бажаєте видалити елемент?'}, {checkPermission: 'canDelete'})" v-settabindex><i class="ico ico-delete"></i> </button></template></div></template></data-grid><a2-pager :source="Parent.Pager"></a2-pager></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server-url><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const tu = require('std:utils').text;
+const du = require('std:utils').date;
+const template = {
+    options: {
+        noDirty: true,
+        persistSelect: ['Tenders']
+    },
+    properties: {
+        'TTender.$isClosed'() {
+            return !du.isZero(this.TenderClosureDate);
+        },
+        'TTender.$IsMultiplyBudget'() { return this.FundedByBudgets === 'S' && this.Budgets.length > 1; },
+        'TTender.$BudgetName'() {
+            if (this.FundedByBudgets === 'M')
+                return 'Мульті';
+            if (this.$IsMultiplyBudget)
+                return 'Обрано' + ` (${this.Budgets.length})`;
+            return this.Budgets.length > 0 ? this.Budgets[0].BudgetName : '';
+        }
+    },
+    events: {
+        'Model.load': modelLoad,
+        'g.tender.saved': tenderSaved
+    },
+    commands: {
+        openReportTO(arg) { openReport.call(this, arg, 'TO'); },
+        exportToExcel,
+        uploadFromExcel,
+        copy,
+        createRequest,
+        createCR
+    }
+};
+exports.default = template;
+function modelLoad() {
+}
+function tenderSaved(root) {
+    let newT = root.Tender;
+    let arr = this.Tenders;
+    let oldT = arr.$find(t => t.Id === newT.Id);
+    let T;
+    if (oldT)
+        T = oldT.$merge(newT);
+    else
+        T = arr.$append(newT);
+    T.Budgets = [...newT.TenderBudgetApproves.map(a => { return { Id: a.Id, BudgetId: a.Budget.Id, BudgetName: a.Budget.Name }; })];
+    T.Categories = newT.TenderCategories.map(c => { return c.Name; }).join(', ');
+}
+function openReport(budget, rep) {
+    if (!budget)
+        return;
+    const ctrl = this.$ctrl;
+    let randomString = Math.random().toString(36).substring(2);
+    let dat = {
+        Id: randomString,
+        Budget: budget.Id
+    };
+    ctrl.$navigate(`/report/budget/report${rep}`, dat);
+}
+function exportToExcel() {
+    const ctrl = this.$ctrl;
+}
+async function uploadFromExcel() {
+    const ctrl = this.$ctrl;
+    const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    await ctrl.$upload('/catalog/tender/uploadfromexcel', mimeType);
+    ctrl.$toast('File uploaded successfully', "success");
+}
+async function copy(tender) {
+    const ctrl = this.$ctrl;
+    const args = { Id: tender.Id };
+    console.log('Copy tender with args', args);
+    let elem = await ctrl.$invoke('copy', args, '/catalog/tender');
+    ctrl.$navigate(`/catalog/tender/edit`, { Id: elem.Tender.Id });
+}
+async function createRequest(tender) {
+    const ctrl = this.$ctrl;
+    const args = { Id: tender.Id };
+    let res = await ctrl.$invoke('createRequest', args, '/catalog/tender');
+    let data = {
+        WorkflowId: res.RequestType.Workflow,
+        CorrelationId: res.Result.Id
+    };
+    let process = await ctrl.$invoke('runProcess', data, '/approval/request');
+    let ibres = await ctrl.$invoke('getInboxes', { Id: res.Result.Id }, '/approval/request');
+    var inboxes = ibres.Inboxes;
+    if (!inboxes || !inboxes.length) {
+        ctrl.$reload();
+        return;
+    }
+    let inbox = inboxes[0];
+    await ctrl.$navigate(inbox.Url, { Id: inbox.CorrelationId });
+    ctrl.$reload();
+}
+async function createCR(tender) {
+    const ctrl = this.$ctrl;
+    await ctrl.$navigate('/contractrequest/request/edit', { Tender: tender.Id });
+}
+
+});;
+
+	const rawData = {
+  "Tenders": [
+    {
+      "Id": 309,
+      "No": 0,
+      "Date": "2026-02-04T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ TEST_MULTI_WINNER від 04.02.2026",
+      "ProcurementManager": {},
+      "TenderNumber": "TEST_MULTI_WINNER",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 80,
+        "Name": "Завершено",
+        "NameEN": "Completed",
+        "Color": "green"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 310,
+          "BudgetId": 115,
+          "BudgetName": "PIN CLASTER (красивый)"
+        }
+      ],
+      "Winner": {
+        "Id": 491,
+        "NameEN": "ABDRAZAKOVA SVITLANA VOLODYMYRIVNA",
+        "Name": "Абдразакова Світлана Володимирівна",
+        "CodeUA": "2491818607"
+      },
+      "WinnerName": "AWO International, Абашидзе Віта Сергіївна, Абдразакова Світлана Володимирівна",
+      "IsMultiWinner": true,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": false,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    },
+    {
+      "Id": 259,
+      "No": null,
+      "Date": "2026-02-03T00:00:00",
+      "TenderClosureDate": null,
+      "Name": null,
+      "ProcurementManager": {},
+      "TenderNumber": null,
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 10,
+        "Name": "Нова",
+        "NameEN": "New",
+        "Color": "white"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 260,
+          "BudgetId": null,
+          "BudgetName": null
+        }
+      ],
+      "Winner": {
+        "Id": 102,
+        "NameEN": "AWO INTERNATIONAL",
+        "Name": "AWO International",
+        "CodeUA": "1122334459"
+      },
+      "WinnerName": "AWO International",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": null,
+      "Printed": null,
+      "Categories": null,
+      "Waiver": null,
+      "Owner": {},
+      "__permissions": 511
+    },
+    {
+      "Id": 209,
+      "No": null,
+      "Date": "2026-01-30T00:00:00",
+      "TenderClosureDate": null,
+      "Name": null,
+      "ProcurementManager": {},
+      "TenderNumber": null,
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 10,
+        "Name": "Нова",
+        "NameEN": "New",
+        "Color": "white"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 210,
+          "BudgetId": null,
+          "BudgetName": null
+        }
+      ],
+      "Winner": {
+        "Id": 102,
+        "NameEN": "AWO INTERNATIONAL",
+        "Name": "AWO International",
+        "CodeUA": "1122334459"
+      },
+      "WinnerName": "AWO International",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": null,
+      "Printed": null,
+      "Categories": null,
+      "Waiver": null,
+      "Owner": {},
+      "__permissions": 511
+    },
+    {
+      "Id": 160,
+      "No": 0,
+      "Date": "2026-01-13T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ СФОР-1 від 13.01.2026",
+      "ProcurementManager": {},
+      "TenderNumber": "СФОР-1",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 80,
+        "Name": "Завершено",
+        "NameEN": "Completed",
+        "Color": "green"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 161,
+          "BudgetId": 109,
+          "BudgetName": "HIAS 4M (Budget)"
+        }
+      ],
+      "Winner": {
+        "Id": 493,
+        "NameEN": "AVRAMENKO NADIIA MYKOLAIVNA",
+        "Name": "АВРАМЕНКО Надія Миколаївна",
+        "CodeUA": "2981508782"
+      },
+      "WinnerName": "АВРАМЕНКО Надія Миколаївна",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": false,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    },
+    {
+      "Id": 159,
+      "No": 0,
+      "Date": "2026-01-13T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ AN-1 від 13.01.2026",
+      "ProcurementManager": {},
+      "TenderNumber": "AN-1",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 80,
+        "Name": "Завершено",
+        "NameEN": "Completed",
+        "Color": "green"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 160,
+          "BudgetId": 125,
+          "BudgetName": "ACTED-SWISS - СУБПАРТНЕР № 1"
+        }
+      ],
+      "Winner": {
+        "Id": 493,
+        "NameEN": "AVRAMENKO NADIIA MYKOLAIVNA",
+        "Name": "АВРАМЕНКО Надія Миколаївна",
+        "CodeUA": "2981508782"
+      },
+      "WinnerName": "АВРАМЕНКО Надія Миколаївна",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": false,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    },
+    {
+      "Id": 109,
+      "No": null,
+      "Date": "2025-12-02T00:00:00",
+      "TenderClosureDate": null,
+      "Name": null,
+      "ProcurementManager": {},
+      "TenderNumber": null,
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 10,
+        "Name": "Нова",
+        "NameEN": "New",
+        "Color": "white"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 110,
+          "BudgetId": null,
+          "BudgetName": null
+        }
+      ],
+      "Winner": {
+        "Id": 102,
+        "NameEN": "AWO INTERNATIONAL",
+        "Name": "AWO International",
+        "CodeUA": "1122334459"
+      },
+      "WinnerName": "AWO International",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": null,
+      "Printed": null,
+      "Categories": null,
+      "Waiver": null,
+      "Owner": {},
+      "__permissions": 511
+    },
+    {
+      "Id": 108,
+      "No": 0,
+      "Date": "2025-12-02T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ A211 від 02.12.2025",
+      "ProcurementManager": {},
+      "TenderNumber": "A211",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 10,
+        "Name": "Нова",
+        "NameEN": "New",
+        "Color": "white"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 109,
+          "BudgetId": 125,
+          "BudgetName": "ACTED-SWISS - СУБПАРТНЕР № 1"
+        }
+      ],
+      "Winner": {
+        "Id": 102,
+        "NameEN": "AWO INTERNATIONAL",
+        "Name": "AWO International",
+        "CodeUA": "1122334459"
+      },
+      "WinnerName": "AWO International",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": false,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    },
+    {
+      "Id": 107,
+      "No": 0,
+      "Date": "2025-10-07T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ 112233 від 07.10.2025",
+      "ProcurementManager": {},
+      "TenderNumber": "112233",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 10,
+        "Name": "Нова",
+        "NameEN": "New",
+        "Color": "white"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 106,
+          "BudgetId": 118,
+          "BudgetName": "McKenzi i Ko 2022"
+        }
+      ],
+      "Winner": {
+        "Id": 593,
+        "NameEN": "YEFIMCHENKO YEVHENIIA YEVHENIIVNA",
+        "Name": "ЄФІМЧЕНКО Євгенія Євгеніївна",
+        "CodeUA": "3119409266"
+      },
+      "WinnerName": "ЄФІМЧЕНКО Євгенія Євгеніївна",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": false,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    },
+    {
+      "Id": 106,
+      "No": 0,
+      "Date": "2025-10-01T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ Addss від 01.10.2025",
+      "ProcurementManager": {},
+      "TenderNumber": "Addss",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 80,
+        "Name": "Завершено",
+        "NameEN": "Completed",
+        "Color": "green"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 105,
+          "BudgetId": 118,
+          "BudgetName": "McKenzi i Ko 2022"
+        }
+      ],
+      "Winner": {
+        "Id": 493,
+        "NameEN": "AVRAMENKO NADIIA MYKOLAIVNA",
+        "Name": "АВРАМЕНКО Надія Миколаївна",
+        "CodeUA": "2981508782"
+      },
+      "WinnerName": "АВРАМЕНКО Надія Миколаївна",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": true,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    },
+    {
+      "Id": 105,
+      "No": 0,
+      "Date": "2025-09-30T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ A22 від 30.09.2025",
+      "ProcurementManager": {},
+      "TenderNumber": "A22",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 10,
+        "Name": "Нова",
+        "NameEN": "New",
+        "Color": "white"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 104,
+          "BudgetId": 116,
+          "BudgetName": "NRC - EU Schock-Familen"
+        }
+      ],
+      "Winner": {},
+      "WinnerName": null,
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": true,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    },
+    {
+      "Id": 103,
+      "No": 0,
+      "Date": "2025-08-28T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ 3343 від 28.08.2025",
+      "ProcurementManager": {},
+      "TenderNumber": "3343",
+      "ProcurementMethod": {},
+      "TenderStatus": {},
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "S",
+      "Budgets": [
+        {
+          "Id": 103,
+          "BudgetId": 109,
+          "BudgetName": "HIAS 4M (Budget)"
+        },
+        {
+          "Id": 102,
+          "BudgetId": 124,
+          "BudgetName": "NRC EU 2022"
+        }
+      ],
+      "Winner": {
+        "Id": 102,
+        "NameEN": "AWO INTERNATIONAL",
+        "Name": "AWO International",
+        "CodeUA": "1122334459"
+      },
+      "WinnerName": "AWO International",
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": true,
+      "Printed": false,
+      "Categories": null,
+      "Waiver": null,
+      "Owner": {},
+      "__permissions": 511
+    },
+    {
+      "Id": 102,
+      "No": 222,
+      "Date": "2025-08-07T00:00:00",
+      "TenderClosureDate": null,
+      "Name": null,
+      "ProcurementManager": {},
+      "TenderNumber": null,
+      "ProcurementMethod": {},
+      "TenderStatus": {},
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "S",
+      "Budgets": [
+        {
+          "Id": 101,
+          "BudgetId": 107,
+          "BudgetName": "NRC - ECHO III (ПОВНА НАЗВА)"
+        },
+        {
+          "Id": 100,
+          "BudgetId": 116,
+          "BudgetName": "NRC - EU Schock-Familen"
+        }
+      ],
+      "Winner": {},
+      "WinnerName": null,
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": false,
+      "Categories": null,
+      "Waiver": null,
+      "Owner": {},
+      "__permissions": 511
+    },
+    {
+      "Id": 101,
+      "No": 223,
+      "Date": "2025-07-17T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ SA3222 від 17.07.2025",
+      "ProcurementManager": {},
+      "TenderNumber": "SA3222",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 10,
+        "Name": "Нова",
+        "NameEN": "New",
+        "Color": "white"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 107,
+          "BudgetId": 124,
+          "BudgetName": "NRC EU 2022"
+        }
+      ],
+      "Winner": {},
+      "WinnerName": null,
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": true,
+      "Printed": true,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    },
+    {
+      "Id": 100,
+      "No": 122,
+      "Date": "2025-07-17T00:00:00",
+      "TenderClosureDate": null,
+      "Name": "№ S3344 від 17.07.2025",
+      "ProcurementManager": {},
+      "TenderNumber": "S3344",
+      "ProcurementMethod": {},
+      "TenderStatus": {
+        "Id": 10,
+        "Name": "Нова",
+        "NameEN": "New",
+        "Color": "white"
+      },
+      "InternalAuditDate": null,
+      "GoodsOrServicesCategory": {},
+      "ShortDescription": null,
+      "FundedByBudgets": "O",
+      "Budgets": [
+        {
+          "Id": 108,
+          "BudgetId": 116,
+          "BudgetName": "NRC - EU Schock-Familen"
+        }
+      ],
+      "Winner": {},
+      "WinnerName": null,
+      "IsMultiWinner": false,
+      "Contract": {},
+      "Urgency": false,
+      "Printed": false,
+      "Categories": null,
+      "Waiver": false,
+      "Owner": {
+        "Id": 4191,
+        "Name": "crm_bk@r2p.org.ua",
+        "Email": "crm_bk@r2p.org.ua"
+      },
+      "__permissions": 511
+    }
+  ],
+  "Tenders.$RowCount": 14,
+  "$ModelInfo": {
+    "Tenders": {
+      "Offset": 0,
+      "PageSize": 20,
+      "SortOrder": "code",
+      "SortDir": "asc",
+      "Filter": {
+        "Fragment": null,
+        "Id": 1,
+        "Period": {
+          "From": null,
+          "To": null
+        },
+        "Period2": {
+          "From": null,
+          "To": null
+        },
+        "Period3": {
+          "From": null,
+          "To": null
+        },
+        "Applicant": {
+          "Id": null,
+          "Name": null
+        },
+        "ProcurementManager": {
+          "Id": null,
+          "Name": null
+        },
+        "ApplicantDepartment": {
+          "Id": null,
+          "Name": null
+        },
+        "Budgets": [],
+        "ExpectedBudgetCompare": 0,
+        "ExpectedBudgetUAH": null,
+        "ContractValueCompare": 0,
+        "ContractValue": null,
+        "ProcurementMethod": {
+          "Id": null,
+          "Name": null
+        },
+        "GoodsOrServicesCategory": {
+          "Id": null,
+          "Name": null
+        },
+        "Winner": {
+          "Id": null,
+          "Name": null
+        },
+        "Status": -1
+      },
+      "Permissions": 511
+    }
+  },
+  "FTenderStatus": [
+    {
+      "Id": 10,
+      "Name": "Нова",
+      "NameEN": "New",
+      "Color": "white"
+    },
+    {
+      "Id": 20,
+      "Name": "В роботі",
+      "NameEN": "In Progress",
+      "Color": "yellow"
+    },
+    {
+      "Id": 30,
+      "Name": "Затверджена до публікації",
+      "NameEN": "Approved for Publication",
+      "Color": "cyan"
+    },
+    {
+      "Id": 40,
+      "Name": "Розпочато збір пропозицій",
+      "NameEN": "Proposal Collection Started",
+      "Color": "blue"
+    },
+    {
+      "Id": 50,
+      "Name": "Завершено збір пропозицій",
+      "NameEN": "Proposal Collection Completed",
+      "Color": "orange"
+    },
+    {
+      "Id": 60,
+      "Name": "Є рішення TechCom",
+      "NameEN": "TechCom Decision Made",
+      "Color": "purple"
+    },
+    {
+      "Id": 70,
+      "Name": "Є рішення ProcCom",
+      "NameEN": "ProcCom Decision Made",
+      "Color": "pink"
+    },
+    {
+      "Id": 80,
+      "Name": "Завершено",
+      "NameEN": "Completed",
+      "Color": "green"
+    },
+    {
+      "Id": 90,
+      "Name": "Скасовано",
+      "NameEN": "Terminated",
+      "Color": "red"
+    },
+    {
+      "Id": -1,
+      "Name": "< All >",
+      "NameEN": "< All >",
+      "Color": "white"
+    }
+  ]
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Tenders':TTenderArray,'FTenderStatus':TFTenderStatusArray}}, false);
+
+function TTender(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TTender, {props: {'Id':Number,'No':Number,'Date':Date,'TenderClosureDate':Date,'Name':{type:String, len:4000},'ProcurementManager':TPerson,'TenderNumber':{type:String, len:255},'ProcurementMethod':TProcurementMethod,'TenderStatus':TTenderStatus,'InternalAuditDate':Date,'GoodsOrServicesCategory':TGoodsOrServicesCategory,'ShortDescription':{type:String, len:255},'FundedByBudgets':{type:String, len:1},'Budgets':TBudgetsArray,'Winner':TAgent,'WinnerName':{type:String, len:4000},'IsMultiWinner':Boolean,'Contract':TContract,'Urgency':Boolean,'Printed':Boolean,'Categories':{type:String, len:4000},'Waiver':Boolean,'Owner':TOwner,'__permissions':Number}, $id: 'Id',$permissions: '__permissions'}, true);
+function TTenderArray(source, path, parent) {
+return cmn.createArray(source, path, TTender, TTenderArray, parent);
+}
+
+function TPerson(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TPerson, {props: {'Id':Number,'NameEN':{type:String, len:511},'Name':{type:String, len:255},'Department':TDepartment}, $id: 'Id'}, true);
+function TPersonArray(source, path, parent) {
+return cmn.createArray(source, path, TPerson, TPersonArray, parent);
+}
+
+function TProcurementMethod(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TProcurementMethod, {props: {'Id':Number,'NameEN':{type:String, len:255},'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TProcurementMethodArray(source, path, parent) {
+return cmn.createArray(source, path, TProcurementMethod, TProcurementMethodArray, parent);
+}
+
+function TTenderStatus(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TTenderStatus, {props: {'Id':Number,'Name':{type:String, len:255},'NameEN':{type:String, len:255},'Color':{type:String, len:50}}, $id: 'Id'}, true);
+function TTenderStatusArray(source, path, parent) {
+return cmn.createArray(source, path, TTenderStatus, TTenderStatusArray, parent);
+}
+
+function TGoodsOrServicesCategory(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TGoodsOrServicesCategory, {props: {'Id':Number,'NameEN':{type:String, len:255},'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TGoodsOrServicesCategoryArray(source, path, parent) {
+return cmn.createArray(source, path, TGoodsOrServicesCategory, TGoodsOrServicesCategoryArray, parent);
+}
+
+function TBudgets(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TBudgets, {props: {'Id':Number,'BudgetId':Number,'BudgetName':{type:String, len:255}}, $id: 'Id'}, true);
+function TBudgetsArray(source, path, parent) {
+return cmn.createArray(source, path, TBudgets, TBudgetsArray, parent);
+}
+
+function TAgent(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAgent, {props: {'Id':Number,'NameEN':{type:String, len:255},'Name':{type:String, len:255},'CodeUA':{type:String, len:16}}, $id: 'Id'}, true);
+function TAgentArray(source, path, parent) {
+return cmn.createArray(source, path, TAgent, TAgentArray, parent);
+}
+
+function TContract(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TContract, {props: {'Id':Number,'No':{type:String, len:255},'Date':Date,'Name':{type:String, len:255},'NameEN':{type:String, len:255},'Memo':{type:String, len:255}}, $id: 'Id'}, true);
+function TContractArray(source, path, parent) {
+return cmn.createArray(source, path, TContract, TContractArray, parent);
+}
+
+function TOwner(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TOwner, {props: {'Id':Number,'Name':{type:String, len:255},'Email':{type:String, len:255}}, $id: 'Id'}, true);
+function TOwnerArray(source, path, parent) {
+return cmn.createArray(source, path, TOwner, TOwnerArray, parent);
+}
+
+function TDepartment(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TDepartment, {props: {'Id':Number,'Name':{type:String, len:255},'NameEN':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TDepartmentArray(source, path, parent) {
+return cmn.createArray(source, path, TDepartment, TDepartmentArray, parent);
+}
+
+function TContractorApprovalLevel(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TContractorApprovalLevel, {props: {'Id':Number,'NameEN':{type:String, len:255},'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TContractorApprovalLevelArray(source, path, parent) {
+return cmn.createArray(source, path, TContractorApprovalLevel, TContractorApprovalLevelArray, parent);
+}
+
+function TCurrency(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TCurrency, {props: {'Id':Number,'Name':{type:String, len:255},'Number3':{type:String, len:3},'Alpha3':{type:String, len:3}}, $id: 'Id'}, true);
+function TCurrencyArray(source, path, parent) {
+return cmn.createArray(source, path, TCurrency, TCurrencyArray, parent);
+}
+
+function TBudget(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TBudget, {props: {'Id':Number,'Name':{type:String, len:255},'Currency':Number}, $id: 'Id'}, true);
+function TBudgetArray(source, path, parent) {
+return cmn.createArray(source, path, TBudget, TBudgetArray, parent);
+}
+
+function TAgentContact(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAgentContact, {props: {'Id':Number,'Name':{type:String, len:255},'Email':{type:String, len:64},'Phone':{type:String, len:32},'Position':{type:String, len:255},'Agent':Number}, $id: 'Id'}, true);
+function TAgentContactArray(source, path, parent) {
+return cmn.createArray(source, path, TAgentContact, TAgentContactArray, parent);
+}
+
+function TFDep(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TFDep, {props: {'Id':Number,'NameEN':{type:String, len:255},'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TFDepArray(source, path, parent) {
+return cmn.createArray(source, path, TFDep, TFDepArray, parent);
+}
+
+function TFBudget(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TFBudget, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TFBudgetArray(source, path, parent) {
+return cmn.createArray(source, path, TFBudget, TFBudgetArray, parent);
+}
+
+function TFTenderStatus(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TFTenderStatus, {props: {'Id':Number,'Name':{type:String, len:255},'NameEN':{type:String, len:255},'Color':{type:String, len:50}}, $id: 'Id'}, true);
+function TFTenderStatusArray(source, path, parent) {
+return cmn.createArray(source, path, TFTenderStatus, TFTenderStatusArray, parent);
+}
+
+const ctors = {TRoot,TTender,TTenderArray,TPerson,TPersonArray,TProcurementMethod,TProcurementMethodArray,TTenderStatus,TTenderStatusArray,TGoodsOrServicesCategory,TGoodsOrServicesCategoryArray,TBudgets,TBudgetsArray,TAgent,TAgentArray,TContract,TContractArray,TOwner,TOwnerArray,TDepartment,TDepartmentArray,TContractorApprovalLevel,TContractorApprovalLevelArray,TCurrency,TCurrencyArray,TBudget,TBudgetArray,TAgentContact,TAgentContactArray,TFDep,TFDepArray,TFBudget,TFBudgetArray,TFTenderStatus,TFTenderStatusArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'catalog/tender/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://catalog/tender/index/
+</script>

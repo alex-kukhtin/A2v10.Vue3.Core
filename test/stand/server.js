@@ -46,6 +46,7 @@ const FILES = {
 	'/_page/dashboard/index/0': [path.join(__dirname, 'pages/dashboard-index.html'), 'text/html; charset=utf-8'],
 	'/_page/attachment/partial/100': [path.join(__dirname, 'pages/attachment-partial.html'), 'text/html; charset=utf-8'],
 	'/_page/task/calendar/index/0': [path.join(__dirname, 'pages/task-calendar-index.html'), 'text/html; charset=utf-8'],
+	'/_page/catalog/tender/index/0': [path.join(__dirname, 'pages/catalog-tender-index.html'), 'text/html; charset=utf-8'],
 	// task/kanban's card 101 opens it; the answer is task 1825's as Core sent it
 	'/_dialog/task/edit/101': [path.join(__dirname, 'pages/task-edit-dialog.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand
@@ -204,6 +205,30 @@ const ATTACHMENT_FILES = {
 	2: ['application/pdf', pdfFile()]
 };
 
+// catalog/tender's budgets (a2-multiselect url="/finance/budget"): fetch's and browse's, by the names in the answer's rows
+const BUDGETS = [
+	{ Id: 107, Name: 'NRC - ECHO III (ПОВНА НАЗВА)' }, { Id: 109, Name: 'HIAS 4M (Budget)' },
+	{ Id: 115, Name: 'PIN CLASTER (красивый)' }, { Id: 116, Name: 'NRC - EU Schock-Familen' },
+	{ Id: 118, Name: 'McKenzi i Ko 2022' }, { Id: 124, Name: 'NRC EU 2022' },
+	{ Id: 125, Name: 'ACTED-SWISS - СУБПАРТНЕР № 1' }
+];
+
+const BUDGET_TYPES = `		function TBudget(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TBudget, {props: {'Id':Number,'Name':String}, $id: 'Id', $name: 'Name'}, true);
+		function TBudgetArray(source, path, parent) { return cmn.createArray(source, path, TBudget, TBudgetArray, parent); }
+		function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TRoot, {props: {'Budgets':TBudgetArray}}, false);
+		const ctors = {"TBudget":TBudget,"TBudgetArray":TBudgetArray,"TRoot":TRoot};`;
+
+// finance/budget/browse (a2-multiselect's search link): not seen from Core, written here
+function budgetBrowseHtml(url) {
+	const elId = `el${crypto.randomUUID()}`;
+	return `<div class="modal" id="${elId}" v-cloak style="width:30rem"><div class="modal-header" v-drag-window><span class="modal-title">Бюджети</span><button class="btnclose" tabindex="-1" @click.prevent="$modalClose(false)">&#x2715;</button></div><div class="modal-content"><data-grid :items-source="Budgets" :fixed-header="true" style="height:20rem" :hover="true" :border="true" :doubleclick="() => $modalSelect(Budgets)"><data-grid-column align="right" header="#" content="Id" width="4rem"></data-grid-column><data-grid-column header="Назва" content="Name"></data-grid-column></data-grid></div><div class="modal-footer"><button class="btn a2-inline btn-primary" :disabled="!$hasSelected(Budgets)" @click.stop.prevent="$modalSelect(Budgets)">Вибрати</button><button class="btn a2-inline" @click.stop.prevent="$modalClose(false)">Скасувати</button></div></div>
+<script type="text/javascript">
+${pageScript(url, { Budgets: BUDGETS }, BUDGET_TYPES)}
+</script>`;
+}
+
 // catalog/item's Items of a folder: the answer had none (Core loads them lazily)
 function lazyRows(folderId) {
 	const n = Math.abs(folderId) % 4 + 1;
@@ -264,12 +289,26 @@ const server = http.createServer((req, res) => {
 		res.end(infoHtml(url, +info[1]));
 		return;
 	}
-	// $invoke: task/kanban's setTaskState and archiveTask answer an empty object, as their procedures return nothing
+	const budgetBrowse = /^\/_dialog\/finance\/budget\/browse(?:\/\d+)?$/.exec(url);
+	if (budgetBrowse) {
+		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+		res.end(budgetBrowseHtml(url));
+		return;
+	}
+	// $invoke: finance/budget's fetch answers the budgets with the text in their names; task/kanban's setTaskState
+	// and archiveTask an empty object, as their procedures return nothing
 	if (url === '/_data/invoke' && req.method === 'POST') {
-		req.resume();
+		let body = '';
+		req.on('data', chunk => body += chunk);
 		req.on('end', () => {
+			const { cmd, baseUrl, data } = JSON.parse(body);
+			let answer = {};
+			if (cmd === 'fetch' && baseUrl.includes('/finance/budget/')) {
+				const text = (data.Text || '').toLowerCase();
+				answer = { Budgets: BUDGETS.filter(b => b.Name.toLowerCase().includes(text)) };
+			}
 			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-			res.end('{}');
+			res.end(JSON.stringify(answer));
 		});
 		return;
 	}

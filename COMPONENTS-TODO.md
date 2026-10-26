@@ -21,7 +21,6 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 - [ ] `pageorient.js` (107): `v-print-page`, `v-page-orientation`
 - [ ] `accelcommand.js` (25): `a2-accel-command`
 - [ ] `waitcursor.js` (22): `wait-cursor`
-- [ ] Core `multiselect.js` (189): `a2-multiselect`
 
 ## Not gaps
 
