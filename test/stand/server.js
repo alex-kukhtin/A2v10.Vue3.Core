@@ -43,6 +43,7 @@ const FILES = {
 	'/_page/catalog/item/index/0': [path.join(__dirname, 'pages/catalog-item-index.html'), 'text/html; charset=utf-8'],
 	'/_page/service/service/index/0': [path.join(__dirname, 'pages/service-service-index.html'), 'text/html; charset=utf-8'],
 	'/_page/task/kanban/0': [path.join(__dirname, 'pages/task-kanban.html'), 'text/html; charset=utf-8'],
+	'/_page/dashboard/index/0': [path.join(__dirname, 'pages/dashboard-index.html'), 'text/html; charset=utf-8'],
 	// task/kanban's card 101 opens it; the answer is task 1825's as Core sent it
 	'/_dialog/task/edit/101': [path.join(__dirname, 'pages/task-edit-dialog.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand
@@ -150,6 +151,30 @@ ${pageScript(url, { Transaction: { Id: id, Text: `Transaction ${id} info` } }, I
 </script>`;
 }
 
+// dashboard/index's widgets to add (Dashboard.Widgets, lazy): the answer had none
+const WIDGETS = [
+	{ Name: 'Залишки', Icon: 'chart-column', Memo: 'Залишки на рахунках', Category: 'Фінанси', rowSpan: 2, colSpan: 3, Url: '/dashboard/widget/balance', Widget: 'balance' },
+	{ Name: 'Каса', Icon: 'currency', Memo: 'Рух коштів за день', Category: 'Фінанси', rowSpan: 2, colSpan: 2, Url: '/dashboard/widget/cash', Widget: 'cash' },
+	{ Name: 'Борги', Icon: 'list', Memo: 'Дебіторська заборгованість', Category: 'Продажі', rowSpan: 1, colSpan: 2, Url: '/dashboard/widget/debts', Widget: 'debts' }
+];
+
+// a dashboard widget's page (/_page/dashboard/widget/{name}/{id}): not seen from Core, written here
+function widgetHtml(url, name, id) {
+	const elId = `el${crypto.randomUUID()}`;
+	return `<div class="widget" id="${elId}" style="padding:.5rem;background:#f4f6f8;height:100%">
+	<b v-text="Widget.Name"></b> <span v-text="Widget.Id"></span>
+</div>
+<script type="text/javascript">
+${pageScript(url, { Widget: { Id: id, Name: name } }, WIDGET_TYPES)}
+</script>`;
+}
+
+const WIDGET_TYPES = `		function TWidget(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TWidget, {props: {'Id':Number,'Name':String}, $id: 'Id'}, false);
+		function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TRoot, {props: {'Widget':TWidget}}, false);
+		const ctors = {"TWidget":TWidget,"TRoot":TRoot};`;
+
 // catalog/item's Items of a folder: the answer had none (Core loads them lazily)
 function lazyRows(folderId) {
 	const n = Math.abs(folderId) % 4 + 1;
@@ -180,15 +205,21 @@ const server = http.createServer((req, res) => {
 		res.end(homeHtml());
 		return;
 	}
-	// a lazy array's rows (catalog/item: a folder's Items), as /_data/loadlazy answers: { [prop]: rows }
+	// a lazy array's rows (catalog/item: a folder's Items; dashboard: Widgets), as /_data/loadlazy answers: { [prop]: rows }
 	if (url === '/_data/loadlazy' && req.method === 'POST') {
 		let body = '';
 		req.on('data', chunk => body += chunk);
 		req.on('end', () => {
 			const { id, prop } = JSON.parse(body);
 			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-			res.end(JSON.stringify({ [prop]: lazyRows(id) }));
+			res.end(JSON.stringify({ [prop]: prop === 'Widgets' ? WIDGETS : lazyRows(id) }));
 		});
+		return;
+	}
+	const widget = /^\/_page\/dashboard\/widget\/(\w+)\/(\d+)$/.exec(url);
+	if (widget) {
+		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+		res.end(widgetHtml(url, widget[1], +widget[2]));
 		return;
 	}
 	const info = /^\/_popup\/finance\/transaction\/info\/(\d+)$/.exec(url);

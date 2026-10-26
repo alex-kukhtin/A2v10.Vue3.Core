@@ -33,3 +33,4 @@ import './spansum.js';
 import './inlinedialog.js';
 import './kanban.js';
 import './timepicker.js';
+import './dashboard.js';

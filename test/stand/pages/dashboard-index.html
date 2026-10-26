@@ -1,0 +1,115 @@
+<div class="page absolute" id="eldf288ea7-6286-4b7f-90a3-db05c6888985"><a2-document-title :page-title="Dashboard.$Title"></a2-document-title><template><a2-dashboard :editable="true" :edit-mode="$data.$$EditMode" group-by="Category" :items="Dashboard.Items" :cell-size="{cx:'96px', cy:'96px'}" v-lazy="Dashboard.$Widgets" :list="Dashboard.$Widgets"><template v-slot:element="elem"><a2-queued-include :source="elem.item.Url" :arg="elem.item.Id" :dat="elem.item.Params"></a2-queued-include></template><template v-slot:listitem="lelem"><div class="generic-list-item" style="padding:1rem"><i class="ico list-item-icon " :class="'ico-' + lelem.item.Icon"></i>
+<div class="list-item-header" v-text="lelem.item.Name"></div><div class="list-item-body" v-text="lelem.item.Memo"></div></div></template><template v-slot:startbtn="btn"><button class="btn btn-tb a2-inline btn-icon" :disabled="(!$canExecute('startEdit', null, null)) || null" @click.stop.prevent="$exec('startEdit', null, null, null)" v-settabindex><i class="ico ico-gear-outline"></i> </button></template><template v-slot:toolbar="tb"><div class="toolbar"><button class="btn first-elem btn-tb btn-icon" :disabled="(!$canExecute('endEdit', null, null)) || null" @click.stop.prevent="$exec('endEdit', null, null, null)" v-settabindex><i class="ico ico-save-outline"></i> </button><textbox class="with-width" update-trigger="input" placeholder="Пошук" :item="Dashboard" prop="$$Text" style="width:15rem"></textbox><div class="aligner"></div><button class="btn btn-tb btn-icon" :disabled="(!$canExecute('cancelEdit', null, null)) || null" @click.stop.prevent="$exec('cancelEdit', null, null, null)" v-settabindex><i class="ico ico-delete"></i> </button></div></template><template v-slot:empty><div class="empty-panel"><i class="ico ico-info-outline"></i> <div class="empty-panel-content"><div class="stack-panel vertical align-center" style="gap:2rem"><template><span>Ще не реалізовано</span><button class="btn a2-inline btn-primary with-width" :disabled="(!$canExecute('startEdit', null, null)) || null" @click.stop.prevent="$exec('startEdit', null, null, null)" v-settabindex style="width:15rem">Додати</button></template></div></div></div></template></template><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const tu = require('std:utils').text;
+const template = {
+    properties: {
+        'TRoot.$$EditMode': Boolean,
+        'TDashboard.$$Text': String,
+        'TDashboard.$Title': dashboardTitle,
+        'TDashboard.$Items'() { return []; },
+        'TDashboard.$Widgets': filteredWidgets
+    },
+    commands: {
+        startEdit() { this.$$EditMode = true; },
+        cancelEdit() { this.$$EditMode = false; this.$ctrl.$reload(); },
+        endEdit: {
+            exec: endEdit,
+            canExec() { return this.$dirty; }
+        }
+    }
+};
+exports.default = template;
+function dashboardTitle() {
+    switch (this.Key) {
+        case 'finance': return 'Дашборд (Фінанси)';
+    }
+    return 'Дашборд';
+}
+function filteredWidgets() {
+    if (!this.$$Text)
+        return this.Widgets;
+    let fi = this.Widgets.filter(x => tu.containsText(x, 'Name', this.$$Text));
+    console.dir(fi);
+    return fi;
+}
+async function endEdit() {
+    let ctrl = this.$ctrl;
+    await ctrl.$save();
+    this.$$EditMode = false;
+}
+
+});;
+
+	// Items: the answer had none, rows written on the stand (their pages: /_page/dashboard/widget/{name}/{id})
+	const rawData = {
+  "Dashboard": {
+    "Id": 153,
+    "Key": "finance",
+    "Items": [
+      { "Id": 1, "row": 1, "col": 1, "rowSpan": 2, "colSpan": 3, "Widget": "balance", "Url": "/dashboard/widget/balance", "Params": null },
+      { "Id": 2, "row": 1, "col": 4, "rowSpan": 2, "colSpan": 2, "Widget": "cash", "Url": "/dashboard/widget/cash", "Params": null },
+      { "Id": 3, "row": 3, "col": 1, "rowSpan": 1, "colSpan": 2, "Widget": "debts", "Url": "/dashboard/widget/debts", "Params": null }
+    ],
+    "Widgets": []
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Dashboard':TDashboard}}, false);
+
+function TDashboard(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TDashboard, {props: {'Id':Number,'Key':{type:String, len:16},'Items':TDashboardItemArray,'Widgets':TWidgetArray}, $id: 'Id',$lazy: ['Widgets']}, false);
+
+function TDashboardItem(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TDashboardItem, {props: {'Id':Number,'row':Number,'col':Number,'rowSpan':Number,'colSpan':Number,'Widget':{type:String, len:16},'Url':{type:String, len:255},'Params':{type:String, len:1023, json:true}}, $id: 'Id'}, true);
+function TDashboardItemArray(source, path, parent) {
+return cmn.createArray(source, path, TDashboardItem, TDashboardItemArray, parent);
+}
+
+function TWidget(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TWidget, {props: {'Name':{type:String, len:255},'row':Number,'col':Number,'rowSpan':Number,'colSpan':Number,'Url':{type:String, len:255},'Widget':{type:String, len:16},'Icon':{type:String, len:32},'Memo':{type:String, len:255},'Params':{type:String, len:1023},'Key':{type:String, len:16},'Category':{type:String, len:64}}}, true);
+function TWidgetArray(source, path, parent) {
+return cmn.createArray(source, path, TWidget, TWidgetArray, parent);
+}
+
+const ctors = {TRoot,TDashboard,TDashboardItem,TDashboardItemArray,TWidget,TWidgetArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'dashboard/index/',
+	inDialog: false,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://dashboard/index/
+</script>
