@@ -6,7 +6,6 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 ## Likely on forms: next
 
 - [ ] `tab.js` (209): `a2-tab-panel`, `a2-tab-item` — XAML `TabPanel`
-- [ ] `popover.js` (111): `popover`
 - [ ] `upload.js` (172): `a2-upload`, `a2-simple-upload`
 - [ ] `fileupload.js` (107): `a2-file-upload`
 - [ ] `image.js` (223): `a2-image`, `a2-file-image`, `a2-file-preview`, `a2-static-image`
@@ -23,7 +22,6 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 - [ ] `graphics.js` (65): `a2-graphics`
 - [ ] `collectionviewplain.js` (part): `collection-view` — the client one; `collection-view-server(-url)` is ported
 - [ ] `inlineedit.js` (77): `a2-edit-inline`
-- [ ] `spansum.js` (33): `a2-span-sum`
 - [ ] `pageorient.js` (107): `v-print-page`, `v-page-orientation`
 - [ ] `accelcommand.js` (25): `a2-accel-command`
 - [ ] `waitcursor.js` (22): `wait-cursor`

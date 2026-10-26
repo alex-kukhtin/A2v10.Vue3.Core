@@ -1,0 +1,132 @@
+<collection-view-server class="cw page absolute page-grid cw-absolute" id="el01409865-3731-4d69-994d-8b5f442d1fc7" :items-source="Transactions" :initial-filter="{Period: period.all(),SubpartnerFilter: null,OwnOnly: false,IsVerified: '',BankAccount: null,Agent: null,Project: null,Currency: null,Mode: '',Fragment: '',Compare: 0,CompareValue1: 0,CompareValue2: 0,Operation: null,InOut: '',Budget: null}" :persistent-filter="[]"><template v-slot="Parent"><a2-document-title page-title="Транзакції"></a2-document-title><a2-taskpad class="page-taskpad overflow collapsible" title="Taskpad" initial-width="24rem" position="right" :initial-collapsed="false" style="padding:11px 1rem 1rem 1rem;grid-column:2"><template><a2-panel :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Фільтри</div></template><div class="panel-content" style="gap:.25rem"><template><a2-period-picker class="drop-bottom-right" label="Період" align="center" :item="Parent.Filter" prop="Period"></a2-period-picker><select is="vue:combobox" v-cloak label="Показати" :item="Parent.Filter" prop="Mode"><option value="U">Unapplied</option><option value="D">Applied</option><option value="A">All</option></select><a2-selector fetch-command="/catalog/bankaccount/fetch" display="Name" :highlight="true" :has-clear="true" label="Банківський рахунок" placeholder="Всі рахунки" :item="Parent.Filter" prop="BankAccount"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/bankaccount/browse', Parent.Filter.BankAccount, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/currency/fetch" display="Name" :highlight="true" :has-clear="true" label="Валюта" placeholder="Всі валюти" :item="Parent.Filter" prop="Currency"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/currency/browse', Parent.Filter.Currency, null)"><i class="ico ico-search"></i> </a><template v-slot:pane="root"><data-grid class="user-select data-grid-light" :is-item-active="root.isItemActive" :hit-item="root.hit" :items-source="root.items" :compact="false" key="eb2fdce0-c9f1-4b1e-9d9b-2f0c719afc7e" :hide-header="true" :hover="true" :striped="false" :border="true" :route-query="$query" grid="Horizontal"><data-grid-column :fit="true" wrap="no-wrap" content="Name"></data-grid-column><data-grid-column content="FullName"></data-grid-column></data-grid></template></a2-selector><a2-selector fetch-command="/catalog/project/fetch" display="Name" :highlight="true" label="Проєкт" placeholder="Всі проєкти" :item="Parent.Filter" prop="Project"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/project/browse', Parent.Filter.Project, null)"><i class="ico ico-search"></i> </a><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" v-if="$data.$HasProjectFilter" :disabled="(!$canExecute('clearFilter', Parent.Filter.Project, null)) || null" @click.stop.prevent="$exec('clearFilter', Parent.Filter.Project, null, null)"><i class="ico ico-clear"></i> </a></a2-selector><a2-selector fetch-command="/finance/budget/fetch" display="Name" :has-clear="true" label="Бюджет" placeholder="Всі бюджети" :item="Parent.Filter" prop="Budget"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/finance/budget/browse', Parent.Filter.Budget, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/agent/fetch" display="Name" :highlight="true" :has-clear="true" label="Контрагент" placeholder="Всі контрагенти" :item="Parent.Filter" prop="Agent"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/agent/browse', Parent.Filter.Agent, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/operation/fetch" display="Name" :highlight="true" :has-clear="true" label="Операція" placeholder="Всі операції" :item="Parent.Filter" prop="Operation"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/operation/browse', Parent.Filter.Operation, null)"><i class="ico ico-search"></i> </a></a2-selector><select is="vue:combobox" v-cloak label="In-Out" :item="Parent.Filter" prop="InOut"><option value="A">All</option><option value="I">Cash-In</option><option value="O">Cash-Out</option></select><select is="vue:combobox" v-cloak label="Фільтр за сумою" :item="Parent.Filter" prop="Compare"><option value="0">Empty</option><option value="1">SUM =  Value</option><option value="2">SUM != Value</option><option value="3">SUM  <  Value</option><option value="4">SUM  <= Value</option><option value="5">SUM >  Value</option><option value="6">SUM >=  Value</option></select><div class="stack-panel horizontal"><template><div class="a2-label no-wrap bold" v-text="$data.$$TextLabel1" v-if="$data.$$ShowLabel1" style="margin:0 4px"></div><textbox v-if="Parent.Filter.Compare" align="right" :item="Parent.Filter" prop="CompareValue1" data-type="Currency"></textbox></template></div></template></div></a2-panel><a2-panel :initial-collapsed="true" :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Субпартнери</div></template><div class="panel-content" style="gap:.5rem"><template><a2-selector fetch-command="/admin/user/subpartner/fetch" display="Name" :has-clear="true" label="Субпартнери" placeholder="Всі" :item="Parent.Filter" prop="SubpartnerFilter"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/admin/user/subpartner/browse', Parent.Filter.SubpartnerFilter, null)"><i class="ico ico-search"></i> </a></a2-selector><label class="checkbox" label="Лише свої"><input type="checkbox" v-settabindex v-model="Parent.Filter.OwnOnly" v-bind:xcheck="Parent.Filter.OwnOnly"/><span>Лише свої</span></label><select is="vue:combobox" v-cloak label="Показати" :item="Parent.Filter" prop="IsVerified"><option value="Y">Verified</option><option value="N">Unverified</option><option value="A">All</option></select></template></div></a2-panel></template></a2-taskpad><div class="page-content"><template><div class="grid" style="height:100%;grid-template-rows:auto 1fr auto "><div class="toolbar"><button class="btn first-elem btn-tb" :disabled="(!$canExecSel('reconcile', Transactions, null)) || null" @click.stop.prevent="$execSelected('reconcile', Transactions, null)" v-settabindex><i class="ico ico-switch"></i> Reconcile</button><div class="divider" role="separator"></div><button class="btn btn-tb" :disabled="(!$canExecute('upload', null, null)) || null" @click.stop.prevent="$exec('upload', null, null, null)" v-settabindex><i class="ico ico-file-import"></i> Import Statements</button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" title="Досьє об'єкта" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$dialog('show-selected', '/admin/objectlog/transaction', Parent.ItemsSource, null, null)" v-settabindex><i class="ico ico-history"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button><div class="dropdown dir-down" v-dropdown v-if="Transactions.$hasChecked"><button class="btn btn-tb" toggle v-if="Transactions.$hasChecked" v-settabindex><i class="ico ico-checkbox"></i> Actions with checked<span class="caret"></span></button><div class="dropdown-menu menu" role="menu"><template><button class="dropdown-item" v-disable>Change Operation</button><button class="dropdown-item" :disabled="(!$canExecute('approveTransactions', null, null)) || null" @click.stop.prevent="$exec('approveTransactions', null, {message: 'Ви впевнені?'}, null)" v-disable>Approve Operation</button></template></div></div><div class="aligner"></div><textbox class="with-width" :has-clear="true" placeholder="Пошук" :item="Parent.Filter" prop="Fragment" style="width:20rem"></textbox><div class="dropdown dir-down" v-dropdown><button class="btn btn-tb btn-icon" toggle v-settabindex><i class="ico ico-ellipsis-vertical"></i> </button><div class="dropdown-menu menu down-left" role="menu"><template><button class="dropdown-item" :disabled="(!$canExecute('download', null, null)) || null" @click.stop.prevent="$exec('download', null, null, null)" v-disable><i class="ico ico-export-excel"></i> <span>Export to Excel</span></button><button class="dropdown-item" :disabled="(!$canExecute('downloadWithFilters', null, null)) || null" @click.stop.prevent="$exec('downloadWithFilters', null, null, null)" v-disable><i class="ico ico-export-excel"></i> <span>Export to Excel (with filters)</span></button><button class="dropdown-item" v-if="$data.CurrentUser.IsAdmin" @click.stop.prevent="$dialog('show', '/finance/transaction/feed', null, null, null)" v-disable><i class="ico ico-link"></i> <span>Excel feed</span></button><button class="dropdown-item" v-if="$data.CurrentUser.IsAdmin" @click.stop.prevent="$dialog('show', '/finance/transaction/feedrows', null, null, null)" v-disable><i class="ico ico-link"></i> <span>Excel feed (rows)</span></button></template></div></div></div><data-grid class="user-select data-grid-light" :compact="false" key="07ef38e5-4821-4163-8109-8710a0767ab7" :fixed-header="true" :items-source="Parent.ItemsSource" :hover="true" :striped="false" :border="true" :sort="true" :route-query="$query" :doubleclick="() => $exec('reconcileSelected', Parent.ItemsSource, null, null)" grid="Horizontal"><data-grid-column :fit="true" wrap="no-wrap" align="center" control-type="checkbox" :editable="true" check-all="$checked" id="col0"></data-grid-column><template v-slot:col0="cell"><label class="checkbox no-label"><input type="checkbox" v-settabindex v-model="cell.row.$checked" v-bind:xcheck="cell.row.$checked"/><span></span></label></template><data-grid-column :fit="true" wrap="no-wrap" align="right" header="#" content="Id"></data-grid-column><data-grid-column :sort="false" id="col2"></data-grid-column><template v-slot:col2="cell"><div class="stack-panel horizontal" style="gap:4px"><template><popover class="a2-inline po-bottom-right" v-if="cell.row.Link.Id" icon="link" width="30rem"><template><table class="prop-grid compact no-wrap-name grid-horizontal" style="padding:0"><colgroup><col class="prop-name"/><col class="prop-value"/></colgroup><tbody><tr><td class="prop-name">#</td><td class="prop-value bold" v-text="cell.row.Link.Id"></td></tr><tr><td class="prop-name">Номер</td><td class="prop-value bold" v-text="cell.row.Link.SNo"></td></tr><tr><td class="prop-name">Дата</td><td class="prop-value bold" v-text="$format(cell.row.Link.Date, {dataType: 'Date'})"></td></tr><tr><td class="prop-name">Сума</td><td class="prop-value bold" v-text="$format(cell.row.Link.Sum, {dataType: 'Currency'})"></td></tr><tr class="no-wrap"><td class="prop-name">Банківський рахунок</td><td class="prop-value bold" v-text="cell.row.Link.BankAccountName"></td></tr><tr><td class="prop-name">Бюджети</td><td class="prop-value"><div class="stack-panel vertical"><template v-for="(xelem, xIndex) in cell.row.Link.Budgets" :key="xIndex"><span class="bold" v-text="xelem.Name"></span></template></div></td></tr><tr><td class="prop-name">Text</td><td class="prop-value" v-text="cell.row.Link.Text"></td></tr></tbody></table><div class="stack-panel horizontal" style="padding:.5rem 0"><template><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" @click.stop.prevent="$navigate('/finance/transaction/editone', cell.row.Link.Id, false, null, null)" :href="$href('/finance/transaction/editone', cell.row.Link.Id)">Open</a></template></div></template></popover><popover class="a2-inline po-bottom-right" v-if="cell.row.StornoTarget.Id" icon="arrow-sort" width="30rem"><template><table class="prop-grid compact no-wrap-name grid-horizontal" style="padding:0"><colgroup><col class="prop-name"/><col class="prop-value"/></colgroup><tbody><tr><td class="prop-name">#</td><td class="prop-value bold" v-text="cell.row.StornoTarget.Id"></td></tr><tr><td class="prop-name">Номер</td><td class="prop-value bold" v-text="cell.row.StornoTarget.SNo"></td></tr><tr><td class="prop-name">Дата</td><td class="prop-value bold" v-text="$format(cell.row.StornoTarget.Date, {dataType: 'Date'})"></td></tr><tr><td class="prop-name">Сума</td><td class="prop-value bold" v-text="$format(cell.row.StornoTarget.Sum, {dataType: 'Currency'})"></td></tr><tr><td class="prop-name">Text</td><td class="prop-value" v-text="cell.row.StornoTarget.Text"></td></tr></tbody></table><div class="stack-panel horizontal" style="padding:.5rem 0"><template><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" @click.stop.prevent="$navigate('/finance/manual/edit', cell.row.StornoTarget.Id, false, null, null)" :href="$href('/finance/manual/edit', cell.row.StornoTarget.Id)">Open</a></template></div></template></popover></template></div></template><data-grid-column header="V/A" :sort="false" width="3rem" id="col3"></data-grid-column><template v-slot:col3="cell"><div class="stack-panel vertical"><template><span class="tag-label outline green" v-if="cell.row.VerifiedByFm" :title="cell.row.$verifiedByTip">V</span><span class="tag-label outline green" v-if="cell.row.ApprovedByFm" :title="cell.row.$approvedByTip">A</span></template></div></template><data-grid-column :fit="true" wrap="no-wrap" align="center" header="Дата" bind-icon="$Icon" content="Date" data-type="Date"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" align="right" header="Номер/PAV" sort-prop="SNo" id="col5"></data-grid-column><template v-slot:col5="cell"><template><span class="block" v-text="cell.row.SNo"></span><span class="text-color-label small" v-text="cell.row.PAVNumber"></span></template></template><data-grid-column :fit="true" wrap="no-wrap" align="right" header="Сума" sort-prop="Sum" id="col6"></data-grid-column><template v-slot:col6="cell"><template><a2-span-sum class="bold" :content="$format(cell.row.Sum, {dataType: 'Currency'})" :dir="cell.row.InOut"></a2-span-sum>&#160;<span v-text="cell.row.Currency.Alpha3"></span></template></template><data-grid-column header="Банківський рахунок" width="12rem" sort-prop="bankacc" id="col7"></data-grid-column><template v-slot:col7="cell"><div class="stack-panel vertical align-start" style="gap:.5rem"><template><popover class="a2-inline po-bottom-right" :content="cell.row.BankAccount.Name"><div class="stack-panel vertical align-start" style="padding:.5rem;gap:.5rem"><template><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" @click.stop.prevent="$navigateSimple(cell.row.$BankAccountUrl, false)"><span v-text="cell.row.BankAccount.Name"></span></a><span class="no-wrap" v-text="cell.row.BankAccount.IBAN"></span><span class="tag-label outline salmon" v-if="cell.row.BankAccount.$IsOwn">Own</span><span class="tag-label outline olive" v-if="cell.row.BankAccount.$IsProject">Project</span></template></div></popover><span class="tag-label outline salmon" v-if="cell.row.BankAccount.$IsOwn">Own</span><span class="tag-label outline olive" v-if="cell.row.BankAccount.$IsProject">Project</span></template></div></template><data-grid-column header="Контрагент" width="15rem" sort-prop="agent" id="col8"></data-grid-column><template v-slot:col8="cell"><div class="stack-panel vertical"><template><popover class="a2-inline po-bottom-right" :content="cell.row.Agent.Name"><div class="stack-panel vertical" style="padding:.5rem"><template><a class="a2-hyperlink no-wrap" href="javascript:void(0)" draggable="false" @click.stop.prevent="$navigateSimple(cell.row.$AgentUrl, false)"><span v-text="cell.row.Agent.Name"></span></a><span v-text="cell.row.Agent.NameEN"></span><span v-text="cell.row.Agent.CodeUA"></span></template></div></popover><span class="small" v-text="cell.row.Agent.CodeUA"></span></template></div></template><data-grid-column header="Текст" :line-clamp="3" content="Text"></data-grid-column><data-grid-column header="Бюджет" :sort="false" :max-chars="50" id="col10"></data-grid-column><template v-slot:col10="cell"><popover class="a2-inline po-bottom-right" :content="cell.row.Budget.Name"><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" @click.stop.prevent="$navigateSimple(cell.row.$BudgetUrl, false)"><span v-text="cell.row.Budget.Name"></span></a></popover></template><data-grid-column header="Підстава" :max-chars="50" content="BasedOn"></data-grid-column><data-grid-column header="Примітка" :line-clamp="3" width="10rem" content="Memo"></data-grid-column><data-grid-column :fit="true" id="col13"></data-grid-column><template v-slot:col13="cell"><div class="commandbar visible-hover"><template><popover class="a2-inline po-bottom-left" icon="eye" :url="cell.row.$InfoUrl" style="margin:0 5px 0 0"></popover></template></div></template><template v-slot:empty><div class="empty-panel" v-if="$data.$IsAccessDenied"><i class="ico ico-ban"></i> <div class="empty-panel-content">
+					You have insufficient rights to view the content.
+				</div></div></template></data-grid><a2-pager :source="Parent.Pager"></a2-pager></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+	const template = (function() {
+	let module = { exports: undefined };
+	(function(module, exports) {
+		// the answer came cut at its script: the template written on the stand by the markup's names
+		const template = {
+	properties: {
+		'TRoot.$IsAccessDenied'() { return false; },
+		'TRoot.$HasProjectFilter'() { return true; },
+		'TRoot.$$TextLabel1'() { return 'Value'; },
+		'TRoot.$$ShowLabel1'() { return true; },
+		'TTransaction.$verifiedByTip'() { return 'Verified by FM'; },
+		'TTransaction.$approvedByTip'() { return 'Approved by FM'; },
+		'TTransaction.$Icon'() { return this.Link.Id ? 'link' : ''; },
+		'TTransaction.$BankAccountUrl'() { return `/catalog/bankaccount/edit/${this.BankAccount.Id}`; },
+		'TTransaction.$AgentUrl'() { return `/catalog/agent/edit/${this.Agent.Id}`; },
+		'TTransaction.$BudgetUrl'() { return `/finance/budget/edit/${this.Budget.Id}`; },
+		'TTransaction.$InfoUrl'() { return `/finance/transaction/info/${this.Id}`; },
+		'TRBankAccount.$IsOwn'() { return this.Kind === 'O'; },
+		'TRBankAccount.$IsProject'() { return this.Kind === 'P'; }
+	},
+	commands: {
+		reconcile() { },
+		reconcileSelected() { },
+		upload() { },
+		clearFilter() { },
+		approveTransactions() { },
+		download() { },
+		downloadWithFilters() { }
+	}
+};
+module.exports = template;
+	})(module, module.exports);
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Transactions": [
+    { "Id": 3003, "Date": "2026-07-15T00:00:00", "SNo": "1503", "PAVNumber": "PAV-77", "Sum": 12500.5, "InOut": 1, "Text": "Оплата за рахунком 15", "BasedOn": "Рахунок 15 від 10.07.2026", "Memo": null, "VerifiedByFm": true, "ApprovedByFm": true,
+      "Currency": { "Id": 980, "Alpha3": "UAH" }, "BankAccount": { "Id": 1, "Name": "ПриватБанк основний", "IBAN": "UA213223130000026007233566001", "Kind": "O" },
+      "Agent": { "Id": 1001, "Name": "Перший", "NameEN": "First", "CodeUA": "12345678" }, "Budget": { "Id": 11, "Name": "Операційний бюджет" },
+      "Link": { "Id": 3001, "SNo": "1501", "Date": "2026-07-10T00:00:00", "Sum": 12500.5, "BankAccountName": "ПриватБанк основний", "Text": "Рахунок", "Budgets": [ { "Id": 11, "Name": "Операційний бюджет" }, { "Id": 12, "Name": "Маркетинг" } ] },
+      "StornoTarget": {} },
+    { "Id": 3002, "Date": "2026-07-12T00:00:00", "SNo": "1502", "PAVNumber": null, "Sum": 800, "InOut": -1, "Text": "Повернення", "BasedOn": null, "Memo": "сторно", "VerifiedByFm": true, "ApprovedByFm": false,
+      "Currency": { "Id": 840, "Alpha3": "USD" }, "BankAccount": { "Id": 2, "Name": "Проєктний рахунок", "IBAN": "UA903052992990004149123456789", "Kind": "P" },
+      "Agent": { "Id": 1004, "Name": "Основний", "NameEN": "Main", "CodeUA": "87654321" }, "Budget": { "Id": 12, "Name": "Маркетинг" },
+      "Link": { "Budgets": [] },
+      "StornoTarget": { "Id": 501, "SNo": "M-501", "Date": "2026-07-01T00:00:00", "Sum": 800, "Text": "Ручна операція" } },
+    { "Id": 3001, "Date": "2026-07-10T00:00:00", "SNo": "1501", "PAVNumber": null, "Sum": 300, "InOut": 0, "Text": "Переказ між рахунками", "BasedOn": null, "Memo": null, "VerifiedByFm": false, "ApprovedByFm": false,
+      "Currency": { "Id": 980, "Alpha3": "UAH" }, "BankAccount": { "Id": 3, "Name": "Монобанк", "IBAN": "UA383220010000026201234567890", "Kind": "" },
+      "Agent": { "Id": 1001, "Name": "Перший", "NameEN": "First", "CodeUA": "12345678" }, "Budget": {},
+      "Link": { "Budgets": [] },
+      "StornoTarget": {} }
+  ],
+  "Transactions.$RowCount": 3,
+  "CurrentUser": { "Id": 1, "IsAdmin": true },
+  "$ModelInfo": {
+    "Transactions": {
+      "PageSize": 20, "Offset": 0, "SortOrder": "date", "SortDir": "asc",
+      "Filter": {
+        "Period": {
+          "From": "\u0022\\/\u00222026-07-01T00:00:00\u0022\\/\u0022",
+          "To": "\u0022\\/\u00222026-09-30T00:00:00\u0022\\/\u0022"
+        },
+        "SubpartnerFilter": { "Id": null, "Name": null },
+        "OwnOnly": true,
+        "IsVerified": "A",
+        "BankAccount": { "Id": null, "Name": null },
+        "Agent": { "Id": null, "Name": null },
+        "Project": { "Id": -1, "Name": null },
+        "Currency": { "Id": null, "Name": null },
+        "Mode": "A",
+        "Fragment": null,
+        "Compare": 0,
+        "CompareValue1": 0,
+        "CompareValue2": 0,
+        "Operation": { "Id": null, "Name": null },
+        "InOut": "A",
+        "Budget": { "Id": null, "Name": null }
+      }
+    }
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRoot, {props: {'Transactions':TTransactionArray,'CurrentUser':TUser}}, false);
+function TTransaction(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TTransaction, {props: {'Id':Number,'Date':Date,'SNo':{type:String, len:64},'PAVNumber':{type:String, len:64},'Sum':Number,'InOut':Number,'Text':{type:String, len:255},'BasedOn':{type:String, len:255},'Memo':{type:String, len:255},'VerifiedByFm':Boolean,'ApprovedByFm':Boolean,'Currency':TRCurrency,'BankAccount':TRBankAccount,'Agent':TRAgent,'Budget':TRBudget,'Link':TRLink,'StornoTarget':TRStornoTarget}, $id: 'Id'}, true);
+function TTransactionArray(source, path, parent) { return cmn.createArray(source, path, TTransaction, TTransactionArray, parent); }
+function TRCurrency(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRCurrency, {props: {'Id':Number,'Alpha3':{type:String, len:3}}, $id: 'Id'}, true);
+function TRBankAccount(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRBankAccount, {props: {'Id':Number,'Name':{type:String, len:255},'IBAN':{type:String, len:34},'Kind':{type:String, len:1}}, $id: 'Id',$name: 'Name'}, true);
+function TRAgent(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRAgent, {props: {'Id':Number,'Name':{type:String, len:255},'NameEN':{type:String, len:255},'CodeUA':{type:String, len:16}}, $id: 'Id',$name: 'Name'}, true);
+function TRBudget(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRBudget, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRBudgetArray(source, path, parent) { return cmn.createArray(source, path, TRBudget, TRBudgetArray, parent); }
+function TRLink(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRLink, {props: {'Id':Number,'SNo':{type:String, len:64},'Date':Date,'Sum':Number,'BankAccountName':{type:String, len:255},'Text':{type:String, len:255},'Budgets':TRBudgetArray}, $id: 'Id'}, true);
+function TRStornoTarget(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TRStornoTarget, {props: {'Id':Number,'SNo':{type:String, len:64},'Date':Date,'Sum':Number,'Text':{type:String, len:255}}, $id: 'Id'}, true);
+function TUser(source, path, parent) { cmn.createObject(this, source, path, parent); }
+cmn.defineObject(TUser, {props: {'Id':Number,'IsAdmin':Boolean}, $id: 'Id'}, false);
+const ctors = {TRoot,TTransaction,TTransactionArray,TRCurrency,TRBankAccount,TRAgent,TRBudget,TRBudgetArray,TRLink,TRStornoTarget,TUser};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'finance/transaction/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://finance/transaction/index/
+</script>

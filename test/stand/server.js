@@ -41,6 +41,8 @@ const FILES = {
 	'/_page/catalog/agent/index/0': [path.join(__dirname, 'pages/catalog-agent-index.html'), 'text/html; charset=utf-8'],
 	'/_page/document/order/index/0': [path.join(__dirname, 'pages/document-order-index.html'), 'text/html; charset=utf-8'],
 	'/_page/catalog/item/index/0': [path.join(__dirname, 'pages/catalog-item-index.html'), 'text/html; charset=utf-8'],
+	// the answer came cut at its script: the template, the types and the rows written on the stand
+	'/_page/finance/transaction/index/0': [path.join(__dirname, 'pages/finance-transaction-index.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']
 };
 
@@ -127,6 +129,23 @@ ${pageScript('_home/index/', {}, EMPTY_TYPES)}
 </script>`;
 }
 
+// finance/transaction's info popover (url: /_popup/finance/transaction/info/{id}): not seen from Core, written here
+const INFO_TYPES = `		function TTransaction(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TTransaction, {props: {'Id':Number,'Text':String}, $id: 'Id'}, false);
+		function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TRoot, {props: {'Transaction':TTransaction}}, false);
+		const ctors = {"TTransaction":TTransaction,"TRoot":TRoot};`;
+
+function infoHtml(url, id) {
+	const elId = `el${crypto.randomUUID()}`;
+	return `<div class="popover-content" id="${elId}" style="padding:.5rem">
+	<div class="stack-panel vertical"><span class="bold" v-text="Transaction.Id"></span><span v-text="Transaction.Text"></span></div>
+</div>
+<script type="text/javascript">
+${pageScript(url, { Transaction: { Id: id, Text: `Transaction ${id} info` } }, INFO_TYPES)}
+</script>`;
+}
+
 // catalog/item's Items of a folder: the answer had none (Core loads them lazily)
 function lazyRows(folderId) {
 	const n = Math.abs(folderId) % 4 + 1;
@@ -166,6 +185,12 @@ const server = http.createServer((req, res) => {
 			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
 			res.end(JSON.stringify({ [prop]: lazyRows(id) }));
 		});
+		return;
+	}
+	const info = /^\/_popup\/finance\/transaction\/info\/(\d+)$/.exec(url);
+	if (info) {
+		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+		res.end(infoHtml(url, +info[1]));
 		return;
 	}
 	// a page, or a dialog (the shell adds the argument's id as the last segment)

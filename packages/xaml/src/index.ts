@@ -28,3 +28,5 @@ import './treegrid.js';
 import './treeview.js';
 import './texteditor.js';
 import './tags.js';
+import './popover.js';
+import './spansum.js';
