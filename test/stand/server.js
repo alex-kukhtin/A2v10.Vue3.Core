@@ -45,6 +45,7 @@ const FILES = {
 	'/_page/task/kanban/0': [path.join(__dirname, 'pages/task-kanban.html'), 'text/html; charset=utf-8'],
 	'/_page/dashboard/index/0': [path.join(__dirname, 'pages/dashboard-index.html'), 'text/html; charset=utf-8'],
 	'/_page/attachment/partial/100': [path.join(__dirname, 'pages/attachment-partial.html'), 'text/html; charset=utf-8'],
+	'/_page/task/calendar/index/0': [path.join(__dirname, 'pages/task-calendar-index.html'), 'text/html; charset=utf-8'],
 	// task/kanban's card 101 opens it; the answer is task 1825's as Core sent it
 	'/_dialog/task/edit/101': [path.join(__dirname, 'pages/task-edit-dialog.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand

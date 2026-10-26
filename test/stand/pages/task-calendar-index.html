@@ -1,0 +1,130 @@
+<collection-view-server-url class="cw page absolute cw-absolute" id="el8b224ce4-719f-41e2-a266-3e05575d5d49" :items-source="Events" :initial-filter="{Start: utils.date.zero(),View: ''}" :persistent-filter="[]"><template v-slot="Parent"><a2-document-title page-title="Календар"></a2-document-title><template><a2-big-calendar :events="Parent.ItemsSource" :item="Parent.Filter" prop="Start" :view-item="Parent.Filter" view-prop="View" :delegates="$data.Delegates" style="padding:.5rem 1rem"><template v-slot:topbar="el"><button class="btn btn-tb a2-inline btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button></template></a2-big-calendar></template><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server-url><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils = require('std:utils');
+const du = utils.date;
+const template = {
+    options: {
+        noDirty: true,
+    },
+    properties: {
+        'TEvent.Color'() { return mapTagColor(this.Style) + '70'; },
+        'TRoot.Delegates'() { return { ClickDay: clickDay.bind(this), ClickEvent: clickEvent.bind(this) }; }
+    }
+};
+exports.default = template;
+function mapTagColor(style) {
+    let tagColors = {
+        'cyan': '#60bbe5',
+        'green': '#5db750',
+        'olive': '#b5cc18',
+        'white': '#ffffff',
+        'teal': '#00b5ad',
+        'tan': '#d2b48c',
+        'red': '#da533f',
+        'blue': '#6495ed',
+        'orange': '#ffb74d',
+        'seagreen': '#8fbc8f',
+        'null': '#8f94b0',
+        'gold': '#eac500',
+        'salmon': '#fa8072',
+        'purple': '#9370db',
+        'pink': '#ff69b4',
+        'magenta': '#8b008b',
+        'lightgray': '#cccccc'
+    };
+    return tagColors[style || 'null'] || '#8f94b0';
+}
+async function clickDay(date) {
+    let h = date.getHours();
+    let ndate = new Date(date);
+    if (!h)
+        ndate = du.add(ndate, 9, "hour");
+    let ctrl = this.$ctrl;
+    let task = await ctrl.$showDialog('/task/edit', null, { StartAt: ndate });
+    this.Events.push({
+        Id: task.Id,
+        Date: du.parse(task.StartAt), Name: task.Text, Duration: 30,
+        Color: mapTagColor(task.State.Color) + '70'
+    });
+}
+async function clickEvent(ev) {
+    let ctrl = this.$ctrl;
+    await ctrl.$showDialog('/task/edit', { Id: ev.Id });
+    await ctrl.$reload();
+}
+
+});;
+
+	// Events: the answer had none, rows written on the stand
+	const rawData = {
+  "Events": [
+    { "Id": 101, "Name": "Підготувати звіт за жовтень", "Date": "2026-10-26T09:30:00", "Duration": 60, "Style": "blue" },
+    { "Id": 102, "Name": "Зателефонувати клієнту", "Date": "2026-10-27T14:00:00", "Duration": 30, "Style": "orange" },
+    { "Id": 103, "Name": "Оновити прайс", "Date": "2026-10-29T11:00:00", "Duration": 90, "Style": "seagreen" },
+    { "Id": 104, "Name": "Нарада", "Date": "2026-10-26T16:30:00", "Duration": 30, "Style": "purple" },
+    { "Id": 105, "Name": "Інвентаризація складу", "Date": "2026-10-15T08:00:00", "Duration": 30, "Style": null }
+  ],
+  "Params": {
+    "Begin": "2026-10-25T00:00:00",
+    "End": "2026-11-02T00:00:00"
+  },
+  "$ModelInfo": {
+    "Events": {
+      "Filter": {
+        "Start": "\u0022\\/\u00222026-10-26T00:00:00\u0022\\/\u0022",
+        "View": "week"
+      }
+    }
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Events':TEventArray,'Params':TParam}}, false);
+
+function TEvent(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TEvent, {props: {'Id':Number,'Name':{type:String, len:255},'Date':Date,'Duration':Number,'Style':{type:String, len:32}}, $id: 'Id'}, true);
+function TEventArray(source, path, parent) {
+return cmn.createArray(source, path, TEvent, TEventArray, parent);
+}
+
+function TParam(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TParam, {props: {'Begin':Date,'End':Date}}, false);
+
+const ctors = {TRoot,TEvent,TEventArray,TParam};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'task/calendar/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://task/calendar/index/
+</script>

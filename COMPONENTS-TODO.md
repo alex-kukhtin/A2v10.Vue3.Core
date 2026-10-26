@@ -22,7 +22,6 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 - [ ] `accelcommand.js` (25): `a2-accel-command`
 - [ ] `waitcursor.js` (22): `wait-cursor`
 - [ ] Core `multiselect.js` (189): `a2-multiselect`
-- [ ] Core `bigcalendar.js` (289): `a2-big-calendar`
 
 ## Not gaps
 
