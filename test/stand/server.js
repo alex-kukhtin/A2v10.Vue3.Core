@@ -43,6 +43,7 @@ const FILES = {
 	'/_page/catalog/item/index/0': [path.join(__dirname, 'pages/catalog-item-index.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand
 	'/_page/finance/transaction/index/0': [path.join(__dirname, 'pages/finance-transaction-index.html'), 'text/html; charset=utf-8'],
+	'/_page/service/service/index/0': [path.join(__dirname, 'pages/service-service-index.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']
 };
 

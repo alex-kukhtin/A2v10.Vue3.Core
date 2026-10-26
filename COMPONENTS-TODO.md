@@ -10,7 +10,6 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 - [ ] `fileupload.js` (107): `a2-file-upload`
 - [ ] `image.js` (223): `a2-image`, `a2-file-image`, `a2-file-preview`, `a2-static-image`
 - [ ] `timepicker.js` (206): `a2-time-picker`
-- [ ] `inlinedialog.js` (91): `a2-inline-dialog`
 - [ ] `resize.js` (158): `v-resize` — the splitter of panes
 
 ## When a page needs it

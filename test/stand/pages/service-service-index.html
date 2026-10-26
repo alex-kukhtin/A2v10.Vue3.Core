@@ -1,0 +1,344 @@
+<collection-view-server-url class="cw page absolute page-grid cw-absolute" id="elfc98fefb-b5aa-4ba6-8920-39929ae56a9b" :items-source="Services" :initial-filter="{Fragment: '',Period: period.all(),State: 0,Person: null,Service: null,ServiceType: null,Program: null,Project: null,Office: null,UseMyPrograms: '',IsLegal: '',IsMult: ''}" :persistent-filter="[]"><template v-slot="Parent"><a2-document-title page-title="Послуги"></a2-document-title><a2-taskpad class="page-taskpad overflow collapsible" title="Taskpad" initial-width="24rem" position="right" :initial-collapsed="false" style="padding:11px 1rem 1rem 1rem;grid-column:2"><template><a2-panel :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Фільтри</div></template><div class="panel-content" style="gap:.25rem"><template><a2-period-picker class="drop-bottom-right" display="namedate" label="Період" align="center" :item="Parent.Filter" prop="Period"></a2-period-picker><a2-color-combobox v-cloak label="Стан" :items-source="States" :name-prop="'Name'" :value-prop="'Id'" :color-prop="'Color'" :item="Parent.Filter" prop="State"></a2-color-combobox><a2-selector fetch-command="/develop/service/fetch" display="Name" :highlight="true" :has-clear="true" label="Послуга" placeholder="Всі послуги" :item="Parent.Filter" prop="Service"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/develop/service/browse', Parent.Filter.Service, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/office/fetch" display="Name" :highlight="true" :has-clear="true" label="Офіс" placeholder="Всі офіси" :item="Parent.Filter" prop="Office"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/office/browse', Parent.Filter.Office, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/project/fetch" display="Name" :highlight="true" :has-clear="true" label="Проєкт" placeholder="Всі проєкти" :item="Parent.Filter" prop="Project"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/project/browse', Parent.Filter.Project, null)"><i class="ico ico-search"></i> </a></a2-selector><select is="vue:combobox" v-cloak label="Програми" :item="Parent.Filter" prop="UseMyPrograms"><option value="M">Мої програми</option><option value="A">Всі програми</option></select><select is="vue:combobox" v-cloak label="Вид бенефіціара" :item="Parent.Filter" prop="IsLegal"><option value="A">Всі</option><option value="L">Юридичні особи</option><option value="P">Фізичні особи</option></select><select is="vue:combobox" v-cloak label="Колективні" :item="Parent.Filter" prop="IsMult"><option value="A">Всі</option><option value="M">Колективні</option><option value="I">Індивідуальні</option></select><a2-selector fetch-command="/catalog/person/fetch" display="Name" :highlight="true" :has-clear="true" :use-all="true" label="Виконавець" placeholder="Всі виконавці" :item="Parent.Filter" prop="Person"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/person/browse', Parent.Filter.Person, null)"><i class="ico ico-search"></i> </a></a2-selector></template></div></a2-panel></template></a2-taskpad><div class="page-content"><template><div class="grid" style="height:100%;grid-template-rows:auto 1fr auto "><div class="toolbar"><button class="btn first-elem btn-tb" :disabled="(!$canExecute('createService', null, null)) || null" @click.stop.prevent="$exec('createService', null, null, null)" v-settabindex><i class="ico ico-plus"></i> Створити послугу</button><button class="btn btn-tb" :disabled="(!$hasSelected(Parent.ItemsSource, null)) || null" @click.stop.prevent="$openSelected('/service/request/edit', Parent.ItemsSource, false, null)" v-settabindex><i class="ico ico-arrow-open"></i> Відкрити</button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button><div class="aligner"></div><textbox class="with-width" :tab-index="1" :has-clear="true" :has-search="true" placeholder="Пошук" :item="Parent.Filter" prop="Fragment" style="width:20rem"></textbox></div><data-grid class="user-select data-grid-light" :compact="false" key="054f3108-d09c-461f-8e51-1fbb1088d56e" :fixed-header="true" :items-source="Parent.ItemsSource" :hover="true" :striped="false" :border="true" :sort="true" :route-query="$query" :doubleclick="() => $openSelected('/service/request/edit', Parent.ItemsSource, false, null)" grid="Horizontal"><data-grid-column :fit="true" wrap="no-wrap" align="right" header="#" bind-icon="$Icon" content="Id"></data-grid-column><data-grid-column header="Стан" :fit="true" wrap="no-wrap" sort-prop="state" id="col1"></data-grid-column><template v-slot:col1="cell"><span class="tag-label" v-text="cell.row.State.Name" :class="cell.row.State.Color"></span></template><data-grid-column header="Бенефіціар" sort-prop="beneficiary" id="col2"></data-grid-column><template v-slot:col2="cell"><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" @click.stop.prevent="$navigate(cell.row.Beneficiary.$ShowUrl, cell.row.Beneficiary, false, null, null)" :href="$href(cell.row.Beneficiary.$ShowUrl, cell.row.Beneficiary)"><span v-text="cell.row.Beneficiary.Name"></span></a></template><data-grid-column header="Послуга" :line-clamp="2" sort-prop="service" content="Service.Name"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" header="Level" :sort="false" content="ServiceLevel.Code"></data-grid-column><data-grid-column header="Офіс" min-width="10rem" sort-prop="office" content="Office.Name"></data-grid-column><data-grid-column header="Проєкт" :line-clamp="2" min-width="10rem" sort-prop="project" content="Project.Name"></data-grid-column><data-grid-column header="Виконавець" min-width="9rem" sort-prop="person" content="Person.Name"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" align="center" header="Дата" content="Date" data-type="Date"></data-grid-column><data-grid-column header="*" col-css-class="dg-tags" wrap="no-wrap" id="col9"></data-grid-column><template v-slot:col9="cell"><template><span class="tag-label orange" v-if="cell.row.Beneficiary.$IsCompany">Ю</span><span class="tag-label cyan" v-if="cell.row.Beneficiary.$IsPerson">Ф</span><span class="tag-label blue" v-if="cell.row.Beneficiary.$IsRepr">П</span><span class="tag-label seagreen" v-if="cell.row.Service.IsMult">К</span><span class="tag-label gold" v-if="!cell.row.Service.IsMult">І</span><span class="tag-label purple" v-if="cell.row.FromRedirection" title="Перенаправлення">П</span></template></template><data-grid-column header="П" id="col10"></data-grid-column><template v-slot:col10="cell"><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" v-if="cell.row.Beneficiary.IsCompany" title="Контактні особи" @click.stop.prevent="$dialog('show', '/service/beneficiary/contact/showservice', cell.row.Id, null, null)"><i class="ico ico-users"></i> </a></template><data-grid-column v-if="$data.CurrentUser.IsAdmin" :fit="true" id="col11"></data-grid-column><template v-slot:col11="cell"><div class="commandbar visible-hover"><template><button class="btn btn-cb btn-icon" :disabled="(!$canExecute('remove', cell.row, null)) || null" @click.stop.prevent="$exec('remove', cell.row, {message: 'Ви впевнені що бажаєте видалити елемент?'}, null)" v-settabindex><i class="ico ico-trash"></i> </button></template></div></template></data-grid><a2-pager :source="Parent.Pager"></a2-pager></div><a2-inline-dialog dialog-id="chooseService" dialog-title="Оберіть послугу" width="47rem"><div class="modal"><div class="modal-header" v-drag-window><span>Оберіть послугу</span><button class="btnclose" @click.prevent="$inlineClose('chooseService', false)">&#x2715;</button></div><div class="load-indicator" v-show="$isLoading"></div><div class="modal-content"><template><div class="grid"><h3 class="a2-header no-bold">Послуги</h3><div class="stack-panel horizontal justify-space-between" style="gap:12px"><template><fieldset class="field-set horizontal"><template class="field-set-item"><label class="radio field-set-item" label="Фіз.особа"><input type="radio" v-settabindex v-model="$data.$AvailType" v-bind:xcheck="$data.$AvailType" value="0"/><span>Фіз.особа</span></label><label class="radio field-set-item" label="Юр.особа"><input type="radio" v-settabindex v-model="$data.$AvailType" v-bind:xcheck="$data.$AvailType" value="1"/><span>Юр.особа</span></label><label class="radio field-set-item" label="Представник"><input type="radio" v-settabindex v-model="$data.$AvailType" v-bind:xcheck="$data.$AvailType" value="2"/><span>Представник</span></label></template></fieldset><fieldset class="field-set horizontal"><template class="field-set-item"><label class="radio field-set-item" label="Індивидуальна"><input type="radio" v-settabindex v-model="$data.$AvailTypeMult" v-bind:xcheck="$data.$AvailTypeMult" value="0"/><span>Індивидуальна</span></label><label class="radio field-set-item" label="Колективна"><input type="radio" v-settabindex v-model="$data.$AvailTypeMult" v-bind:xcheck="$data.$AvailTypeMult" value="1"/><span>Колективна</span></label></template></fieldset></template></div><textbox :tab-index="1" update-trigger="input" :has-clear="true" :has-search="true" :highlight="true" placeholder="Пошук послуги" :item="$data" prop="$Search"></textbox><data-grid class="user-select data-grid-light" :compact="false" key="1f2222d0-ecb7-4a11-a6ea-d876c26644cd" :items-source="VisibleServices" :hover="true" :striped="false" :border="true" :route-query="$query" :doubleclick="() => $execSelected('doCreateService', VisibleServices, null)" grid="Horizontal" auto-select="first-item" style="height:25rem"><data-grid-column header="Послуга" content="Name"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" header="Рівень" content="LevelCode"></data-grid-column><data-grid-column header="Tags" col-css-class="dg-tags" :fit="true" wrap="no-wrap" id="col2"></data-grid-column><template v-slot:col2="cell"><template><span class="tag-label orange" v-if="cell.row.$IsCompany">Ю</span><span class="tag-label cyan" v-if="cell.row.$IsPerson">Ф</span><span class="tag-label blue" v-if="cell.row.$IsRepr">П</span><span class="tag-label seagreen" v-if="cell.row.IsMult">К</span><span class="tag-label gold" v-if="!cell.row.IsMult">І</span></template></template></data-grid></div></template></div><div class="modal-footer"><button class="btn a2-inline btn-primary" :disabled="(!$canExecSel('doCreateService', VisibleServices, null)) || null" @click.stop.prevent="$execSelected('doCreateService', VisibleServices, null)" v-settabindex>Створити</button><button class="btn a2-inline" @click.stop.prevent="$inlineClose('chooseService', false)" v-settabindex>Скасувати</button></div></div></a2-inline-dialog></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server-url><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils = require("std:utils");
+const tu = utils.text;
+const template = {
+    options: {
+        noDirty: true,
+        persistSelect: ['Services'],
+        bindOnce: ['$AvailType', '$AvailTypeMult', 'VisibleServices']
+    },
+    properties: {
+        'TRoot.$AvailType': String,
+        'TRoot.$AvailTypeMult': String,
+        'TRoot.$Search': String,
+        'TAvailService.$IsVisible': isAvailVisible,
+        'TService.$Icon'() { return this.Done ? 'success-outline-green' : 'warning-outline-yellow'; },
+        'TAvailService.$Title'() { return this.IsRedirection ? 'Перенаправлення' : 'Послуга'; },
+        'TBeneficiary.$ShowUrl': showUrl,
+        'TAvailService.$IsPerson'() { return this.IsCompany == 0; },
+        'TAvailService.$IsCompany'() { return this.IsCompany == 1; },
+        'TAvailService.$IsRepr'() { return this.IsCompany == 2; },
+        'TBeneficiary.$IsPerson'() { return this.IsCompany == 0; },
+        'TBeneficiary.$IsCompany'() { return this.IsCompany == 1; },
+        'TBeneficiary.$IsRepr'() { return this.IsCompany == 2; }
+    },
+    commands: {
+        createService,
+        doCreateService,
+        remove: {
+            exec: remove,
+            canExec(el) { return !el.Done; }
+        }
+    },
+    defaults: {},
+    events: {
+        'Model.load': modelLoad,
+        'g.requestservice.setstate': serviceState,
+        'Root.$AvailType.change'() { fillVisible(this); },
+        'Root.$AvailTypeMult.change'() { fillVisible(this); },
+        'Root.$Search.change'() { fillVisible(this); },
+    }
+};
+exports.default = template;
+function serviceState(svc) {
+    let found = this.Services.$find(x => x.Id === svc.Id);
+    if (!found)
+        return;
+    found.State = svc.State;
+    found.Done = svc.Done;
+}
+async function createService() {
+    const ctrl = this.$ctrl;
+    if (!this.AvailServices.length) {
+        ctrl.$alert("Немає доступних послуг");
+        return;
+    }
+    ctrl.$inlineOpen('chooseService');
+}
+async function doCreateService(service) {
+    const ctrl = this.$ctrl;
+    ctrl.$inlineClose('chooseService');
+    let res = await ctrl.$invoke('createRequest', { Beneficiary: 0, Service: service.Id }, '/service/request');
+    ctrl.$navigate('/service/request/edit', { Id: res.Request.Id });
+    ctrl.$reload();
+}
+async function remove(el) {
+    const ctrl = this.$ctrl;
+    let res = await ctrl.$invoke('removeService', { Service: el.Id }, '/service/request');
+    el.$remove();
+}
+function fillVisible(root) {
+    root.VisibleServices.$empty();
+    for (let f of root.AvailServices.filter(s => s.$IsVisible))
+        root.VisibleServices.$append(f);
+    if (root.VisibleServices.length > 0)
+        root.VisibleServices[0].$select();
+}
+function modelLoad() {
+    if (!this.$AvailType)
+        this.$AvailType = '0';
+    if (!this.$AvailTypeMult)
+        this.$AvailTypeMult = '0';
+}
+function filterAvail() {
+    let t = this.$AvailType === 'L';
+    return this.AvailServices.filter(s => s.IsCompany === t);
+}
+function isAvailVisible() {
+    let isComp = +this.$root.$AvailType;
+    let isMult = this.$root.$AvailTypeMult == '1' ? true : false;
+    let txt = this.$root.$Search;
+    return this.IsCompany == isComp && this.IsMult == isMult &&
+        (!txt || tu.containsText(this, 'Name', txt));
+}
+function showUrl() {
+    switch (this.IsCompany) {
+        case 0: return '/service/beneficiary/show';
+        case 1: return '/service/benefcomp/show';
+        case 2: return '/service/benefrepr/show';
+        default:
+            alert(`Invalid IsCompany '${this.IsCompany}'`);
+    }
+}
+
+});;
+
+	// Services and AvailServices: the answer had none, rows written on the stand
+	const rawData = {
+  "Services": [
+    { "Id": 205, "Date": "2024-11-12T00:00:00", "BeneficiaryCard": 1, "ServiceCard": 1, "Request": 1, "Person": { "Id": 1, "Name": "Іваненко" }, "Service": { "Id": 11, "Name": "Юридична консультація", "IsMult": false }, "Beneficiary": { "Id": 501, "Name": "Петренко Олена", "IsCompany": 0 }, "ServiceType": { "Id": 1, "Name": "Консультація" }, "Program": { "Id": 1, "Name": "Програма 1" }, "Project": { "Id": 1, "Name": "Проєкт А" }, "Office": { "Id": 1, "Name": "Київ" }, "State": { "Id": 10, "Name": "Новий", "Color": "blue" }, "Memo": null, "IsRedirection": false, "Done": false, "FromRedirection": 0, "ServiceLevel": { "Id": 1, "Name": "Базовий", "Code": "L1" } },
+    { "Id": 204, "Date": "2024-10-03T00:00:00", "BeneficiaryCard": 2, "ServiceCard": 2, "Request": 2, "Person": { "Id": 2, "Name": "Коваль" }, "Service": { "Id": 12, "Name": "Тренінг для громади", "IsMult": true }, "Beneficiary": { "Id": 502, "Name": "ТОВ Рассвет", "IsCompany": 1 }, "ServiceType": { "Id": 2, "Name": "Тренінг" }, "Program": { "Id": 1, "Name": "Програма 1" }, "Project": { "Id": 2, "Name": "Проєкт Б" }, "Office": { "Id": 2, "Name": "Львів" }, "State": { "Id": 30, "Name": "Успіх", "Color": "seagreen" }, "Memo": null, "IsRedirection": false, "Done": true, "FromRedirection": 1, "ServiceLevel": { "Id": 2, "Name": "Розширений", "Code": "L2" } }
+  ],
+  "Services.$RowCount": 2,
+  "$ModelInfo": {
+    "Services": {
+      "Offset": 0,
+      "PageSize": 20,
+      "SortOrder": "date",
+      "SortDir": "desc",
+      "Filter": {
+        "Period": {
+          "From": "\u0022\\/\u00222024-01-01T00:00:00\u0022\\/\u0022",
+          "To": "\u0022\\/\u00222024-12-31T00:00:00\u0022\\/\u0022"
+        },
+        "State": 0,
+        "Person": {
+          "Id": null,
+          "Name": null
+        },
+        "Service": {
+          "Id": null,
+          "Name": null
+        },
+        "ServiceType": {
+          "Id": null,
+          "Name": null
+        },
+        "Program": {
+          "Id": null,
+          "Name": null
+        },
+        "Project": {
+          "Id": null,
+          "Name": null
+        },
+        "Office": {
+          "Id": null,
+          "Name": null
+        },
+        "UseMyPrograms": "M",
+        "IsLegal": "A",
+        "IsMult": "A",
+        "Fragment": null
+      }
+    }
+  },
+  "States": [
+    {
+      "Id": 0,
+      "Name": "Всі статуси ",
+      "Color": "white"
+    },
+    {
+      "Id": 102,
+      "Name": "Чекає відповіді",
+      "Color": "olive"
+    },
+    {
+      "Id": 101,
+      "Name": "Неможливо знайти",
+      "Color": "pink"
+    },
+    {
+      "Id": 104,
+      "Name": "Обробка (вввв)",
+      "Color": null
+    },
+    {
+      "Id": 10,
+      "Name": "Новий",
+      "Color": "blue"
+    },
+    {
+      "Id": 20,
+      "Name": "В обробці",
+      "Color": "orange"
+    },
+    {
+      "Id": 30,
+      "Name": "Успіх",
+      "Color": "seagreen"
+    },
+    {
+      "Id": 40,
+      "Name": "Невдача",
+      "Color": "red"
+    }
+  ],
+  "AvailServices": [
+    { "Id": 11, "Name": "Юридична консультація", "ServiceName": "Консультація", "ServiceType": 1, "IsRedirection": false, "IsMult": false, "IsCompany": 0, "LevelCode": "L1" },
+    { "Id": 13, "Name": "Психологічна підтримка", "ServiceName": "Підтримка", "ServiceType": 3, "IsRedirection": false, "IsMult": false, "IsCompany": 0, "LevelCode": "L2" },
+    { "Id": 14, "Name": "Група підтримки", "ServiceName": "Підтримка", "ServiceType": 3, "IsRedirection": false, "IsMult": true, "IsCompany": 0, "LevelCode": "L1" },
+    { "Id": 12, "Name": "Тренінг для громади", "ServiceName": "Тренінг", "ServiceType": 2, "IsRedirection": false, "IsMult": true, "IsCompany": 1, "LevelCode": "L2" },
+    { "Id": 15, "Name": "Реєстрація підприємства", "ServiceName": "Консультація", "ServiceType": 1, "IsRedirection": true, "IsMult": false, "IsCompany": 1, "LevelCode": "L1" },
+    { "Id": 16, "Name": "Супровід представника", "ServiceName": "Консультація", "ServiceType": 1, "IsRedirection": false, "IsMult": false, "IsCompany": 2, "LevelCode": "L1" }
+  ],
+  "CurrentUser": {
+    "IsAdmin": true
+  },
+  "VisibleServices": []
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Services':TServiceArray,'States':TStateArray,'AvailServices':TAvailServiceArray,'CurrentUser':TCUser,'VisibleServices':TAvailServiceArray}}, false);
+
+function TService(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TService, {props: {'Id':Number,'Date':Date,'BeneficiaryCard':Number,'ServiceCard':Number,'Request':Number,'Person':TPerson,'Service':TRService,'Beneficiary':TBeneficiary,'ServiceType':TServiceType,'Program':TProgram,'Project':TProject,'Office':TOffice,'State':TState,'Memo':{type:String, len:255},'IsRedirection':Boolean,'Done':Boolean,'FromRedirection':Number,'ServiceLevel':TServiceLevel}, $id: 'Id'}, true);
+function TServiceArray(source, path, parent) {
+return cmn.createArray(source, path, TService, TServiceArray, parent);
+}
+
+function TPerson(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TPerson, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TPersonArray(source, path, parent) {
+return cmn.createArray(source, path, TPerson, TPersonArray, parent);
+}
+
+function TRService(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRService, {props: {'Id':Number,'Name':{type:String, len:255},'IsMult':Boolean}, $id: 'Id'}, true);
+function TRServiceArray(source, path, parent) {
+return cmn.createArray(source, path, TRService, TRServiceArray, parent);
+}
+
+function TBeneficiary(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TBeneficiary, {props: {'Id':Number,'Name':{type:String, len:1024},'IsCompany':Number}, $id: 'Id',$name: 'Name'}, false);
+
+function TServiceType(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TServiceType, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id'}, false);
+
+function TProgram(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TProgram, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TProgramArray(source, path, parent) {
+return cmn.createArray(source, path, TProgram, TProgramArray, parent);
+}
+
+function TProject(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TProject, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TProjectArray(source, path, parent) {
+return cmn.createArray(source, path, TProject, TProjectArray, parent);
+}
+
+function TOffice(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TOffice, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TOfficeArray(source, path, parent) {
+return cmn.createArray(source, path, TOffice, TOfficeArray, parent);
+}
+
+function TState(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TState, {props: {'Id':Number,'Name':{type:String, len:255},'Color':{type:String, len:32}}, $id: 'Id'}, true);
+function TStateArray(source, path, parent) {
+return cmn.createArray(source, path, TState, TStateArray, parent);
+}
+
+function TServiceLevel(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TServiceLevel, {props: {'Id':Number,'Name':{type:String, len:255},'Code':{type:String, len:8}}, $id: 'Id'}, true);
+function TServiceLevelArray(source, path, parent) {
+return cmn.createArray(source, path, TServiceLevel, TServiceLevelArray, parent);
+}
+
+function TFServiceType(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TFServiceType, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TFServiceTypeArray(source, path, parent) {
+return cmn.createArray(source, path, TFServiceType, TFServiceTypeArray, parent);
+}
+
+function TAvailService(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAvailService, {props: {'Id':Number,'Name':{type:String, len:255},'ServiceName':{type:String, len:255},'ServiceType':Number,'IsRedirection':Boolean,'IsMult':Boolean,'IsCompany':Number,'LevelCode':{type:String, len:8}}, $id: 'Id',$name: 'Name'}, true);
+function TAvailServiceArray(source, path, parent) {
+return cmn.createArray(source, path, TAvailService, TAvailServiceArray, parent);
+}
+
+function TCUser(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TCUser, {props: {'IsAdmin':Boolean}}, false);
+
+const ctors = {TRoot,TService,TServiceArray,TPerson,TPersonArray,TRService,TRServiceArray,TBeneficiary,TServiceType,TProgram,TProgramArray,TProject,TProjectArray,TOffice,TOfficeArray,TState,TStateArray,TServiceLevel,TServiceLevelArray,TFServiceType,TFServiceTypeArray,TAvailService,TAvailServiceArray,TCUser};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'service/service/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://service/service/index/
+</script>
