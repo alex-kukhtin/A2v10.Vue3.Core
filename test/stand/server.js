@@ -41,9 +41,10 @@ const FILES = {
 	'/_page/catalog/agent/index/0': [path.join(__dirname, 'pages/catalog-agent-index.html'), 'text/html; charset=utf-8'],
 	'/_page/document/order/index/0': [path.join(__dirname, 'pages/document-order-index.html'), 'text/html; charset=utf-8'],
 	'/_page/catalog/item/index/0': [path.join(__dirname, 'pages/catalog-item-index.html'), 'text/html; charset=utf-8'],
+	'/_page/service/service/index/0': [path.join(__dirname, 'pages/service-service-index.html'), 'text/html; charset=utf-8'],
+	'/_page/task/kanban/0': [path.join(__dirname, 'pages/task-kanban.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand
 	'/_page/finance/transaction/index/0': [path.join(__dirname, 'pages/finance-transaction-index.html'), 'text/html; charset=utf-8'],
-	'/_page/service/service/index/0': [path.join(__dirname, 'pages/service-service-index.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']
 };
 
@@ -192,6 +193,15 @@ const server = http.createServer((req, res) => {
 	if (info) {
 		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
 		res.end(infoHtml(url, +info[1]));
+		return;
+	}
+	// $invoke: task/kanban's setTaskState and archiveTask answer an empty object, as their procedures return nothing
+	if (url === '/_data/invoke' && req.method === 'POST') {
+		req.resume();
+		req.on('end', () => {
+			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+			res.end('{}');
+		});
 		return;
 	}
 	// a page, or a dialog (the shell adds the argument's id as the last segment)

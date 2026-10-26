@@ -1,0 +1,139 @@
+<collection-view-server-url class="cw page absolute cw-absolute" id="elcb416ba4-8b41-4012-a17a-d9744e1e2739" :items-source="States" :initial-filter="{}" :persistent-filter="[]"><template v-slot="Parent"><a2-document-title page-title="Мої задачу"></a2-document-title><template><div class="grid" style="padding:0.5rem 1rem;height:100%;grid-template-rows:auto 1fr "><div class="toolbar" style="grid-row:1"><button class="btn first-elem btn-tb" @click.stop.prevent="$dialog('show', '/task/edit', Tasks, null, null)" v-settabindex><i class="ico ico-plus"></i> Створити</button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button><div class="aligner"></div><div class="dropdown dir-down" v-dropdown><button class="btn btn-tb btn-icon" toggle v-settabindex><i class="ico ico-ellipsis-vertical"></i> </button><div class="dropdown-menu menu down-left" role="menu"><template><button class="dropdown-item" @click.stop.prevent="$dialog('show', '/catalog/taskstate/edit', null, null, {reloadAfter: true})" disabled v-disable>Налаштувати стани задач</button></template></div></div></div><a2-kanban state-prop="State" :drop-delegate="$delegate('dropCard')" :trash-delegate="$delegate('archiveCard')" :lanes="States" :items="Tasks" :show-trash="true" style="grid-row:2;align-self:stretch;overflow:auto"><template v-slot:header="{lane}"><span class="bold block text-color-label" v-text="lane.Name" style="padding:8px"></span></template><template v-slot:card="{card}"><div class="kanban-card drop-shadow shadow1" @click.stop.prevent="$dialog('show', '/task/edit', card, null, null)"><div class="kanban-card-body"><template><div class="stack-panel vertical" style="padding:8px;gap:4px"><template><span><span class="bold" :title="card.Name" v-text="$maxChars(card.Text, 50)"></span></span><span><span class="small" :title="card.Memo" v-text="$maxChars(card.Memo, 50)"></span></span><div class="stack-panel vertical align-start" style="gap:6px"><template><div class="stack-panel w-100 horizontal justify-space-between"><template class="w-100"><span class="tag-label" v-text="card.State.Name" :class="card.State.Color"></span></template></div><div class="stack-panel wrap w-100 horizontal justify-space-between" style="gap:0 1rem"><template class="w-100"><span class="no-wrap"><i class="ico text-color-light-gray" :class="'ico-history'"></i>
+<span class="small" v-text="$format(card.StartAt, {dataType: 'DateTime'})"></span></span><span class="no-wrap small" v-text="card.Assignee.Name"></span></template></div></template></div></template></div></template></div></div></template><template v-slot:footer="{lane}"></template></a2-kanban></div></template><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server-url><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils = require("std:utils");
+const template = {
+    options: {
+        noDirty: true
+    },
+    delegates: {
+        dropCard,
+        archiveCard
+    },
+    events: {
+        'g.task.saved': handleSaved
+    }
+};
+exports.default = template;
+async function dropCard(task, state) {
+    const ctrl = this.$ctrl;
+    if (task.State.Id === state.Id)
+        return;
+    await ctrl.$invoke('setTaskState', { Id: task.Id, State: state.Id }, '/task');
+    task.State = state;
+}
+async function handleSaved(root) {
+    let newTask = root.Task;
+    let oldTask = this.Tasks.$find(t => t.Id === newTask.Id);
+    if (oldTask)
+        oldTask.$merge(newTask);
+    else
+        this.Tasks.$append(newTask);
+}
+async function archiveCard(task) {
+    const ctrl = this.$ctrl;
+    await ctrl.$confirm('Are you sure you want to archive this task?');
+    await ctrl.$invoke('archiveTask', { Id: task.Id }, '/task');
+    task.$remove();
+}
+
+});;
+
+	// Tasks: the answer had none, rows written on the stand
+	const rawData = {
+  "Tasks": [
+    { "Id": 101, "Text": "Підготувати звіт за жовтень", "Memo": "до кінця тижня", "State": { "Id": 10, "Name": "Нова", "Color": "blue", "Kind": "I" }, "StartAt": "2026-10-26T09:30:00", "Assignee": { "Id": 1, "Name": "Іваненко" }, "DateCreated": "2026-10-20T10:00:00", "UserCreated": { "Id": 2, "Name": "Коваль" } },
+    { "Id": 102, "Text": "Зателефонувати клієнту", "Memo": null, "State": { "Id": 10, "Name": "Нова", "Color": "blue", "Kind": "I" }, "StartAt": "2026-10-27T14:00:00", "Assignee": { "Id": 2, "Name": "Коваль" }, "DateCreated": "2026-10-21T10:00:00", "UserCreated": { "Id": 2, "Name": "Коваль" } },
+    { "Id": 103, "Text": "Оновити прайс", "Memo": "нові ціни від постачальника", "State": { "Id": 20, "Name": "Виконується", "Color": "orange", "Kind": "P" }, "StartAt": "2026-10-22T11:00:00", "Assignee": { "Id": 1, "Name": "Іваненко" }, "DateCreated": "2026-10-19T10:00:00", "UserCreated": { "Id": 1, "Name": "Іваненко" } },
+    { "Id": 104, "Text": "Інвентаризація складу", "Memo": null, "State": { "Id": 30, "Name": "Виконана", "Color": "seagreen", "Kind": "S" }, "StartAt": "2026-10-15T08:00:00", "Assignee": { "Id": 3, "Name": "Петренко" }, "DateCreated": "2026-10-10T10:00:00", "UserCreated": { "Id": 2, "Name": "Коваль" } }
+  ],
+  "Tasks.$RowCount": 4,
+  "States": [
+    {
+      "Id": 10,
+      "Name": "Нова",
+      "Color": "blue",
+      "Kind": "I"
+    },
+    {
+      "Id": 20,
+      "Name": "Виконується",
+      "Color": "orange",
+      "Kind": "P"
+    },
+    {
+      "Id": 30,
+      "Name": "Виконана",
+      "Color": "seagreen",
+      "Kind": "S"
+    },
+    {
+      "Id": 40,
+      "Name": "Скасована",
+      "Color": "red",
+      "Kind": "F"
+    }
+  ]
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Tasks':TTaskArray,'States':TStateArray}}, false);
+
+function TTask(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TTask, {props: {'Id':Number,'Text':{type:String, len:255},'Memo':{type:String, len:255},'State':TState,'StartAt':Date,'Assignee':TManager,'DateCreated':Date,'UserCreated':TManager}, $id: 'Id',$name: 'Text'}, true);
+function TTaskArray(source, path, parent) {
+return cmn.createArray(source, path, TTask, TTaskArray, parent);
+}
+
+function TState(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TState, {props: {'Id':Number,'Name':{type:String, len:255},'Color':{type:String, len:32},'Kind':{type:String, len:1}}, $id: 'Id',$name: 'Name'}, true);
+function TStateArray(source, path, parent) {
+return cmn.createArray(source, path, TState, TStateArray, parent);
+}
+
+function TManager(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TManager, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TManagerArray(source, path, parent) {
+return cmn.createArray(source, path, TManager, TManagerArray, parent);
+}
+
+const ctors = {TRoot,TTask,TTaskArray,TState,TStateArray,TManager,TManagerArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'task/kanban/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://task/kanban/
+</script>

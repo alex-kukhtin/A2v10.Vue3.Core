@@ -31,3 +31,4 @@ import './tags.js';
 import './popover.js';
 import './spansum.js';
 import './inlinedialog.js';
+import './kanban.js';
