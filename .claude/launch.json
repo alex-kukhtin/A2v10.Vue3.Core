@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "stand",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "stand"
+      ],
+      "port": 3077
+    },
+    {
+      "name": "stand-3078",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "test/stand/server.js",
+        "3078"
+      ],
+      "port": 3078
+    },
+    {
+      "name": "stand-3079",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "test/stand/server.js",
+        "3079"
+      ],
+      "port": 3079
+    }
+  ]
+}

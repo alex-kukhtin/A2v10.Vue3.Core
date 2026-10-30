@@ -29,7 +29,7 @@ The open defects of the source, and what the package does with each, are in `NET
 - Hidden members (`_path_`, `_root_`, `_parent_`, `_meta_`, `_errors_`, `_lockEvents_`, `$id`…) are `configurable: true` (Net48: false): a proxy may then report them.
 - Methods live on prototypes, not on each instance:
   - arrays: one prototype per core over `Array.prototype` (`model/array.ts`); own are the hidden fields, `$lock`, and what the server and the platform set (`$RowCount`, `$ModelInfo`, `$loaded`, `$cross`, template properties);
-  - elements: `$lockEvents`, `$unlockEvents`, `$eventsLocked`, `$valid`, `$invalid`, `$errors`, `$groupName`, `$expand`, `$findTreeRoot`, `$selectPath` on the type's prototype (`defineObject`);
+  - elements: `$lockEvents`, `$unlockEvents`, `$noChangeEvents`, `$eventsLocked`, `$valid`, `$invalid`, `$errors`, `$groupName`, `$expand`, `$findTreeRoot`, `$selectPath` on the type's prototype (`defineObject`);
   - the root: `_modelLoad_`, `_setDefaults_`, `_fireLoad_`, `_fireUnload_`, `_fire*_`, `_saveSelections`, `_restoreSelections`, `_setRuntimeInfo_`, `$createModelInfo`, `_setModelInfo_`, `_findRootModelInfo`, `$readOnly`, `$stateReadOnly`, `$isCopy`, `$mainObject` on the root type's prototype (`implementRoot`); the caller of `_modelLoad_` is kept in a hidden `_lastCaller_`.
   Seen only by `hasOwnProperty` and `Object.keys`; `in`, calls and `for…in` see them as before.
 - `implementRoot` no longer sets `$merge`: `defineObject` already put the same function on every type's prototype, the root's included.

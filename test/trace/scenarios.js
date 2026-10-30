@@ -43,6 +43,10 @@ const SCENARIOS = [
 			doc.$unlockEvents();
 			return locked;
 		});
+		t.op('$noChangeEvents(Name = "Quiet")', () => {
+			const res = doc.$noChangeEvents(d => { d.Name = 'Quiet'; return [d === doc, d.$eventsLocked]; });
+			return [res, doc.$eventsLocked];
+		});
 		t.op('$id, $name, $isNew, $maxLength(Name), $maxLength(Amount)',
 			() => [doc.$id, doc.$name, doc.$isNew, doc.$maxLength('Name'), doc.$maxLength('Amount')]);
 		t.op('$root, $parent, $vm present', () => [doc.$root === root, doc.$parent === root, !!doc.$vm]);

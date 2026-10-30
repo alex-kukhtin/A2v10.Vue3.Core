@@ -49,8 +49,10 @@
   ev Document.$$Tab.change(@Root.Document, "x", "", "$$Tab")
 > $lockEvents; Name = "Locked"; $unlockEvents
   = true
+> $noChangeEvents(Name = "Quiet")
+  = [[true, true], false]
 > $id, $name, $isNew, $maxLength(Name), $maxLength(Amount)
-  = [10, "Locked", false, 50, undefined]
+  = [10, "Quiet", false, 50, undefined]
 > $root, $parent, $vm present
   = [true, true, true]
 > add a property to an element after load
@@ -62,7 +64,7 @@
   = TRoot {
       Document: TDocument {
         Id: 10
-        Name: "Locked"
+        Name: "Quiet"
         Amount: 0
         Done: false
         Date: D2026-02-01T00:00:00

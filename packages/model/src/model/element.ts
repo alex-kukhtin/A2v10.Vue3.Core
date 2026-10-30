@@ -299,6 +299,14 @@ export function createElements(ctx: ModelContext, tpl: Template, validation: Val
 		p.$unlockEvents = function (this: Elem) {
 			this._lockEvents_ -= 1;
 		};
+		p.$noChangeEvents = function (this: Elem, fn: (elem: Elem) => unknown) {
+			this._lockEvents_ += 1;
+			try {
+				return fn.call(this, this);
+			} finally {
+				this._lockEvents_ -= 1;
+			}
+		};
 		defHiddenGet(p, '$eventsLocked', function (this: Elem) {
 			return this._lockEvents_ > 0;
 		});
