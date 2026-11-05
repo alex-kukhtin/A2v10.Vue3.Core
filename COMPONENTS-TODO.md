@@ -5,7 +5,6 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 
 ## Likely on forms: next
 
-- [ ] `upload.js` (172): `a2-simple-upload` — `a2-upload` is ported (`upload.ts`)
 - [ ] `fileupload.js` (107): `a2-file-upload`
 - [ ] `image.js` (223): `a2-file-image`, `a2-static-image` — `a2-image`, `a2-file-preview` are ported (`image.ts`)
 - [ ] `resize.js` (158): `v-resize` — the splitter of panes

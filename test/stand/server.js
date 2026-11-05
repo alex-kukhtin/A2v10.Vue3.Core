@@ -50,6 +50,8 @@ const FILES = {
 	'/_page/admin/settings/index/0': [path.join(__dirname, 'pages/admin-settings-index.html'), 'text/html; charset=utf-8'],
 	// no page with a TabPanel in MetaAppStand: written by TabPanel.cs and Tab.cs, shaped on Net48's Apps/Develop Quotations/edit
 	'/_page/document/quotation/edit/1': [path.join(__dirname, 'pages/document-quotation-edit.html'), 'text/html; charset=utf-8'],
+	// no page with an UploadFileSimple in MetaAppStand: written by UploadFileSimple.cs, the template's File properties as Net48's Apps/Develop Sales/Waybill/eusign
+	'/_page/sales/waybill/eusign/1': [path.join(__dirname, 'pages/sales-waybill-eusign.html'), 'text/html; charset=utf-8'],
 	// task/kanban's card 101 opens it; the answer is task 1825's as Core sent it
 	'/_dialog/task/edit/101': [path.join(__dirname, 'pages/task-edit-dialog.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand

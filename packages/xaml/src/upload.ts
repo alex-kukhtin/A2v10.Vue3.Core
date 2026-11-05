@@ -1,8 +1,9 @@
 // a2-upload (Net48 components/upload.js), unchanged in behaviour: a label with a file input, dropped on or clicked;
 // the files posted to /_image/<base>/<prop>/<id>, the answer's { status: 'OK', elems: [{ Id, Token }] } written to
 // item[prop] (a reference's $id and $token, or the id with the token beside it in item); newItem appends one element
-// per file to item's parent array. A file over limit (KB) is refused with an alert. a2-simple-upload of upload.js is
-// not ported yet.
+// per file to item's parent array. A file over limit (KB) is refused with an alert.
+// a2-simple-upload (the same file), unchanged in behaviour: XAML's UploadFileSimple, the chosen File itself in
+// item[prop] (nothing is posted), × clears it.
 
 import { defineComponent } from 'vue';
 import { require, vocabulary } from './platform.js';
@@ -116,6 +117,52 @@ vocabulary.component('a2-upload', defineComponent({
 				else
 					alert(msg);
 			});
+		}
+	}
+}));
+
+vocabulary.component('a2-simple-upload', defineComponent({
+	template: `
+<label class="a2-simple-upload" :class="labelClass">
+	<i class="ico" :class='icon'></i>
+	<input type="file" @change="uploadChange" ref="file"/>
+	<span v-text="labelText" class="upload-text"></span>
+	<button class="btnclose" @click.prevent="clear" v-if="file">&#x2715;</button>
+</label>
+		`,
+	props: {
+		item: Object,
+		prop: String,
+		text: String
+	},
+	computed: {
+		labelText(): string {
+			if (this.file) return this.file.name;
+			return this.text || locale.$ChooseFile;
+		},
+		icon(): string {
+			return this.file && this.file.name ? 'ico-file' : 'ico-attach';
+		},
+		file(): any {
+			return this.item ? this.item[this.prop!] : null;
+		},
+		labelClass(): string | undefined {
+			return this.file ? 'has-file' : undefined;
+		}
+	},
+	methods: {
+		fireChange() {
+		},
+		clear() {
+			if (!this.item) return;
+			(this.item as any)[this.prop!] = null;
+			this.fireChange();
+			(this.$refs.file as HTMLInputElement).value = '';
+		},
+		uploadChange(ev: Event) {
+			const files = (ev.target as HTMLInputElement).files!;
+			(this.item as any)[this.prop!] = files[0];
+			this.fireChange();
 		}
 	}
 }));

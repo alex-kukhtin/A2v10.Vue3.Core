@@ -1,0 +1,69 @@
+<div class="page absolute" id="el3f9a2b14-6e07-4c5d-8a21-7d0e5b1c9f46"><a2-document-title page-title="Електронний підпис"></a2-document-title><template><div class="grid" style="grid-template-columns:20rem 20rem ;gap:1rem;padding:1rem"><a2-simple-upload style="grid-row:1;grid-column:1" :item="Attachment" prop="$File"></a2-simple-upload><a2-simple-upload style="grid-row:1;grid-column:2;width:15rem" :item="Attachment" prop="$Key" text="Оберіть ключ"></a2-simple-upload><span style="grid-row:2;grid-column:1" class="file-name" v-text="Attachment.$FileName"></span><span style="grid-row:2;grid-column:2" class="change-log" v-text="Attachment.$Log"></span></div></template></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+	const template = (function() {
+	let module = { exports: undefined };
+
+	(function(module, exports) {
+		const template = {
+    properties: {
+        'TAttachment.$File': File,
+        'TAttachment.$Key': File,
+        'TAttachment.$Log': String,
+        'TAttachment.$FileName'() { return this.$File ? this.$File.name : ''; }
+    },
+    events: {
+        'Attachment.$File.change'(att, file) { att.$Log += (file ? file.name : 'null') + ';'; }
+    }
+};
+
+module.exports = template;
+
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Attachment": {
+    "Id": 1,
+    "Name": "Договір"
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Attachment':TAttachment}, $main: 'Attachment'}, false);
+
+function TAttachment(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAttachment, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, false);
+
+const ctors = {TRoot,TAttachment};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {'ReadOnly': false}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'sales/waybill/eusign/1/',
+	inDialog: false,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://sales/waybill/eusign/1/
+</script>
