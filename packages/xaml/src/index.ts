@@ -38,3 +38,4 @@ import './upload.js';
 import './image.js';
 import './bigcalendar.js';
 import './multiselect.js';
+import './tab.js';

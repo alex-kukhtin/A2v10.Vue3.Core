@@ -1,0 +1,87 @@
+<div class="page absolute" id="el7c1e5a60-3d42-4b8e-9f10-2a6b4c8d1e73"><a2-document-title :page-title="Contract.Name"></a2-document-title><template><a2-tab-panel class="tab-pos-top"><a2-tab-item header="Котирування"><template><div class="grid" style="grid-template-columns:1fr ;gap:.5rem"><textbox label="Назва" :required="true" :item="Contract" prop="Name"></textbox><a2-textarea label="Примітка" :rows="3" :item="Contract" prop="Memo"></a2-textarea><label class="checkbox"><input type="checkbox" v-model="Contract.HasNotes"/><span>Є вкладка «Нотатки» (If)</span></label><label class="checkbox"><input type="checkbox" v-model="Contract.ShowExtra"/><span>Видно вкладку «Додатково» (Show)</span></label></div></template></a2-tab-item><a2-tab-item header="Переліки" :badge="Contract.Lists.Count"><template><a2-tab-panel :items="Contract.Lists" class="tab-pos-top"><template v-slot:items="tabitem"><template><textbox label="Назва переліку" :required="true" :item="tabitem.item" prop="Name"></textbox></template></template><template v-slot:header="tabitem"><span v-text="$format(tabitem.number, {format: `Перелік {0}`})"></span> <a class="a2-hyperlink a2-inline" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$remove(tabitem.item, null)"><i class="ico ico-delete"></i></a></template><template v-slot:title><div class="pane-header"><a class="a2-hyperlink a2-inline" href="javascript:void(0)" draggable="false" @click.stop.prevent="Contract.Lists.$append()"><i class="ico ico-add"></i> додати перелік</a></div></template></a2-tab-panel></template></a2-tab-item><a2-tab-item v-if="Contract.HasNotes" header="Нотатки"><template v-if="Contract.HasNotes"><span>Вкладка з If: прибрана, коли знято прапорець; активна при цьому переходить на першу.</span></template></a2-tab-item><a2-tab-item v-show="Contract.ShowExtra" header="Додатково" :tab-show="Contract.ShowExtra"><template v-show="Contract.ShowExtra"><textbox label="Обов'язкове додаткове" :required="true" :item="Contract" prop="Extra"></textbox></template></a2-tab-item><a2-tab-item header="Стиль" icon="info" tab-style="yellow"><template><span>icon і tab-style: Core їх не рендерить, компонент має.</span></template></a2-tab-item><template v-slot:title><div class="pane-header" v-text="Contract.Name"></div></template></a2-tab-panel></template></div><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+	const template = (function() {
+	let module = { exports: undefined };
+
+	(function(module, exports) {
+		const template = {
+    properties: {},
+    validators: {
+        'Contract.Name': 'Введіть назву',
+        'Contract.Extra': 'Заповніть поле',
+        'Contract.Lists[].Name': 'Введіть назву переліку'
+    },
+    events: {
+        'Contract.Lists[].add'(arr, row) { row.isVisible = true; }
+    }
+};
+
+module.exports = template;
+
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Contract": {
+    "Id": 1,
+    "Name": "Котирування 1",
+    "Memo": "",
+    "Extra": "",
+    "HasNotes": true,
+    "ShowExtra": true,
+    "Lists": [
+      { "Id": 11, "Name": "Перший", "isVisible": true },
+      { "Id": 12, "Name": "Другий", "isVisible": true },
+      { "Id": 13, "Name": "Без заголовка: isVisible false (B36)", "isVisible": false }
+    ]
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Contract':TContract}, $main: 'Contract'}, false);
+
+function TContract(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TContract, {props: {'Id':Number,'Name':{type:String, len:255},'Memo':{type:String, len:255},'Extra':{type:String, len:255},'HasNotes':Boolean,'ShowExtra':Boolean,'Lists':TListArray}, $id: 'Id',$name: 'Name'}, false);
+
+function TList(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TList, {props: {'Id':Number,'Name':{type:String, len:255},'isVisible':Boolean}, $id: 'Id',$name: 'Name'}, true);
+
+function TListArray(source, path, parent) {
+return cmn.createArray(source, path, TList, TListArray, parent);
+}
+
+const ctors = {TRoot,TContract,TList,TListArray};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {'ReadOnly': false}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'document/quotation/edit/1/',
+	inDialog: false,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://document/quotation/edit/1/
+</script>

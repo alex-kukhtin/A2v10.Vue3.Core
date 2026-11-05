@@ -4,7 +4,7 @@ Found while porting the model core to `@a2v10/model` (2026-10), while tracing th
 
 Each entry: where, what, what follows from it, what the package does now, the fix proposed or decided. An ID is cited in the package's code and in `test/trace/divergences.js`.
 
-An entry is deleted when done: Net48 and the package agree, and `test/trace/divergences.js` does not cite it. Its history is in git; delete its citations in the code with it. An ID is never reused: the next are B35 and Q4.
+An entry is deleted when done: Net48 and the package agree, and `test/trace/divergences.js` does not cite it. Its history is in git; delete its citations in the code with it. An ID is never reused: the next are B37 and Q4.
 
 The package's rule: a crash is fixed at once; any other defect is kept as Net48 has it until decided here, since an application may depend on it. Deciding: fix it in the package (and in Net48, if it is critical there), add or change the scenario in `test/trace/scenarios.js`, record the divergence in `test/trace/divergences.js`; once Net48 has the fix too, drop the divergence and delete the entry.
 
@@ -77,6 +77,16 @@ The page controller and the platform are ported (`@a2v10/platform`): their entri
 - Port: kept (`packages/platform/src/include.ts`, `doQueue`).
 - Net48: half fixed 2026-10-24 (`84e0f9ffb`): `try`/`catch` around the await logs a rejection and goes on (`:247-251`). A load that never settles still holds the loop: `load` returns without resolving or rejecting on an empty answer (`:147-148`), a full page (`:149-152`), a foreign url (`:155-160`) and `__blank__` (401, 473 `Unauthorized`: `:203-204`).
 - Fix (left): settle `load` in those branches, or do not await them in the queue. The port follows the rejection half now.
+
+**B35** `components/tab.js:153-167` `a2-tab-panel`'s watcher on `items`: Vue 2 fires it on a mutation of the array too, with the same array as both values (seen on Vue 2.7.16: `push`, `splice`; not on a change of an element). The lengths are then equal: the branches "removed" and "added" run only when the binding gives another array, which `$merge` does not (`$copy` is in place).
+- Follows: `$append` and `$remove` on a TabPanel's ItemsSource select the first tab, not the new one or the neighbour.
+- Port: kept, `deep: 1` (`packages/xaml/src/tab.ts`). Stand: document/quotation/edit/1, Переліки.
+- Fix: keep the length in the panel and compare with it.
+
+**B36** `components/tab.js:44` the header of a tab over `items` has `v-show="item.isVisible"`: `isVisible` is `a2-tab-item`'s computed (`:100`, read at `:31`); a model element has none unless the application declares it. `v-show` of undefined is `display: none` (`vue.js` 2.7.16 `el.style.display = value ? originalDisplay : 'none'`).
+- Follows: a TabPanel with ItemsSource shows no tab headers, only the first tab's content, unless its elements have `isVisible` (Net48 `Apps/Develop/Document/Quotations/edit.view.xaml`, `Contract.Lists`, declares none).
+- Port: kept (`packages/xaml/src/tab.ts`). Stand: the rows declare `isVisible`; row 13's is false.
+- Decided 2026-11-05: kept as Net48.
 
 ## Questions: what was meant
 
