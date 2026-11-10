@@ -28,9 +28,8 @@ export function createUrl(utils: Model['utils'], period: Model['period']) {
 		blobUrl
 	};
 
-	// '' + elem: undefined and null become 'undefined' and 'null', kept (B26).
 	function normalize(elem: unknown): string {
-		let s = '' + elem || '';
+		let s = elem == null ? '' : '' + elem;
 		s = s.replace(/\\/g, '/');
 		if (s.startsWith('/'))
 			s = s.substring(1);

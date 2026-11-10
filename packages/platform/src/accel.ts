@@ -78,7 +78,7 @@ export function createAccel() {
 			return;
 		}
 		const elem1 = _elems[found];
-		elem1.handlers.shift();
+		elem1.handlers = elem1.handlers.filter(x => x.key !== key);
 		if (!elem1.handlers.length)
 			_elems.splice(found, 1);
 		setListeners();

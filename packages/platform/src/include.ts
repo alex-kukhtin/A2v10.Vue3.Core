@@ -182,7 +182,8 @@ component('a2-include', defineComponent({
 		complete: Function,
 		lock: Boolean,
 		reload: Number,
-		onError: Function
+		onError: Function,
+		hideIndicator: Boolean
 	},
 	data() {
 		return {
@@ -212,8 +213,7 @@ component('a2-include', defineComponent({
 			return includeUrl(this.source!, this.arg, this.dat, this.addRun);
 		},
 		load(url: string): void {
-			// hideIndicator is not a prop here: Net48 read this.hideIndicator, always undefined (B29)
-			show(this, url, undefined).then(handle => this.loaded(handle)).catch(this.error);
+			show(this, url, this.hideIndicator).then(handle => this.loaded(handle)).catch(this.error);
 		}
 	},
 	watch: {

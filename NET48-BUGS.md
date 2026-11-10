@@ -4,7 +4,7 @@ Found while porting the model core to `@a2v10/model` (2026-10), while tracing th
 
 Each entry: where, what, what follows from it, what the package does now, the fix proposed or decided. An ID is cited in the package's code and in `test/trace/divergences.js`.
 
-An entry is deleted when done: Net48 and the package agree, and `test/trace/divergences.js` does not cite it. Its history is in git; delete its citations in the code with it. An ID is never reused: the next are B37 and Q4.
+An entry is deleted when done: Net48 and the package agree, and `test/trace/divergences.js` does not cite it. Its history is in git; delete its citations in the code with it. An ID is never reused: the next are B39 and Q4.
 
 The package's rule: a crash is fixed at once; any other defect is kept as Net48 has it until decided here, since an application may depend on it. Deciding: fix it in the package (and in Net48, if it is critical there), add or change the scenario in `test/trace/scenarios.js`, record the divergence in `test/trace/divergences.js`; once Net48 has the fix too, drop the divergence and delete the entry.
 
@@ -56,21 +56,11 @@ The page controller and the platform are ported (`@a2v10/platform`): their entri
 - Package: kept (`model/array.ts`). Trace: "tree" `A2.$select(); A.Items.$clearSelected()`.
 - Fix: in a tree, emit on the tree root (`$findTreeRoot` of the cleared element), as `$select` does.
 
-**B26** `services/url.js:33` `normalize`: `'' + elem || ''`; the `+` binds first, so `undefined` and `null` become the segments `'undefined'` and `'null'`, never dropped by `combine`'s filter.
-- Follows: `combine('/_file', url, undefined)` gives `/_file/<url>/undefined`. `$file(url)` with no argument (`controllers/base.js:734`) asks the server for the file `undefined`.
-- Port: kept (`packages/platform/src/url.ts`, `normalize`).
-- Net48: fixed 2026-10-24 (`84e0f9ffb`): `elem == null ? '' : '' + elem`, an absent segment dropped. The port follows, then the entry is deleted.
-
 **B27** `services/http.js:95-123` `upload`: the `switch` has cases 200 and 255 only; `doRequest` (`:62-69`) breaks out of 473 when the text is not `Unauthorized`.
 - Follows: `upload` on any other status (500, 413, 401) and a request answered 473 otherwise resolve with `undefined`: the caller takes a failure for an empty success. `$upload` returns it to the application.
 - Port: the upload half follows Net48 (`packages/platform/src/http.ts`); the 473 half kept. Test: `test/core/http.js`, "upload 500", "473 not Unauthorized".
 - Net48: half fixed 2026-10-24 (`84e0f9ffb`): `upload` has `default: throw response.statusText` (`:117-118`). `doRequest`'s 473 not `Unauthorized` still breaks out of the switch (`:62-70`) and resolves `undefined`.
 - Fix (left): in the 473 branch, `throw response.statusText` after the `Unauthorized` check. The port follows each half as Net48 gets it.
-
-**B29** `components/includeplain.js:204`, `:238` `a2-include` passes `this.hideIndicator` to `http.load`; `hideIndicator` is not among its props (`:142-150`).
-- Follows: always undefined: XAML's Include never hides the request indicator, and a `hide-indicator` attribute falls through to the element.
-- Port: kept, undefined passed (`packages/platform/src/include.ts`, `a2-include`).
-- Net48: fixed 2026-10-24 (`84e0f9ffb`): `hideIndicator: Boolean` declared on `include` (`components/include.js`) and `a2-include` (`includeplain.js`). The port follows, then the entry is deleted.
 
 **B30** `services/http.js:233-248` `queue`/`doQueue` (`a2-queued-include`): a load that rejects leaves the loop with `processing` still true; a load that never settles (401, an empty answer, a login page) holds the loop.
 - Follows: after one failed or unanswered queued page, no `a2-queued-include` of the document loads again until the browser page reloads; the rejection is unhandled.
@@ -87,6 +77,11 @@ The page controller and the platform are ported (`@a2v10/platform`): their entri
 - Follows: a TabPanel with ItemsSource shows no tab headers, only the first tab's content, unless its elements have `isVisible` (Net48 `Apps/Develop/Document/Quotations/edit.view.xaml`, `Contract.Lists`, declares none).
 - Port: kept (`packages/xaml/src/tab.ts`). Stand: the rows declare `isVisible`; row 13's is false.
 - Decided 2026-11-05: kept as Net48.
+
+**B38** `services/accel.js:26` `_keyDownHandler` takes `handlers[0]`, the last registered, whatever is on screen.
+- Follows: the tabbed shell only: tabs stay mounted (`v-show`, A2v10.Core `Platform/A2v10.Platform.Web/Views/Main/Default.tabbed.cshtml:58`); Net48 has no tabbed layout (`tabmain.js` is built, no layout loads it). Tabs A, then B, same accel, A active: the key runs B's command on the hidden page (Ctrl+S saves the hidden document); a `focus` handler focuses a hidden input, nothing happens.
+- Port: kept (`packages/platform/src/accel.ts`, `_keyDownHandler`).
+- Fix: not designed. A handler must know its tab; the key goes to the active tab's.
 
 ## Questions: what was meant
 
