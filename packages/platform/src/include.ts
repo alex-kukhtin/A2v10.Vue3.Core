@@ -248,7 +248,7 @@ component('a2-include', defineComponent({
 	}
 }));
 
-// a2-queued-include: pages loaded one after another, document-wide. A failed load stops the queue for good, and
+// a2-queued-include: pages loaded one after another, document-wide. A failed load is logged, the queue goes on;
 // a load that never settles holds it (Net48 http.js doQueue: B30).
 const queue: { url: string, host: Host }[] = [];
 let processing = false;
@@ -265,7 +265,11 @@ async function doQueue(): Promise<void> {
 	processing = true;
 	while (queue.length > 0) {
 		const el = queue.shift()!;
-		await show(el.host, el.url, undefined);
+		try {
+			await show(el.host, el.url, undefined);
+		} catch (err) {
+			console.error(err);
+		}
 	}
 	processing = false;
 }

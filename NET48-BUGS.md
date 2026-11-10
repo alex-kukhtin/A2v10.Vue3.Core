@@ -54,9 +54,9 @@ The page controller and the platform are ported (`@a2v10/platform`): their entri
 
 **B30** `services/http.js:233-248` `queue`/`doQueue` (`a2-queued-include`): a load that rejects leaves the loop with `processing` still true; a load that never settles (401, an empty answer, a login page) holds the loop.
 - Follows: after one failed or unanswered queued page, no `a2-queued-include` of the document loads again until the browser page reloads; the rejection is unhandled.
-- Port: kept (`packages/platform/src/include.ts`, `doQueue`).
+- Port: the rejection half follows Net48 (`packages/platform/src/include.ts`, `doQueue`); a load that never settles holds the queue, kept.
 - Net48: half fixed 2026-10-24 (`84e0f9ffb`): `try`/`catch` around the await logs a rejection and goes on (`:247-251`). A load that never settles still holds the loop: `load` returns without resolving or rejecting on an empty answer (`:147-148`), a full page (`:149-152`), a foreign url (`:155-160`) and `__blank__` (401, 473 `Unauthorized`: `:203-204`).
-- Fix (left): settle `load` in those branches, or do not await them in the queue. The port follows the rejection half now.
+- Fix (left): settle `load` in those branches, or do not await them in the queue.
 
 **B35** `components/tab.js:153-167` `a2-tab-panel`'s watcher on `items`: Vue 2 fires it on a mutation of the array too, with the same array as both values (seen on Vue 2.7.16: `push`, `splice`; not on a change of an element). The lengths are then equal: the branches "removed" and "added" run only when the binding gives another array, which `$merge` does not (`$copy` is in place).
 - Follows: `$append` and `$remove` on a TabPanel's ItemsSource select the first tab, not the new one or the neighbour.
