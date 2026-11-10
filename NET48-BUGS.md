@@ -23,11 +23,6 @@ The page controller and the platform are ported (`@a2v10/platform`): their entri
 - Net48: fixed 2026-10-24 (`84e0f9ffb`), otherwise: `srcElem ? srcElem.id || null : null`; with no element the selector is emptied and the load resolves `null` (`:166-199`), quietly. The port throws.
 - Decide: the port follows Net48 (an empty include, no error), or Net48 refuses loudly as the port does.
 
-**B31** A2v10.Core `Web/A2v10.Core.Web.Site/Scripts/signalr.js:28` (not Net48: the tabbed shell's, bundled into `tabbed.js`) `startService`: a failed `connection.start()` retries with `setTimeout(start, 5000)`; `start` is not declared.
-- Follows: the first failure throws ReferenceError inside the async function: an unhandled rejection, and no retry; signals are lost until the browser page reloads (`withAutomaticReconnect` covers a dropped connection, not a failed first start).
-- Port: fixed at once, `setTimeout(startService, 5000)` (`packages/platform/src/signalr.ts`). Test: `test/core/services.js`, std:signalR.
-- Fix: the same in A2v10.Core.
-
 **B34** `services/html.js:119-123` `removePrintFrame`: `window.frames[frameId]` is the frame's window (named access to an iframe gives its browsing context), not the element; `document.body.removeChild` of it throws TypeError.
 - Follows: once a direct print made the frame, the next `printDirect` throws before printing, and a page closing (base.js `destroyed`: `htmlTools.removePrintFrame()`) throws in its hook.
 - Port: fixed at once: `document.getElementById(frameId)` (`packages/platform/src/html.ts`).

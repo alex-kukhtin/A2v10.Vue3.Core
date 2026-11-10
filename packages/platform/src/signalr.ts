@@ -26,7 +26,7 @@ export function createSignalR(eventBus: EventBus) {
 			console.log('SignalR Connected.');
 		} catch (err) {
 			console.log(err);
-			setTimeout(startService, 5000); // Net48: setTimeout(start), start undeclared (B31)
+			setTimeout(startService, 5000);
 		}
 	}
 }

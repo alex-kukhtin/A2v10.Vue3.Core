@@ -1,7 +1,7 @@
 // The services of the built core against their Net48 sources, side by side: the same calls on both, the same
 // answers expected. Net48 (read in place) runs in a page of its own: app.js, its server platform, utils, period,
 // url, routeplain, log, popup (and locale.js, const.js). Covered: std:const, std:log, std:console, std:utils' controls part (text.applyFilters,
-// mapTagColor), std:store, std:popup; std:signalR against a scripted signalR (Net48's is A2v10.Core's, B31).
+// mapTagColor), std:store, std:popup; std:signalR against a scripted signalR (Net48's is A2v10.Core's).
 // Run: node test/core/services.js (after pnpm build)
 
 'use strict';
@@ -241,7 +241,7 @@ same('popup: a registered element without _close', s => {
 	await sr.startService();
 	assert.deepStrictEqual([hub.starts, timers.length, timers[0] && timers[0].ms], [1, 1, 5000], 'a failed start: retried in 5 s');
 	await timers[0].fn();
-	assert.deepStrictEqual([hub.starts, page.out], [2, ['log Error: offline', 'log SignalR Connected.']], 'the retry connects (Net48: ReferenceError, B31)');
+	assert.deepStrictEqual([hub.starts, page.out], [2, ['log Error: offline', 'log SignalR Connected.']], 'the retry connects');
 
 	console.log('services: std:const, std:log, std:console, applyFilters, mapTagColor, std:store, std:popup as Net48; std:signalR');
 })().catch(e => {
