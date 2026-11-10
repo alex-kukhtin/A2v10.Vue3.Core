@@ -28,11 +28,6 @@ The page controller and the platform are ported (`@a2v10/platform`): their entri
 - Port: fixed at once, `setTimeout(startService, 5000)` (`packages/platform/src/signalr.ts`). Test: `test/core/services.js`, std:signalR.
 - Fix: the same in A2v10.Core.
 
-**B33** A2v10.Core `Web/A2v10.Core.Web.Site/Scripts/shell.js:669-670` (the tabbed shell) `_eventModalClose`: when a dialog's `canClose` delegate returns a promise (`canResult.then`), the code calls `result.then`: `result` is what the dialog closes with (`true`, an object), not the delegate's promise.
-- Follows: a dialog whose canClose answers with a promise throws TypeError on close and stays open; the promise is never awaited.
-- Port: fixed at once, `canResult.then(...)` (`packages/shell-tabbed/src/shell.ts`, `_eventModalClose`).
-- Fix: the same in A2v10.Core.
-
 **B34** `services/html.js:119-123` `removePrintFrame`: `window.frames[frameId]` is the frame's window (named access to an iframe gives its browsing context), not the element; `document.body.removeChild` of it throws TypeError.
 - Follows: once a direct print made the frame, the next `printDirect` throws before printing, and a page closing (base.js `destroyed`: `htmlTools.removePrintFrame()`) throws in its hook.
 - Port: fixed at once: `document.getElementById(frameId)` (`packages/platform/src/html.ts`).

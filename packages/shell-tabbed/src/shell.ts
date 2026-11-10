@@ -693,8 +693,7 @@ const shellPlain = defineComponent({
 				const canResult = dlg.attrs.canClose();
 				if (canResult === true)
 					closeImpl(result);
-				else if (canResult.then) {
-					// Core: result.then, the dialog's result, not the delegate's promise (B33)
+				else if (canResult && canResult.then) {
 					canResult.then(function (innerResult: unknown) {
 						if (innerResult === true)
 							closeImpl(result);
