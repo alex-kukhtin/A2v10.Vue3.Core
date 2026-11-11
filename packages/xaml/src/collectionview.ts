@@ -10,8 +10,6 @@
 // - updateFilter watches ItemsSource.$ModelInfo: Vue 2's watcher on ItemsSource also fired on a mutation of the array,
 //   by then a lazy load's $ModelInfo was set; Vue 3's fires on a new array only. Not deep: 1: an empty answer mutates
 //   nothing.
-// Not as Net48: a persistentFilter copied to an opened array resets its Offset (Net48 reopens it at the old page,
-// maybe empty).
 
 import { defineComponent, type ComponentPublicInstance } from 'vue';
 import { require, vocabulary } from './platform.js';

@@ -86,6 +86,6 @@ In the client:
 
 ## 6. Open
 
-- `Views/Page/About.vue3.cshtml`, `ChangePassword.vue3.cshtml` do not exist; on Vue 3 About and ChangePassword fail (§2: no fallback). Their Vue 2 scripts give the page component options of its own (About: `appData`, `computed`; ChangePassword: `computed`, `methods`), which the descriptor of §4 has no place for.
+- `Views/Page/ChangePassword.vue3.cshtml` does not exist; on Vue 3 ChangePassword fails (§2: no fallback). Its Vue 2 script gives the page component options of its own (`computed`, `methods`), which the descriptor of §4 has no place for. About is done: `About.vue3.cshtml` returns a plain object as its model, `locale` in it.
 - The NuGet package's assets (§1).
 - An application's HTML view binding `:disabled` on an `<a>` to `false`: shown off on Vue 3, still working (§5 covers the XAML only).
