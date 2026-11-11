@@ -4,7 +4,7 @@ Found while porting the model core to `@a2v10/model` (2026-10), while tracing th
 
 Each entry: where, what, what follows from it, what the package does now, the fix proposed or decided. An ID is cited in the package's code and in `test/trace/divergences.js`.
 
-An entry is deleted when done: Net48 and the package agree, and `test/trace/divergences.js` does not cite it. Its history is in git; delete its citations in the code with it. An ID is never reused: the next are B39 and Q4.
+An entry is deleted when done: Net48 and the package agree, and `test/trace/divergences.js` does not cite it. Its history is in git; delete its citations in the code with it. An ID is never reused: the next are B40 and Q4.
 
 The package's rule: a crash is fixed at once; any other defect is kept as Net48 has it until decided here, since an application may depend on it. Deciding: fix it in the package (and in Net48, if it is critical there), add or change the scenario in `test/trace/scenarios.js`, record the divergence in `test/trace/divergences.js`; once Net48 has the fix too, drop the divergence and delete the entry.
 
@@ -71,7 +71,15 @@ The page controller and the platform are ported (`@a2v10/platform`): their entri
 **B38** `services/accel.js:26` `_keyDownHandler` takes `handlers[0]`, the last registered, whatever is on screen.
 - Follows: the tabbed shell only: tabs stay mounted (`v-show`, A2v10.Core `Platform/A2v10.Platform.Web/Views/Main/Default.tabbed.cshtml:58`); Net48 has no tabbed layout (`tabmain.js` is built, no layout loads it). Tabs A, then B, same accel, A active: the key runs B's command on the hidden page (Ctrl+S saves the hidden document); a `focus` handler focuses a hidden input, nothing happens.
 - Port: kept (`packages/platform/src/accel.ts`, `_keyDownHandler`).
-- Fix: not designed. A handler must know its tab; the key goes to the active tab's.
+- Fix: designed 2026-11-10, not built. `_keyDownHandler` takes `handlers.find(isVisible)`; none visible: return, no `preventDefault`. `isVisible(h)`: `node = h.anchor || h.elem`; `!node || !node.checkVisibility || node.checkVisibility()`. `registerControl` gets an optional 4th `anchor`; `components/accelcommand.js:18` passes `this.$el.parentElement` (`render()` is empty, `$el` is a comment). A direct `func` call without `anchor`, `focus` with no element, a browser without `checkVisibility`: as today.
+- Why visibility: the tab's `v-show` is already in the DOM; `std:accel` learns no tab, Home and dialogs need no case.
+- Rejected: a tab key on the handler (shell → include → page → control, cases for Home and dialogs); `anchor` passed from `control.js` (a shared block changed for this defect); `elem` always a node, the command in a 4th argument (breaks a direct `func` call in an application; none on this machine, applications elsewhere unseen).
+- Cost: an `AccelCommand` of a Partial under a hidden `v-show` inside a page stops firing.
+
+**B39** `services/accel.js:26` `_keyDownHandler`: an accel the open dialog does not declare runs the page's handler under the dialog. The listener is on `document`; `components/modal.js:14` takes only Tab on keydown.
+- Follows: any layout. A dialog without Ctrl+S over a page with it: the key saves the page behind the dialog. B38's check does not help: the page is visible.
+- Port: `_keyDownHandler` kept (`packages/platform/src/accel.ts`).
+- Decide: a dialog shuts off the page's accels, or passes those it does not declare; an application may rely on the pass.
 
 ## Questions: what was meant
 

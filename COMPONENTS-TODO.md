@@ -12,7 +12,6 @@ A port goes to `packages/xaml/src/<file>.ts`, is imported by `packages/xaml/src/
 ## When a page needs it
 
 - [ ] `wizard.js` (226): `a2-wizard-panel`, `a2-wizard-page`
-- [ ] `megamenu.js` (69): `mega-menu`
 - [ ] `graphics.js` (65): `a2-graphics`
 - [ ] `collectionviewplain.js` (part): `collection-view` — the client one; `collection-view-server(-url)` is ported
 - [ ] `inlineedit.js` (77): `a2-edit-inline`

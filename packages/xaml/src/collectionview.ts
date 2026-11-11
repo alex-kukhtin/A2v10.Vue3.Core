@@ -6,7 +6,12 @@
 //   reads ItemsSource, a computed;
 // - Vue 2's $root was the page (base.js): $root.$emit('cwChange') and $root[prop] are the page's controller
 //   (inject $page, page.ts): __cwChange, $data;
-// - $on('sort') is gone: doSort is called by the data grid (the data-grid step).
+// - $on('sort') is gone: doSort is called by the data grid (the data-grid step);
+// - updateFilter watches ItemsSource.$ModelInfo: Vue 2's watcher on ItemsSource also fired on a mutation of the array,
+//   by then a lazy load's $ModelInfo was set; Vue 3's fires on a new array only. Not deep: 1: an empty answer mutates
+//   nothing.
+// Not as Net48: a persistentFilter copied to an opened array resets its Offset (Net48 reopens it at the old page,
+// maybe empty).
 
 import { defineComponent, type ComponentPublicInstance } from 'vue';
 import { require, vocabulary } from './platform.js';
@@ -83,7 +88,7 @@ const collectionView = defineComponent({
 				this.filterChanged();
 			}
 		},
-		ItemsSource: {
+		'ItemsSource.$ModelInfo': {
 			handler() {
 				this.updateFilter();
 			}
@@ -172,6 +177,8 @@ const collectionView = defineComponent({
 							const te = topElem[lastProp];
 							if (!utils.isEqual(te.$ModelInfo.Filter[pp], this.filter[pp])) {
 								te.$ModelInfo.Filter[pp] = this.filter[pp];
+								if ('Offset' in te.$ModelInfo)
+									te.$ModelInfo.Offset = 0;
 								if (te.$loaded)
 									te.$empty();
 								te.$loaded = false;

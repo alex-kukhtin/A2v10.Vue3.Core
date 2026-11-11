@@ -14,7 +14,7 @@ vocabulary.component('a2-list', defineComponent({
 <ul class="a2-list" v-lazy="itemsSource">
 	<template v-if="itemsSource">
 		<li class="a2-list-item" tabindex="1" :class="cssClass(listItem)" v-for="(listItem, listItemIndex) in source" :key="listItemIndex"
-				@mousedown="select(listItem)" @keydown="keyDown"
+				@mousedown="mouseDown(listItem, $event)" @keydown="keyDown"
 				ref="li" v-on:dblclick.prevent="doDblClick">
 			<span v-if="listItem.__group" v-text="listItem.__group"></span>
 			<slot name="items" :item="listItem" v-if="!listItem.__group"/>
@@ -143,6 +143,13 @@ vocabulary.component('a2-list', defineComponent({
 				}
 				if (fe) this.select(fe);
 			}
+		},
+		mouseDown(item: any, ev: MouseEvent) {
+			if (!this.selectable) return;
+			const active = document.activeElement as HTMLElement | null;
+			if (active && !(ev.currentTarget as Element).contains(active))
+				active.blur();
+			this.select(item);
 		},
 		keyDown(e: KeyboardEvent) {
 			const next = (delta: number) => {

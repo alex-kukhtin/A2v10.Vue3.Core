@@ -1,0 +1,455 @@
+<collection-view-server-url class="cw page absolute page-grid small-scrollbar cw-absolute" id="el0aca6c1e-c107-402e-ab01-9c8717112c43" :items-source="Documents" :initial-filter="{Period: period.all(),Operation: null,Agent: null,Company: null,Warehouse: null}" :persistent-filter="[]"><template v-slot="Parent"><a2-document-title :page-title="Params.Title"></a2-document-title><a2-taskpad class="page-taskpad overflow collapsible" title="Панель задач" initial-width="24rem" position="right" :initial-collapsed="false" style="padding:11px 1rem 1rem 1rem;grid-column:2"><template><a2-panel :collapsible="true" panel-style="transparent"><template v-slot:header><div class="panel-header-slot">Фільтри</div></template><div class="panel-content" style="gap:.25rem"><template><a2-period-picker class="description-center drop-bottom-right" display="name" label="Період" :description="Parent.Filter.Period.Name" align="center" :item="Parent.Filter" prop="Period"></a2-period-picker><a2-selector fetch-command="/catalog/operation/fetch" display="Name" :highlight="true" :has-clear="true" :line-clamp="2" :fetch-command-data="$data.$OperationBrowseData" label="Операції" placeholder="<Всі операції>" :item="Parent.Filter" prop="Operation"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/operation/browse', Parent.Filter.Operation, $data.$OperationBrowseData)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/company/fetch" display="Name" :highlight="true" :has-clear="true" :line-clamp="2" label="Підприємство" placeholder="<Всі підприємства>" :item="Parent.Filter" prop="Company"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/company/browse', Parent.Filter.Company, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/warehouse/fetch" display="Name" :highlight="true" :has-clear="true" :line-clamp="2" label="Склад" placeholder="<Всі склади>" :item="Parent.Filter" prop="Warehouse"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/warehouse/browse', Parent.Filter.Warehouse, null)"><i class="ico ico-search"></i> </a></a2-selector><a2-selector fetch-command="/catalog/agent/fetch" display="Name" :highlight="true" :has-clear="true" :line-clamp="2" label="Контрагент" placeholder="<Всі контрагенти>" :item="Parent.Filter" prop="Agent"><a class="a2-hyperlink add-on" href="javascript:void(0)" draggable="false" tabindex="-1" @click.stop.prevent="$dialog('browse', '/catalog/agent/browse', Parent.Filter.Agent, null)"><i class="ico ico-search"></i> </a></a2-selector></template></div></a2-panel></template></a2-taskpad><div class="page-content small-scrollbar"><template class="small-scrollbar"><div class="grid" style="height:100%;grid-template-rows:auto 1fr auto "><div class="toolbar" style="grid-row:1"><div class="dropdown dir-down first-elem" v-dropdown><button class="btn first-elem btn-tb" toggle v-settabindex><i class="ico ico-plus"></i> Створити<span class="caret"></span></button><mega-menu class="no-wrap" :items-source="Menu" group-by="FormName" :columns="0"><template v-slot:item="slotItem"><button class="dropdown-item" v-text="slotItem.menuItem.Name" :disabled="(!$canExecute('create', slotItem.menuItem, null)) || null" @click.stop.prevent="$exec('create', slotItem.menuItem, null, null)" v-disable></button></template></mega-menu></div><button class="btn btn-tb btn-icon" :disabled="(!$canExecute('editSelected', Documents, null)) || null" @click.stop.prevent="$exec('editSelected', Documents, null, null)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-tb btn-icon" :disabled="(!$canExecSel('delete', Documents, null)) || null" @click.stop.prevent="$execSelected('delete', Documents, null)" v-settabindex><i class="ico ico-delete"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" :disabled="(!$hasSelected(Documents, null)) || null" @click.stop.prevent="$dialog('show-selected', '/document/print/browse', Documents, null, null)" v-settabindex><i class="ico ico-print"></i> </button><button class="btn btn-tb btn-icon" :disabled="(!$canExecute('copy', Documents, null)) || null" @click.stop.prevent="$exec('copy', Documents, null, null)" v-settabindex><i class="ico ico-copy"></i> </button><div class="divider" role="separator"></div><button class="btn btn-tb btn-icon" @click.stop.prevent="$reload(null)" v-settabindex><i class="ico ico-reload"></i> </button></div><data-grid class="user-select data-grid-light" :compact="false" key="c3b5a685-c4c8-4d92-a1d4-f4a34adb7be9" :fixed-header="true" :items-source="Parent.ItemsSource" :hover="true" :striped="false" :border="true" :sort="true" :route-query="$query" :doubleclick="() => $exec('editSelected', Documents, null, null)" grid="Horizontal" style="grid-row:2"><data-grid-column :fit="true" wrap="no-wrap" align="center" control-type="checkbox" :editable="true" check-all="$checked" id="col0"></data-grid-column><template v-slot:col0="cell"><label class="checkbox no-label"><input type="checkbox" v-settabindex v-model="cell.row.$checked" v-bind:xcheck="cell.row.$checked"/><span></span></label></template><data-grid-column :fit="true" wrap="no-wrap" align="center" header="Дата" bind-icon="$Icon" content="Date" data-type="Date"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" align="right" header="Номер" sort-prop="no" content="No"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" align="right" header="Сума" bold="true" sort-prop="Sum" id="col3"></data-grid-column><template v-slot:col3="cell"><div class="stack-panel vertical"><template><span v-if="cell.row.$IsCurrency" v-text="cell.row.$Sum"></span><span class="small" v-if="cell.row.$IsCurrency" v-text="$format(cell.row.ESum, {dataType: 'Currency',hideZeros: true})" :class="$getNegativeRedClass(cell.row.ESum)"></span><span v-if="!cell.row.$IsCurrency" v-text="$format(cell.row.TSum, {dataType: 'Currency',hideZeros: true})" :class="$getNegativeRedClass(cell.row.TSum)"></span></template></div></template><data-grid-column header="Операція" :sort="false" content="Operation.Name"></data-grid-column><data-grid-column header="Склад" :sort="false" :max-chars="50" content="$Warehouse"></data-grid-column><data-grid-column header="Контрагент" :sort="false" id="col6"></data-grid-column><template v-slot:col6="cell"><popover class="a2-inline po-left-bottom po-white" :content="$maxChars(cell.row.Agent.Name, 50)" :title="cell.row.Agent.Name" url="/popover/agent/balance" :arg="cell.row.Agent"></popover></template><data-grid-column header="Замовлення" :fit="true" wrap="no-wrap" id="col7"></data-grid-column><template v-slot:col7="cell"><a class="a2-hyperlink" href="javascript:void(0)" draggable="false" v-if="cell.row.BaseDoc.Id" @click.stop.prevent="$navigate(cell.row.BaseDoc.Url, cell.row.BaseDoc, false, null, null)" :href="$href(cell.row.BaseDoc.Url, cell.row.BaseDoc)"><i class="ico" :class="'ico-' + cell.row.BaseDoc.Icon"></i> <span v-text="cell.row.BaseDoc.Name"></span></a></template><data-grid-column header="Примітка" :max-chars="50" sort-prop="memo" content="Memo"></data-grid-column><data-grid-column :fit="true" wrap="no-wrap" id="col9"></data-grid-column><template v-slot:col9="cell"><div class="commandbar visible-hover"><template><button class="btn btn-cb btn-icon" @click.stop.prevent="$navigate(cell.row.Operation.DocumentUrl, cell.row, false, null, null)" :href="$href(cell.row.Operation.DocumentUrl, cell.row)" v-settabindex><i class="ico ico-edit"></i> </button><button class="btn btn-cb btn-icon" :disabled="(!$canExecute('delete', cell.row, null)) || null" @click.stop.prevent="$exec('delete', cell.row, null, null)" v-settabindex><i class="ico ico-delete"></i> </button></template></div></template></data-grid><a2-pager :source="Parent.Pager" style="grid-row:3"></a2-pager></div></template></div><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></template></collection-view-server-url><script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+	if (app.modules['document/_common/index.module'] == undefined) {
+app.modules['document/_common/index.module'] = function() {return define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils = require("std:utils");
+const dateUtils = utils.date;
+const template = {
+    options: {
+        persistSelect: ['Documents'],
+        noDirty: true,
+    },
+    properties: {
+        'TDocument.$No'() { return this.SNo || this.No; },
+        'TDocument.$Mark'() { return !this.Done ? 'warning' : ''; },
+        'TDocument.$Icon'() { return this.Done ? 'success-outline-green' : 'warning-outline-yellow'; },
+        'TRoot.$OperationBrowseData'() { return { Menu: this.Params ? this.Params.Menu : '' }; }
+    },
+    events: {
+        'g.document.saved': handleSaved,
+        'g.document.applied': handleApply,
+        'app.document.delete': handleDelete,
+        'g.document.deleted': handleDeleted,
+    },
+    commands: {
+        create,
+        editSelected: {
+            exec: editSelected,
+            canExec(docs) { return docs.$hasSelected; }
+        },
+        edit,
+        delete: {
+            exec: deleteDoc,
+            canExec(doc) { return !doc.Done; },
+            confirm: 'Ви дійсно бажаєте видалити елемент?'
+        },
+        copy: {
+            exec: copyDoc,
+            canExec(docs) { return docs.$hasSelected; },
+        }
+    }
+};
+exports.default = template;
+async function create(menu) {
+    const ctrl = this.$ctrl;
+    let url = menu.DocumentUrl;
+    await ctrl.$navigate(url, { Operation: menu.Id });
+}
+function editSelected(docs) {
+    let doc = docs.$selected;
+    if (!doc)
+        return;
+    edit.call(this, doc);
+}
+async function edit(doc) {
+    if (!doc)
+        return;
+    const ctrl = this.$ctrl;
+    let url = doc.Operation.DocumentUrl;
+    ctrl.$navigate(url, { Id: doc.Id });
+}
+function handleSaved(m) {
+    let doc = m.Document;
+    let found = this.Documents.$find(d => d.Id === doc.Id);
+    if (found)
+        found.$merge(doc).$select();
+    else if (this.Menu.some(o => o.Id === doc.Operation.Id))
+        this.Documents.$append(doc).$select();
+}
+function handleApply(elem) {
+    let doc = elem.Document;
+    let found = this.Documents.find(d => d.Id == doc.Id);
+    if (!found)
+        return;
+    found.Done = doc.Done;
+}
+function handleDelete(elem) {
+    let found = this.Documents.find(d => d.Id == elem.Id);
+    if (!found)
+        return;
+    found.$remove();
+}
+function handleDeleted(elem) {
+    let doc = elem.Document;
+    let found = this.Documents.find(d => d.Id == doc.Id);
+    if (!found)
+        return;
+    found.$remove();
+}
+async function deleteDoc(doc) {
+    const ctrl = this.$ctrl;
+    await ctrl.$invoke('delete', { Id: doc.Id }, '/document/commands');
+    doc.$remove();
+}
+async function copyDoc(docs) {
+    if (!docs.$hasSelected)
+        return;
+    const ctrl = this.$ctrl;
+    const doc = docs.$selected;
+    let res = await ctrl.$invoke('copy', { Id: doc.Id }, '/document/commands');
+    let url = res.Document.DocumentUrl;
+    await ctrl.$navigate(url, { Id: res.Document.Id });
+}
+
+});
+
+}};
+
+
+	const template = define(["require", "exports"], function (require, exports) {
+	/* common.js module */
+	"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const base = require("document/_common/index.module");
+const utils = require("std:utils");
+const cu = utils.currency;
+const template = {
+    properties: {
+        'TRoot.$BaseCurrency'() { return this.Params.BaseCurrency.Id; },
+        'TDocument.$Warehouse'() { return this.WhFrom.Id ? this.WhFrom.Name : this.WhTo.Name; },
+        'TDocument.$IsCurrency'() { return this.Operation.IsCurrency; },
+        'TDocument.$Sum'() { return cu.format(this.TSum) + ' ' + this.Currency.Alpha3; },
+    }
+};
+exports.default = utils.mergeTemplate(base, template);
+
+});;
+
+	const rawData = {
+  "Documents": [
+    { "Id": 5003, "Date": "2026-11-10T00:00:00", "Sum": 1200, "VSum": 0, "TSum": 1200, "ESum": 49800, "Memo": "експорт", "SNo": null, "No": "17", "Vat": false, "VatNested": false, "Notice": null, "Done": true, "BaseDoc": { "Id": 4001, "Url": "/document/sales/order/edit", "Name": "Замовлення №8 від 01.11.2026", "Icon": "file" }, "Operation": { "Id": 1028, "Name": "Експорт товарів/послуг", "Form": "waybillout", "DocumentUrl": "/document/sales/waybillout/edit", "InOut": -1, "IsCurrency": true, "Links": [] }, "Agent": { "Id": 301, "Name": "Baltic Trade OÜ" }, "Company": { "Id": 1, "Name": "Моє підприємство" }, "WhFrom": { "Id": 11, "Name": "Основний склад" }, "WhTo": {}, "Manager": {}, "Currency": { "Id": 978, "Short": "євро", "Alpha3": "EUR", "Name": "Євро", "Denom": 1 }, "CostItem": {} },
+    { "Id": 5002, "Date": "2026-11-09T00:00:00", "Sum": 15000, "VSum": 2500, "TSum": 15000, "ESum": 0, "Memo": null, "SNo": null, "No": "16", "Vat": true, "VatNested": true, "Notice": null, "Done": false, "BaseDoc": {}, "Operation": { "Id": 1002, "Name": "Продаж товарів/послуг", "Form": "waybillout", "DocumentUrl": "/document/sales/waybillout/edit", "InOut": -1, "IsCurrency": false, "Links": [] }, "Agent": { "Id": 302, "Name": "ТОВ «Альфа»" }, "Company": { "Id": 1, "Name": "Моє підприємство" }, "WhFrom": { "Id": 11, "Name": "Основний склад" }, "WhTo": {}, "Manager": {}, "Currency": { "Id": 980, "Short": "грн.", "Alpha3": "UAH", "Name": "Українська гривня", "Denom": 1 }, "CostItem": {} },
+    { "Id": 5001, "Date": "2026-11-05T00:00:00", "Sum": -3200, "VSum": 0, "TSum": -3200, "ESum": 0, "Memo": "повернення", "SNo": null, "No": "4", "Vat": false, "VatNested": false, "Notice": null, "Done": true, "BaseDoc": {}, "Operation": { "Id": 1003, "Name": "Повернення від покупця", "Form": "retcust", "DocumentUrl": "/document/sales/retcust/edit", "InOut": 1, "IsCurrency": false, "Links": [] }, "Agent": { "Id": 302, "Name": "ТОВ «Альфа»" }, "Company": { "Id": 1, "Name": "Моє підприємство" }, "WhFrom": {}, "WhTo": { "Id": 12, "Name": "Склад повернень" }, "Manager": {}, "Currency": { "Id": 980, "Short": "грн.", "Alpha3": "UAH", "Name": "Українська гривня", "Denom": 1 }, "CostItem": {} }
+  ],
+  "Documents.$RowCount": 3,
+  "Menu": [
+    {
+      "Id": 1002,
+      "Name": "Продаж товарів/послуг",
+      "FormId": "216984bd-dbbe-4117-b47c-a82636cecd39",
+      "FormName": "Продаж товарів/послуг",
+      "DocumentUrl": "/document/sales/waybillout/edit"
+    },
+    {
+      "Id": 1028,
+      "Name": "Експорт товарів/послуг",
+      "FormId": "216984bd-dbbe-4117-b47c-a82636cecd39",
+      "FormName": "Продаж товарів/послуг",
+      "DocumentUrl": "/document/sales/waybillout/edit"
+    },
+    {
+      "Id": 1954,
+      "Name": "Продаж товарів/послуг-копія",
+      "FormId": "216984bd-dbbe-4117-b47c-a82636cecd39",
+      "FormName": "Продаж товарів/послуг",
+      "DocumentUrl": "/document/sales/waybillout/edit"
+    },
+    {
+      "Id": 2095,
+      "Name": "Безоплатна передача",
+      "FormId": "216984bd-dbbe-4117-b47c-a82636cecd39",
+      "FormName": "Продаж товарів/послуг",
+      "DocumentUrl": "/document/sales/waybillout/edit"
+    },
+    {
+      "Id": 2287,
+      "Name": "Експорт товарів/послуг-копія",
+      "FormId": "216984bd-dbbe-4117-b47c-a82636cecd39",
+      "FormName": "Продаж товарів/послуг",
+      "DocumentUrl": "/document/sales/waybillout/edit"
+    },
+    {
+      "Id": 5900,
+      "Name": "Продаж ОЗ",
+      "FormId": "216984bd-dbbe-4117-b47c-a82636cecd39",
+      "FormName": "Продаж товарів/послуг",
+      "DocumentUrl": "/document/sales/waybillout/edit"
+    },
+    {
+      "Id": 2098,
+      "Name": "Повернення безоплатної передачі",
+      "FormId": "41407515-4ee4-4025-9459-e7beb2dfcba5",
+      "FormName": "Повернення від покупця",
+      "DocumentUrl": "/document/sales/retcust/edit"
+    },
+    {
+      "Id": 1030,
+      "Name": "Повернення експорту",
+      "FormId": "41407515-4ee4-4025-9459-e7beb2dfcba5",
+      "FormName": "Повернення від покупця",
+      "DocumentUrl": "/document/sales/retcust/edit"
+    },
+    {
+      "Id": 1003,
+      "Name": "Повернення від покупця",
+      "FormId": "41407515-4ee4-4025-9459-e7beb2dfcba5",
+      "FormName": "Повернення від покупця",
+      "DocumentUrl": "/document/sales/retcust/edit"
+    },
+    {
+      "Id": 1163,
+      "Name": "Податкова накладна (зобов\u0027язання)",
+      "FormId": "c5844adc-808a-47c9-af19-cdbe9fd4055e",
+      "FormName": "Податкова накладна (зобов\u0027язання)",
+      "DocumentUrl": "/document/vat/taxdeclout/edit"
+    },
+    {
+      "Id": 1175,
+      "Name": "Податкова накладна (зобов\u0027язання) на роздріб",
+      "FormId": "c5844adc-808a-47c9-af19-cdbe9fd4055e",
+      "FormName": "Податкова накладна (зобов\u0027язання)",
+      "DocumentUrl": "/document/vat/taxdeclout/edit"
+    },
+    {
+      "Id": 1041,
+      "Name": "Відомість РРО",
+      "FormId": "f7cc093e-f450-4192-b153-2e1c7606ec9f",
+      "FormName": "Відомість РРО",
+      "DocumentUrl": "/retail/rrobill/edit"
+    }
+  ],
+  "Params": {
+    "Menu": "Sales.Sales",
+    "Title": "Продажі",
+    "BaseCurrency": {
+      "Id": 980,
+      "Short": "грн.",
+      "Alpha3": "UAH",
+      "Name": "Українська гривня",
+      "Denom": 1
+    }
+  },
+  "$ModelInfo": {
+    "Documents": {
+      "Offset": 0,
+      "PageSize": 20,
+      "SortOrder": "date",
+      "SortDir": "asc",
+      "Filter": {
+        "Period": {
+          "From": "\u0022\\/\u00222026-11-11T00:00:00\u0022\\/\u0022",
+          "To": "\u0022\\/\u00222026-11-11T00:00:00\u0022\\/\u0022"
+        },
+        "Operation": {
+          "Id": null,
+          "Name": null
+        },
+        "Agent": {
+          "Id": null,
+          "Name": null
+        },
+        "Company": {
+          "Id": null,
+          "Name": null
+        },
+        "CostItem": {
+          "Id": null,
+          "Name": null
+        },
+        "Warehouse": {
+          "Id": null,
+          "Name": null
+        }
+      }
+    }
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Documents':TDocumentArray,'Menu':TMenuArray,'Params':TParam}}, false);
+
+function TDocument(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TDocument, {props: {'Id':Number,'Date':Date,'Sum':Number,'VSum':Number,'TSum':Number,'ESum':Number,'Memo':{type:String, len:255},'SNo':{type:String, len:64},'No':{type:String, len:64},'Vat':Boolean,'VatNested':Boolean,'Notice':{type:String, len:255},'Done':Boolean,'BaseDoc':TDocBase,'Operation':TOperation,'Agent':TAgent,'Company':TCompany,'WhFrom':TWarehouse,'WhTo':TWarehouse,'Manager':TManager,'Currency':TCurrency,'CostItem':TCostItem}, $id: 'Id'}, true);
+function TDocumentArray(source, path, parent) {
+return cmn.createArray(source, path, TDocument, TDocumentArray, parent);
+}
+
+function TDocBase(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TDocBase, {props: {'Id':Number,'Url':{type:String, len:255},'Name':{type:String, len:4000},'Icon':{type:String, len:22}}, $id: 'Id'}, true);
+function TDocBaseArray(source, path, parent) {
+return cmn.createArray(source, path, TDocBase, TDocBaseArray, parent);
+}
+
+function TOperation(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TOperation, {props: {'Id':Number,'Name':{type:String, len:255},'Form':{type:String, len:16},'DocumentUrl':{type:String, len:255},'InOut':Number,'IsCurrency':Boolean,'Title':{type:String, len:255},'FormShort':{type:String, len:16},'WriteSelfCost':Boolean,'Links':TOpLinkArray}, $id: 'Id',$name: 'Name'}, true);
+function TOperationArray(source, path, parent) {
+return cmn.createArray(source, path, TOperation, TOperationArray, parent);
+}
+
+function TAgent(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAgent, {props: {'Id':Number,'Name':{type:String, len:255},'Role':TItemRole,'Contract':TAContract,'AgBankAcc':TAgBankAcc}, $id: 'Id',$name: 'Name'}, true);
+function TAgentArray(source, path, parent) {
+return cmn.createArray(source, path, TAgent, TAgentArray, parent);
+}
+
+function TCompany(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TCompany, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TCompanyArray(source, path, parent) {
+return cmn.createArray(source, path, TCompany, TCompanyArray, parent);
+}
+
+function TWarehouse(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TWarehouse, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TWarehouseArray(source, path, parent) {
+return cmn.createArray(source, path, TWarehouse, TWarehouseArray, parent);
+}
+
+function TManager(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TManager, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TManagerArray(source, path, parent) {
+return cmn.createArray(source, path, TManager, TManagerArray, parent);
+}
+
+function TCurrency(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TCurrency, {props: {'Id':Number,'Short':{type:String, len:8},'Alpha3':{type:String, len:3},'Name':{type:String, len:255},'Denom':Number}, $id: 'Id'}, true);
+function TCurrencyArray(source, path, parent) {
+return cmn.createArray(source, path, TCurrency, TCurrencyArray, parent);
+}
+
+function TCostItem(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TCostItem, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id'}, true);
+function TCostItemArray(source, path, parent) {
+return cmn.createArray(source, path, TCostItem, TCostItemArray, parent);
+}
+
+function TMenu(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TMenu, {props: {'Id':Number,'Name':{type:String, len:255},'FormId':{type:String, len:16},'FormName':{type:String, len:255},'DocumentUrl':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TMenuArray(source, path, parent) {
+return cmn.createArray(source, path, TMenu, TMenuArray, parent);
+}
+
+function TRespCenter(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRespCenter, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TRespCenterArray(source, path, parent) {
+return cmn.createArray(source, path, TRespCenter, TRespCenterArray, parent);
+}
+
+function TProject(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TProject, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TProjectArray(source, path, parent) {
+return cmn.createArray(source, path, TProject, TProjectArray, parent);
+}
+
+function TContract(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TContract, {props: {'Id':Number,'Name':{type:String, len:255},'Date':Date,'SNo':{type:String, len:255},'PriceKind':TPriceKind,'Company':TCompany,'Agent':TAgent,'ItemRole':TItemRole,'CurrencyName':{type:String, len:8}}, $id: 'Id',$name: 'Name'}, true);
+function TContractArray(source, path, parent) {
+return cmn.createArray(source, path, TContract, TContractArray, parent);
+}
+
+function TPriceKind(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TPriceKind, {props: {'Id':Number,'Name':{type:String, len:255},'Vat':Boolean}, $id: 'Id',$name: 'Name'}, true);
+function TPriceKindArray(source, path, parent) {
+return cmn.createArray(source, path, TPriceKind, TPriceKindArray, parent);
+}
+
+function TItemRole(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TItemRole, {props: {}}, false);
+
+function TAContract(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAContract, {props: {'Id':Number,'Name':{type:String, len:255},'ItemRole':TItemRole}, $id: 'Id',$name: 'Name'}, true);
+function TAContractArray(source, path, parent) {
+return cmn.createArray(source, path, TAContract, TAContractArray, parent);
+}
+
+function TAgBankAcc(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TAgBankAcc, {props: {'Id':Number,'Name':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, true);
+function TAgBankAccArray(source, path, parent) {
+return cmn.createArray(source, path, TAgBankAcc, TAgBankAccArray, parent);
+}
+
+function TXRate(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TXRate, {props: {'Id':Number,'Name':{type:String, len:255},'UseApi':Boolean}, $id: 'Id'}, true);
+function TXRateArray(source, path, parent) {
+return cmn.createArray(source, path, TXRate, TXRateArray, parent);
+}
+
+function TOpLink(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TOpLink, {props: {}}, true);
+function TOpLinkArray(source, path, parent) {
+return cmn.createArray(source, path, TOpLink, TOpLinkArray, parent);
+}
+
+function TParam(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TParam, {props: {'Menu':{type:String, len:255},'Title':{type:String, len:255},'BaseCurrency':TCurrency}}, false);
+
+const ctors = {TRoot,TDocument,TDocumentArray,TDocBase,TDocBaseArray,TOperation,TOperationArray,TAgent,TAgentArray,TCompany,TCompanyArray,TWarehouse,TWarehouseArray,TManager,TManagerArray,TCurrency,TCurrencyArray,TCostItem,TCostItemArray,TMenu,TMenuArray,TRespCenter,TRespCenterArray,TProject,TProjectArray,TContract,TContractArray,TPriceKind,TPriceKindArray,TItemRole,TAContract,TAContractArray,TAgBankAcc,TAgBankAccArray,TXRate,TXRateArray,TOpLink,TOpLinkArray,TParam};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'sales/sales/index/',
+	inDialog: false,
+	isIndex: true,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://sales/sales/index/
+</script>

@@ -56,6 +56,9 @@ const FILES = {
 	'/_dialog/task/edit/101': [path.join(__dirname, 'pages/task-edit-dialog.html'), 'text/html; charset=utf-8'],
 	// the answer came cut at its script: the template, the types and the rows written on the stand
 	'/_page/finance/transaction/index/0': [path.join(__dirname, 'pages/finance-transaction-index.html'), 'text/html; charset=utf-8'],
+	// no page with a DropDownMegaMenu in MetaAppStand: the answer is a Vue 2 application's (sales/sales/index), its slots,
+	// commands' :disabled and script written as Core writes them for Vue 3; the rows written on the stand
+	'/_page/sales/sales/index/0': [path.join(__dirname, 'pages/sales-sales-index.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']
 };
 
