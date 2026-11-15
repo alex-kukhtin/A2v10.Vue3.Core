@@ -59,6 +59,9 @@ const FILES = {
 	// no page with a DropDownMegaMenu in MetaAppStand: the answer is a Vue 2 application's (sales/sales/index), its slots,
 	// commands' :disabled and script written as Core writes them for Vue 3; the rows written on the stand
 	'/_page/sales/sales/index/0': [path.join(__dirname, 'pages/sales-sales-index.html'), 'text/html; charset=utf-8'],
+	// no page with a StaticImage or a FileImage in MetaAppStand: written by StaticImage.cs and Image.cs (FileImage);
+	// the photo is attachment/partial's file 1, the static images are /_static_image's below
+	'/_page/catalog/product/edit/1': [path.join(__dirname, 'pages/catalog-product-edit.html'), 'text/html; charset=utf-8'],
 	'/locale.js': [path.join(SITE, 'app/localization/locale-uk.js'), 'text/javascript; charset=utf-8']
 };
 
@@ -297,6 +300,13 @@ const server = http.createServer((req, res) => {
 		const [mime, body] = ATTACHMENT_FILES[attachment[1]];
 		res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'no-store' });
 		res.end(body);
+		return;
+	}
+	// a site's image (StaticImage: the path, its dots as dashes, ImageController's _static_image): any path, its name drawn
+	const staticImage = /^\/_static_image\/(.+)$/.exec(url);
+	if (staticImage) {
+		res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store' });
+		res.end(`<svg xmlns="http://www.w3.org/2000/svg" width="240" height="80"><rect width="240" height="80" fill="#ecd"/><text x="12" y="48" font-size="18">${staticImage[1].replace(/[<&]/g, '')}</text></svg>`);
 		return;
 	}
 	const image = /^\/_image\/admin\/settings\/\w+(?:\/(\d+))?$/.exec(url);

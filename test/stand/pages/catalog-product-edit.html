@@ -1,0 +1,71 @@
+<div class="page absolute" id="el6f1c2a3e-8b4d-4e7a-9c21-5d3e8f7a1b90"><a2-document-title :page-title="Product.Name"></a2-document-title><template><div class="grid" style="padding:1rem;gap:1rem;grid-template-columns:auto auto auto"><template><div class="stack-panel vertical" style="gap:.5rem"><template><span class="bold">StaticImage Url</span><a2-static-image url="images/logo.png" alt="logo.png" style="height:4rem"></a2-static-image></template></div><div class="stack-panel vertical" style="gap:.5rem"><template><span class="bold">StaticImage {Bind Product.Brand.Logo}</span><a2-static-image :url="Product.Brand.Logo" style="height:4rem"></a2-static-image></template></div><div class="stack-panel vertical" style="gap:.5rem"><template><span class="bold">StaticImage {Bind Product.Brand.NoLogo} (null)</span><a2-static-image :url="Product.Brand.NoLogo" style="height:4rem"></a2-static-image></template></div><div class="stack-panel vertical" style="gap:.5rem"><template><span class="bold">FileImage {Bind Product.Photo}</span><a2-file-image url="/attachment/upload" :value="Product.Photo" width="16rem" height="8rem"></a2-file-image></template></div><div class="stack-panel vertical" style="gap:.5rem"><template><span class="bold">FileImage {Bind Product.PhotoId}</span><a2-file-image url="/attachment/upload" :value="Product.PhotoId" width="8rem"></a2-file-image></template></div></template></div></template><div class="page-canvas-outer"><div class="page-canvas" id="page-canvas"></div></div></div>
+<script type="text/javascript">
+'use strict';
+const eventBus = require('std:eventBus');
+const utils = require('std:utils');
+const uPeriod = require('std:period');
+const currentModule = function() {
+
+
+	const template = (function() {
+	let module = { exports: undefined };
+
+	(function(module, exports) {
+		module.exports = {};
+	})(module, module.exports);
+
+	return module.exports;
+})();;
+
+	const rawData = {
+  "Product": {
+    "Id": 1,
+    "Name": "Product 1",
+    "PhotoId": 1,
+    "Brand": { "Id": 7, "Name": "Brand 7", "Logo": "images/brand.7.svg", "NoLogo": null },
+    "Photo": { "Id": 1, "Token": "a7Kq2" }
+  }
+};
+
+	function modelData(template, data) {
+const cmn = require('std:datamodel');
+function TRoot(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TRoot, {props: {'Product':TProduct}}, false);
+
+function TProduct(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TProduct, {props: {'Id':Number,'Name':{type:String, len:255},'PhotoId':Number,'Brand':TBrand,'Photo':TPhoto}, $id: 'Id',$name: 'Name'}, false);
+
+function TBrand(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TBrand, {props: {'Id':Number,'Name':{type:String, len:255},'Logo':{type:String, len:255},'NoLogo':{type:String, len:255}}, $id: 'Id',$name: 'Name'}, false);
+
+function TPhoto(source, path, parent) {
+cmn.createObject(this, source, path, parent);
+}
+cmn.defineObject(TPhoto, {props: {'Id':Number,'Token':{type:String, len:16}}, $id: 'Id',$token: 'Token'}, false);
+
+const ctors = {TRoot,TProduct,TBrand,TPhoto};
+cmn.implementRoot(TRoot, template, ctors);
+let root = new TRoot(data);
+cmn.setModelInfo(root, {}, rawData);return root;}
+
+
+	return {
+		dataModel: modelData(template, rawData)
+	};
+};
+
+return {
+	baseUrl: 'catalog/product/edit/1',
+	inDialog: false,
+	isIndex: false,
+	isSkipDataStack: false,
+	createModel: () => currentModule().dataModel
+};
+//# sourceURL=a2v10://catalog/product/edit/1
+</script>
