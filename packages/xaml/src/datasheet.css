@@ -199,3 +199,22 @@
 	border-width: 0 2px 2px 0;
 	transform: rotate(45deg);
 }
+
+/* sorting: a header that sorts, its direction when sorted by it */
+.data-sheet .ds-table th.sort {
+	cursor: pointer;
+}
+
+.data-sheet .ds-table th.sort:hover {
+	color: var(--link, #1565c0);
+}
+
+.data-sheet .ds-table th.asc::after {
+	content: ' ▲';
+	font-size: .7em;
+}
+
+.data-sheet .ds-table th.desc::after {
+	content: ' ▼';
+	font-size: .7em;
+}

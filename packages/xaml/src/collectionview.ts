@@ -6,7 +6,8 @@
 //   reads ItemsSource, a computed;
 // - Vue 2's $root was the page (base.js): $root.$emit('cwChange') and $root[prop] are the page's controller
 //   (inject $page, page.ts): __cwChange, $data;
-// - $on('sort') is gone: doSort is called by the data grid (the data-grid step);
+// - $on('sort') is gone: doSort is called by the data grid (the data-grid step), by data-sheet through provide
+//   ('collectionView': the nearest one, however deep the sheet sits);
 // - updateFilter watches ItemsSource.$ModelInfo: Vue 2's watcher on ItemsSource also fired on a mutation of the array,
 //   by then a lazy load's $ModelInfo was set; Vue 3's fires on a new array only. Not deep: 1: an empty answer mutates
 //   nothing.
@@ -66,6 +67,9 @@ const collectionView = defineComponent({
 `,
 	inject: {
 		page: { from: '$page', default: null }
+	},
+	provide() {
+		return { collectionView: this };
 	},
 	props: {
 		itemsSource: [Array, Object],

@@ -36,6 +36,7 @@ Slices (2026-11-22):
    - `CheckBox`: Space and a click on its box toggle; Enter goes on to the next cell.
    - Tab outside an edit is the browser's (focus leaves the sheet).
    - A column's props are evaluated by the sheet's render (the columns are its slot): a prop a cell reads made anew there (a literal array in `items-source`) renders the sheet again without end. A binding to the model is stable.
+   - Sorting (after slice 3): a header's click, by the collection view that holds the sheet's array (`inject` `collectionView`, which `collection-view-server` provides; its `doSort` / `sortDir`, the server's `SortOrder` / `SortDir`, as `data-grid`'s). No collection view, no sort: a sorted copy (`data-grid`'s local sort) would part the rows shown from the model's, and the cursor is `$selected`; reordering the model's rows is a data change, a command's. `sort` on the sheet, `sort` / `sort-prop` on a column. Stand: DataSheet list.
    - Stand: DataSheet part (`/stand/datasheet/part/0`), a table part with every kind; the stand's colour scheme has no `--bgMenu`, so the selector's list and the calendar show transparent there (in tabbed.light not).
 
 The selector (2026-11-22): one control, not two — the habits written for it are one reference field's. It extends `a2-selector` (`extends`), its XAML element derives from `Selector`: a selector written anew would repeat `a2-selector`'s semantics (fetch, `textItem`, `createNew`, the panes, the validation). The ported `a2-selector` stays Net48's.
@@ -45,7 +46,7 @@ The selector (2026-11-22): one control, not two — the habits written for it ar
 
 New controls, not substitutes (2026-11-22): `DataSheet` and the selector are elements of their own with their own properties. Nothing takes `DataGrid`'s markup and renders it as `DataSheet`: it would have to repeat `DataGrid`'s semantics. The a2v10meta generator builds `DataSheet` from the metadata in a branch of its own, chosen by a key (as `Xaml:Grid` = `DataGrid` | `DataSheet`). The wiring waits: the control first.
 
-The requirement to Core (to CORE-VUE3.md when written): the elements `DataSheet` and the selector in `A2v10.Xaml`, rendered as their Vue 3 components; the generator's branch and its key. Rendered under a `"Framework"` other than `vue3`, an error that names the element, not an unknown tag.
+The requirement to Core: `DataSheet` and `DataSheetColumn` written in CORE-VUE3.md §6 (2026-11-22). Still to write: the selector's element, the generator's branch and its key.
 
 Open:
 - the generator's key: its place (appsettings beside `Application:Framework`, or `app.json`); what it switches — the list's `DataGrid` (`ControlsXaml.cs`, `FormElementKind.DataGrid`) and the table part's `Table` both, so its value `DataGrid` means «`DataGrid` and `Table`»; not the selector's `LookupPanel`, `XamlOperationsBuilder`, the users' admin grid; whether the selector has a key too;

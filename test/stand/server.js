@@ -242,7 +242,8 @@ ${pageScript(url, { Rows: rows }, SHEET_TYPES)}
 
 // data-sheet as a list (slice 2): a server page of documents in a collection view, the pager beside, opened on the
 // last page with the cursor on the newest (at the bottom); the row picture by Icon; the keys of rows bound to toasts,
-// Del to a mark for deletion. /_data/reload answers a page by the offset in the reloaded url.
+// Del to a mark for deletion. /_data/reload answers a page by the offset, the order and the direction in the reloaded
+// url (a header's click sorts by the collection view); Memo does not sort (the column's :sort="false").
 const DOC_TYPES = `		function TAgent(source, path, parent) { cmn.createObject(this, source, path, parent); }
 		cmn.defineObject(TAgent, {props: {'Id':Number,'Name':String}, $id: 'Id', $name: 'Name'}, false);
 		function TDoc(source, path, parent) { cmn.createObject(this, source, path, parent); }
@@ -255,17 +256,20 @@ const DOC_TYPES = `		function TAgent(source, path, parent) { cmn.createObject(th
 const DOC_COUNT = 95;
 const DOC_PAGE = 20;
 
-function docPage(offset) {
-	const docs = [];
-	for (let i = offset; i < Math.min(offset + DOC_PAGE, DOC_COUNT); i++)
-		docs.push({
-			Id: 5000 + i, No: i + 1, Date: new Date(Date.UTC(2026, 6, 1 + i)).toISOString().substring(0, 10) + 'T00:00:00',
-			Agent: { Id: i % 5 + 1, Name: SHEET_AGENTS[i % 5] }, Sum: ((i * 7919) % 100000) / 100,
-			Memo: `Видаткова накладна №${i + 1}`, Icon: i % 7 ? 'success-outline-green' : 'warning-outline-yellow'
-		});
+const DOC_ALL = Array.from({ length: DOC_COUNT }, (_, i) => ({
+	Id: 5000 + i, No: i + 1, Date: new Date(Date.UTC(2026, 6, 1 + i)).toISOString().substring(0, 10) + 'T00:00:00',
+	Agent: { Id: i % 5 + 1, Name: SHEET_AGENTS[i % 5] }, Sum: ((i * 7919) % 100000) / 100,
+	Memo: `Видаткова накладна №${i + 1}`, Icon: i % 7 ? 'success-outline-green' : 'warning-outline-yellow'
+}));
+const DOC_KEYS = { No: d => d.No, Date: d => d.Date, Agent: d => d.Agent.Name, Sum: d => d.Sum };
+
+function docPage(offset, order = 'Date', dir = 'asc') {
+	const key = DOC_KEYS[order] || DOC_KEYS.Date;
+	const sign = dir === 'desc' ? -1 : 1;
+	const docs = DOC_ALL.slice().sort((a, b) => sign * (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : a.No - b.No));
 	return {
-		Docs: docs, 'Docs.$RowCount': DOC_COUNT,
-		$ModelInfo: { Docs: { PageSize: DOC_PAGE, Offset: offset, SortOrder: 'Date', SortDir: 'asc' } }
+		Docs: docs.slice(offset, offset + DOC_PAGE), 'Docs.$RowCount': DOC_COUNT,
+		$ModelInfo: { Docs: { PageSize: DOC_PAGE, Offset: offset, SortOrder: order, SortDir: dir } }
 	};
 }
 
@@ -273,14 +277,14 @@ function sheetListHtml(url) {
 	const id = `el${crypto.randomUUID()}`;
 	const lastPage = Math.floor((DOC_COUNT - 1) / DOC_PAGE) * DOC_PAGE;
 	return `<collection-view-server class="cw page absolute" id="${id}" :items-source="Docs" :initial-filter="{}" :persistent-filter="[]"><template v-slot="Parent"><div style="display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5rem;height:100%;padding:1rem;box-sizing:border-box">
-	<data-sheet :items-source="Parent.ItemsSource" :fixed-columns="1" row-picture="Icon" auto-select="last-item" test-id="list"
+	<data-sheet :items-source="Parent.ItemsSource" :fixed-columns="1" row-picture="Icon" auto-select="last-item" :sort="true" test-id="list"
 		:open="(e) => $toast('Open: ' + e.Memo)" :add="() => $toast('New document', 'info')" :copy="(e) => $toast('Copy: ' + e.Memo, 'info')"
 		:remove="(e) => e.Icon = (e.Icon === 'close' ? 'warning-outline-yellow' : 'close')">
 		<data-sheet-column header="Номер" content="No" data-type="Number" width="5rem"></data-sheet-column>
 		<data-sheet-column header="Дата" content="Date" data-type="Date" align="center" width="7rem"></data-sheet-column>
-		<data-sheet-column header="Контрагент" content="Agent.Name" width="14rem"></data-sheet-column>
+		<data-sheet-column header="Контрагент" content="Agent.Name" sort-prop="Agent" width="14rem"></data-sheet-column>
 		<data-sheet-column header="Сума" content="Sum" data-type="Currency" width="9rem"></data-sheet-column>
-		<data-sheet-column header="Примітка" content="Memo" width="18rem"></data-sheet-column>
+		<data-sheet-column header="Примітка" content="Memo" :sort="false" width="18rem"></data-sheet-column>
 	</data-sheet>
 	<a2-pager :source="Parent.Pager"></a2-pager>
 </div></template></collection-view-server>
@@ -457,9 +461,9 @@ const server = http.createServer((req, res) => {
 				res.end('No reload on the stand for ' + baseUrl);
 				return;
 			}
-			const offset = +(new URL(baseUrl, 'http://stand').searchParams.get('offset') || 0);
+			const q = new URL(baseUrl, 'http://stand').searchParams;
 			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-			res.end(JSON.stringify(docPage(offset)));
+			res.end(JSON.stringify(docPage(+(q.get('offset') || 0), q.get('order') || undefined, q.get('dir') || undefined)));
 		});
 		return;
 	}

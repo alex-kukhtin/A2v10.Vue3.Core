@@ -12,7 +12,10 @@
 // itself, the sheet keeps the value the edit started with: Esc writes it back. Enter / Tab end the edit and go on to the
 // next editable cell (Shift+Tab back); focus leaving the editor, a click elsewhere, the wheel end it in place. A toggle
 // kind (CheckBox) edits in place: Space, a click on its icon; Enter goes on. Without ControlType: Enter opens, typing
-// searches. Its CSS: datasheet.css, beside.
+// searches. Sorting: a click on a header, by the collection view holding the sheet's array (on the server: its
+// $ModelInfo's SortOrder / SortDir, as data-grid's); no collection view, no sort: a sorted copy would part the rows
+// shown from the model's (the cursor is $selected), and reordering the model's rows is a command's, not the sheet's.
+// Its CSS: datasheet.css, beside.
 
 import { defineComponent, type PropType } from 'vue';
 import {
@@ -128,7 +131,9 @@ vocabulary.component('data-sheet-column', defineComponent({
 		itemsSource: Array,
 		fetch: Function,
 		fetchCommand: String,
-		valueProp: String
+		valueProp: String,
+		sort: { type: Boolean, default: undefined }, // the sheet's `sort` overridden
+		sortProp: String // the order the server sorts by; the content's path by default
 	},
 	created() {
 		(this.sheet as any).$addColumn(this);
@@ -148,7 +153,7 @@ vocabulary.component('data-sheet', defineComponent({
 	<div class="ds-view" ref="view" @wheel="wheel" @pointerdown="pointerdown" @dblclick="dblclick">
 		<table class="ds-table" :style="{width: px(tableWidth)}">
 			<colgroup><col v-if="rowPicture" :style="{width: px(lead)}"/><col v-for="c in shownCols" :key="c" :style="{width: px(widths[c])}"/></colgroup>
-			<thead><tr><th v-if="rowPicture" class="ds-picture"></th><th v-for="c in shownCols" :key="c" :class="colClass(c)" v-text="columns[c].header"></th></tr></thead>
+			<thead><tr><th v-if="rowPicture" class="ds-picture"></th><th v-for="c in shownCols" :key="c" :class="headClass(c)" v-text="columns[c].header" @click="sortBy(c)"></th></tr></thead>
 			<tbody>
 				<tr v-for="r in shownRows" :key="r" :class="{active: r === cursorRow}">
 					<td v-if="rowPicture" class="ds-picture"><i v-if="picture(r)" :class="'ico ico-' + picture(r)"></i></td>
@@ -168,6 +173,7 @@ vocabulary.component('data-sheet', defineComponent({
 	props: {
 		itemsSource: Array as PropType<any[]>,
 		fixedColumns: { type: Number, default: 0 },
+		sort: Boolean, // the columns sort (each may say otherwise), when a collection view holds the array
 		rowPicture: String,
 		autoSelect: { type: String, default: 'first-item' }, // 'last-item': a list, the newest at the bottom
 		open: Function,
@@ -175,6 +181,9 @@ vocabulary.component('data-sheet', defineComponent({
 		copy: Function,
 		remove: Function,
 		testId: String
+	},
+	inject: {
+		collectionView: { from: 'collectionView', default: null }
 	},
 	provide() {
 		return { dataSheet: this };
@@ -234,6 +243,11 @@ vocabulary.component('data-sheet', defineComponent({
 		colPage(): number {
 			return columnPage(this.widths, this.fixed, this.colPos, this.width);
 		},
+		// the collection view that sorts the rows: the nearest one, if it holds this array
+		sorter(): any {
+			const cw = this.collectionView as any;
+			return cw && cw.ItemsSource === this.itemsSource ? cw : null;
+		},
 		tableWidth(): number {
 			return this.shownCols.reduce((w: number, c: number) => w + this.widths[c], this.lead);
 		},
@@ -289,6 +303,29 @@ vocabulary.component('data-sheet', defineComponent({
 		},
 		column(c: number): SheetColumn {
 			return this.columns[c] as SheetColumn;
+		},
+		// The order a column sorts by; undefined: it does not sort.
+		sortOrder(c: number): string | undefined {
+			const col = this.columns[c] as { sort?: boolean, sortProp?: string, content?: string };
+			if (!this.sorter || !(col.sort ?? this.sort))
+				return undefined;
+			return col.sortProp || col.content;
+		},
+		sortBy(c: number) {
+			const order = this.sortOrder(c);
+			if (order)
+				this.sorter.doSort(order); // the same column: the other direction; another: ascending (the collection view's)
+		},
+		headClass(c: number): string[] {
+			const cls = this.colClass(c);
+			const order = this.sortOrder(c);
+			if (order) {
+				cls.push('sort');
+				const dir = this.sorter.sortDir(order);
+				if (dir)
+					cls.push(String(dir).toLowerCase());
+			}
+			return cls;
 		},
 		colClass(c: number): string[] {
 			const cls = [kindOf(this.column(c)).align(this.column(c))];

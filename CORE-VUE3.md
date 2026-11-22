@@ -12,9 +12,9 @@ Built here (`pnpm build`), each with its `.map`:
 
 | file | holds | from |
 |---|---|---|
-| `a2v10-core.js`, `.min.js` | Vue 3 (runtime + this repository's compiler), the model, the platform: `app`, `require`, the `std:*` modules (`std:eventBus`, `utils`, `period`, `datamodel`, `url`, `http`, `dataservice`, `routing`, `popup`, `mask`, `accel`, `html`, `tools`, `signalR`…) and `app.components['std:store']`, include, the page's controller (base.js), `window.Vue`, the polyfills; the primitives (`v-dropdown`, `v-contextmenu`) | `packages/core/dist/` |
+| `a2v10-core.js`, `.min.js` | Vue 3 (runtime + this repository's compiler), the model, the platform: `app`, `require`, the `std:*` modules (`std:eventBus`, `utils`, `period`, `datamodel`, `url`, `http`, `dataservice`, `routing`, `popup`, `mask`, `accel`, `html`, `tools`, `signalR`…) and `app.components['std:store']`, include, the page's controller (base.js), `window.Vue`, the polyfills; the primitives (`v-dropdown`, `v-contextmenu`; the datasheet's core as `a2v10.primitives`) | `packages/core/dist/` |
 | `a2v10-shell-tabbed.js`, `.min.js` | the tabbed shell: `std:shellPlain`, header, navbar, modal (and its directives), toastr, debug with `a2-json-browser`, `a2-document-title`; `a2v10.shell.start` | `packages/shell-tabbed/dist/` |
-| `a2v10-xaml.js`, `.min.js` | what the XAML renders: `collection-view-server(-url)`, `data-grid`, `data-grid-column`, `a2-pager`, `textbox`, `a2-textarea`, `static`, `validator`, `a2-static-validator`, `a2-selector`, `combobox`, `a2-date-picker`, `a2-period-picker`, `a2-calendar`, `a2-panel`, `a2-taskpad`, `a2-sheet`, `a2-sheet-section`, `a2-sheet-section-tree`, `a2-blob-image`, `a2-blob-preview`, `a2-list`, `a2-color-picker`, `a2-color-combobox`, `a2-pdfreport-viewer`, `tree-grid`, `tree-view`, `a2-text-editor`, `a2-text-view`, `a2-tags`, `a2-tags-filter`, `a2-tags-list`, `popover`, `a2-span-sum`, `a2-inline-dialog`, `a2-kanban`, `a2-time-picker`, `a2-dashboard`, `a2-dashboard-item`, `a2-file-preview`, `a2-big-calendar`, `a2-multiselect`, `a2-image`, `a2-static-image`, `a2-file-image`, `a2-upload`, `a2-simple-upload`, `a2-tab-panel`, `a2-tab-item`, `mega-menu`; `v-focus`, `v-settabindex`, `v-disable`, `v-lazy`, `v-auto-size`; `app.components['control']` (the base the controls and applications extend). Grows by the pages met. | `packages/xaml/dist/` |
+| `a2v10-xaml.js`, `.min.js` | what the XAML renders: `collection-view-server(-url)`, `data-grid`, `data-grid-column`, `a2-pager`, `textbox`, `a2-textarea`, `static`, `validator`, `a2-static-validator`, `a2-selector`, `combobox`, `a2-date-picker`, `a2-period-picker`, `a2-calendar`, `a2-panel`, `a2-taskpad`, `a2-sheet`, `a2-sheet-section`, `a2-sheet-section-tree`, `a2-blob-image`, `a2-blob-preview`, `a2-list`, `a2-color-picker`, `a2-color-combobox`, `a2-pdfreport-viewer`, `tree-grid`, `tree-view`, `a2-text-editor`, `a2-text-view`, `a2-tags`, `a2-tags-filter`, `a2-tags-list`, `popover`, `a2-span-sum`, `a2-inline-dialog`, `a2-kanban`, `a2-time-picker`, `a2-dashboard`, `a2-dashboard-item`, `a2-file-preview`, `a2-big-calendar`, `a2-multiselect`, `a2-image`, `a2-static-image`, `a2-file-image`, `a2-upload`, `a2-simple-upload`, `a2-tab-panel`, `a2-tab-item`, `mega-menu`, `data-sheet`, `data-sheet-column`, `a2-sheet-scrollbar` (§6); `v-focus`, `v-settabindex`, `v-disable`, `v-lazy`, `v-auto-size`; `app.components['control']` (the base the controls and applications extend). Grows by the pages met. | `packages/xaml/dist/` |
 
 - `.js` carries Vue's development builds (warnings, template errors as text), `.min.js` the production builds. The layout's `minify` picks one (`MainController`: `Environment.IsRelease` → `min.`).
 - `pnpm build` copies them, maps included, to `Web/A2v10.Core.Web.Site/wwwroot/scripts/vue3/` (`scripts/copy-assets.mjs`; the path is relative: A2v10.Core beside this repository).
@@ -84,8 +84,56 @@ In the client:
 - A bare `<template>` (no `v-if`/`v-else`/`v-for`/`v-slot`): Vue 2 rendered its children, Vue 3 a native, hidden `<template>`. `Container.RenderChildren` writes one around a container's children (with `v-show` when `Show`/`Hide` is set: Vue 2 dropped it, the container's own element carries it). The client's compiler keeps Vue 2's way (`compatConfig.COMPILER_NATIVE_TEMPLATE`, `packages/platform/src/compiler.ts`); not writing a wrapper that does nothing is a cleanup in Core, not a need.
 - Whitespace between elements is kept, as Vue 2 kept it (`whitespace: 'preserve'`).
 
-## 6. Open
+## 6. DataSheet: to do in Core
+
+New elements, not a port (PLAN.md, «The 1C dialect»): `DataSheet` and `DataSheetColumn` in `A2v10.Xaml`, rendered as this repository's `data-sheet` and `data-sheet-column` (`packages/xaml/src/datasheet.ts`, `cellkinds.ts`). Not `DataGrid`'s markup rendered anew: their own classes, their own properties. Seen so far on the stand only (`/stand/datasheet/index/0`, `list/0`, `part/0`, written in `test/stand/server.js` as Core is to render them).
+
+A table part, the XAML and what Core writes:
+
+```xml
+<DataSheet ItemsSource="{Bind Document.Rows}" FixedColumns="1"
+		Add="{BindCmd Append, Argument={Bind Document.Rows}}" Remove="{BindCmd RemoveSelected, Argument={Bind Document.Rows}}">
+	<DataSheetColumn Header="Товар" Content="{Bind Item}" ControlType="Selector" DisplayProperty="Name" Fetch="/catalog/item" Width="14rem"/>
+	<DataSheetColumn Header="Кількість" Content="{Bind Qty, DataType=Number}" ControlType="TextBox" Width="6rem"/>
+</DataSheet>
+```
+
+```html
+<data-sheet :items-source="Document.Rows" :fixed-columns="1"
+		:add="() => Document.Rows.$append()" :remove="() => $removeSelected(Document.Rows, null)">
+	<data-sheet-column header="Товар" content="Item" control-type="Selector" display="Name" fetch-command="/catalog/item" width="14rem"></data-sheet-column>
+	<data-sheet-column header="Кількість" content="Qty" data-type="Number" control-type="TextBox" width="6rem"></data-sheet-column>
+</data-sheet>
+```
+
+`DataSheet` (`[ContentProperty("Columns")]`), as `DataGrid` writes the same things:
+- `ItemsSource`: a binding, `:items-source` by `GetPath(context)`.
+- `FixedColumns` (Int32): `:fixed-columns`, written when not 0.
+- `Sort` (Boolean): `:sort="true"` when set, as `DataGrid`'s; its columns sort by a header's click, by the collection view that holds `ItemsSource` (no collection view: no sort).
+- `RowPicture`: a binding only, a row's property holding an icon's name; `row-picture` by the path without context (as `DataGrid`'s `Mark`); a value not bound: `XamlException`.
+- `AutoSelect` (`AutoSelectMode`): `LastItem` → `auto-select="last-item"`; `None`, `FirstItem`: nothing (the sheet always has a cursor, the first row by default); `ItemId`: `XamlException` (the sheet has none).
+- The keys of rows, `Command`s: `Open` (Enter, a double click), `Add` (Ins), `Copy` (F9), `Remove` (Del) → `:open`, `:add`, `:copy`, `:remove`, each `"() => " + GetCommand(context)`, as `DataGrid`'s `DoubleClick`. The cursor's row is the array's `$selected`: a command's argument reaches it as a toolbar's does (`{Bind Document.Rows}` with `…Selected`, `{Bind Document.Rows.$selected}`). Not bound: the key does nothing.
+- `Height`: the style, as `DataGrid`'s; `MergeAttributes` (margin, visibility, `TestId`) as `DataGrid`'s.
+- Its columns: in its body, the default slot, one `data-sheet-column` each, in order; nothing else in the body.
+
+`DataSheetColumn` (no content property: a child element is a XAML parse error, PLAN.md):
+- `Content`: a binding only; as `DataGridColumn`'s: `content` by the path without context, `data-type` (not `String`), `:hide-zeros`, `format` from the binding.
+- `Header`: `header` (localized) or `:header` bound, as `DataGridColumn`'s.
+- `Width` (`Length`): `width`. `Align` (`TextAlign`): `align`, lower case, when not `Default`.
+- `Sort` (Boolean?): `:sort` when set (the sheet's overridden); `SortProperty`: `sort-prop`, the order the server sorts by (the content's path by default); as `DataGridColumn`'s.
+- `ControlType`, an enum of its own, not `ColumnControlType`: `None` (the default: the column does not edit) | `TextBox` | `DatePicker` | `Selector` | `ComboBox` | `CheckBox`; written `control-type` by the member's name as it is, not lower-cased (`DataGridColumn` lower-cases its own): the client's kinds are keyed by these names and throw on another. A binding: not supported.
+- The editor's attributes, this list only (the client's `SheetColumn`): `DisplayProperty` → `display` (`Selector`'s name; `ComboBox`'s option name, else `$name`); `ItemsSource` → `:items-source` by `GetPath(context)`; `Fetch` → `fetch-command` (bound: `:fetch-command` by `GetPathFormat(context)`), `Delegate` → `:fetch="$delegate('…')"`, both as `Selector`'s; `ValueProperty` → `value-prop` (`ComboBox`'s by `ComboBoxItem`'s `Value`). Another attribute: not written; a column needs no more today.
+- An attribute evaluated by the sheet's render (the columns are its slot) must not make a new object each time (a literal array): it renders the sheet again without end. Bindings are stable; Core writes no literal.
+
+Only on Vue 3: rendered under another `Framework`, `XamlException` naming the element (`DataSheet is supported by the Vue 3 client only`), asked of `RenderContext` as `MergeSlot` is, never `Framework` itself.
+
+Its CSS (`packages/xaml/src/datasheet.css`): not served by Core yet, so the sheet shows unstyled there; where it goes is open (§7).
+
+Not in this requirement: the a2v10meta generator's key (`Xaml:Grid` = `DataGrid` | `DataSheet`, PLAN.md) and the selector of the 1C dialect: their wiring waits.
+
+## 7. Open
 
 - `Views/Page/ChangePassword.vue3.cshtml` does not exist; on Vue 3 ChangePassword fails (§2: no fallback). Its Vue 2 script gives the page component options of its own (`computed`, `methods`), which the descriptor of §4 has no place for. About is done: `About.vue3.cshtml` returns a plain object as its model, `locale` in it.
 - The NuGet package's assets (§1).
+- The datasheet's CSS (§6): into Core's CSS (`tabbed.css`), then every change of the sheet's look is a requirement to Core; or built here beside the scripts and copied by `pnpm build`, then Core's part is one `<link>` in `_Layout.tabbed.vue3.cshtml`.
 - An application's HTML view binding `:disabled` on an `<a>` to `false`: shown off on Vue 3, still working (§5 covers the XAML only).
