@@ -95,6 +95,9 @@ importers:
       '@a2v10/platform':
         specifier: workspace:*
         version: link:../platform
+      '@a2v10/primitives':
+        specifier: workspace:*
+        version: link:../primitives
       vue:
         specifier: 3.5.43
         version: 3.5.43(typescript@6.0.3)

@@ -40,3 +40,4 @@ import './bigcalendar.js';
 import './multiselect.js';
 import './tab.js';
 import './megamenu.js';
+import './datasheet.js';

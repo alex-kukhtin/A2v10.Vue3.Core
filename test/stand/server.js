@@ -30,6 +30,8 @@ const FILES = {
 	'/a2v10-shell-tabbed.js.map': [path.join(SHELL, 'a2v10-shell-tabbed.js.map'), 'application/json'],
 	'/a2v10-xaml.js': [path.join(XAML, 'a2v10-xaml.js'), 'text/javascript; charset=utf-8'],
 	'/a2v10-xaml.js.map': [path.join(XAML, 'a2v10-xaml.js.map'), 'application/json'],
+	// data-sheet's CSS: a file of its own until it is decided where it is included
+	'/datasheet.css': [path.join(__dirname, '../../packages/xaml/src/datasheet.css'), 'text/css; charset=utf-8'],
 	// pages as A2v10.Core sends them (MetaAppStand, seen 2026-10-25), with v-slot for slot-scope as Core is to send
 	'/_page/catalog/company/index/0': [path.join(__dirname, 'pages/catalog-company-index.html'), 'text/html; charset=utf-8'],
 	'/_dialog/catalog/company/edit/1001': [path.join(__dirname, 'pages/catalog-company-edit.html'), 'text/html; charset=utf-8'],
@@ -189,6 +191,55 @@ const WIDGET_TYPES = `		function TWidget(source, path, parent) { cmn.createObjec
 		cmn.defineObject(TRoot, {props: {'Widget':TWidget}}, false);
 		const ctors = {"TWidget":TWidget,"TRoot":TRoot};`;
 
+// data-sheet (PLAN.md, the 1C dialect): no element in Core yet, the markup written here as Core is to render it.
+// 1000 rows and more columns than the width, two fixed; the buttons move $selected from outside, as commands do.
+const SHEET_TYPES = `		function TAgent(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TAgent, {props: {'Id':Number,'Name':String}, $id: 'Id', $name: 'Name'}, false);
+		function TRow(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TRow, {props: {'Id':Number,'Code':String,'Name':String,'Date':Date,'Agent':TAgent,'Qty':Number,'Sum':Number,'Store':String,'Memo':String}, $id: 'Id', $name: 'Name'}, true);
+		function TRowArray(source, path, parent) { return cmn.createArray(source, path, TRow, TRowArray, parent); }
+		function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TRoot, {props: {'Rows':TRowArray}}, false);
+		const ctors = {"TAgent":TAgent,"TRow":TRow,"TRowArray":TRowArray,"TRoot":TRoot};`;
+
+const SHEET_AGENTS = ['ТОВ «Альфа»', 'ПП Бета', 'ФОП Гаврилюк', 'ТОВ «Дельта-Трейд»', 'АТ «Епсилон»'];
+const SHEET_STORES = ['Основний склад', 'Склад №2', 'Магазин'];
+
+function sheetHtml(url) {
+	const id = `el${crypto.randomUUID()}`;
+	const rows = Array.from({ length: 1000 }, (_, i) => ({
+		Id: i + 1, Code: `A-${String(i + 1).padStart(5, '0')}`, Name: `Товар ${i + 1}`,
+		Date: new Date(Date.UTC(2026, 0, 1 + i % 300)).toISOString().substring(0, 10) + 'T00:00:00',
+		Agent: { Id: i % 5 + 1, Name: SHEET_AGENTS[i % 5] }, Qty: (i * 7) % 50 + 1, Sum: ((i * 7919) % 100000) / 100 - 50,
+		Store: SHEET_STORES[i % 3], Memo: i % 4 ? '' : `Примітка до рядка ${i + 1}`
+	}));
+	return `<div id="${id}" class="page absolute">
+	<div style="display:grid;grid-template-rows:auto minmax(0,1fr);gap:.5rem;height:100%;padding:1rem;box-sizing:border-box">
+		<div class="toolbar">
+			<button class="btn btn-tb" @click.prevent="Rows[0].$select()"><span>First</span></button>
+			<button class="btn btn-tb" @click.prevent="Rows[Rows.length - 1].$select()"><span>Last</span></button>
+			<button class="btn btn-tb" @click.prevent="Rows.$append({Name: 'Новий'})"><span>Append</span></button>
+			<button class="btn btn-tb" @click.prevent="Rows.$selected && Rows.$selected.$remove()"><span>Remove</span></button>
+			<span style="margin-left:1rem" test-id="selected" v-text="Rows.$selected ? Rows.$selected.Code + ' ' + Rows.$selected.Name : '—'"></span>
+		</div>
+		<data-sheet :items-source="Rows" :fixed-columns="2" test-id="sheet">
+			<data-sheet-column header="#" content="Id" data-type="Number" width="4rem"></data-sheet-column>
+			<data-sheet-column header="Код" content="Code" width="7rem"></data-sheet-column>
+			<data-sheet-column header="Назва" content="Name" width="14rem"></data-sheet-column>
+			<data-sheet-column header="Дата" content="Date" data-type="Date" align="center" width="7rem"></data-sheet-column>
+			<data-sheet-column header="Контрагент" content="Agent.Name" width="14rem"></data-sheet-column>
+			<data-sheet-column header="Кількість" content="Qty" data-type="Number" width="7rem"></data-sheet-column>
+			<data-sheet-column header="Сума" content="Sum" data-type="Currency" width="9rem"></data-sheet-column>
+			<data-sheet-column header="Склад" content="Store" width="10rem"></data-sheet-column>
+			<data-sheet-column header="Примітка" content="Memo" width="18rem"></data-sheet-column>
+		</data-sheet>
+	</div>
+</div>
+<script type="text/javascript">
+${pageScript(url, { Rows: rows }, SHEET_TYPES)}
+</script>`;
+}
+
 // attachment/partial's files (/_file/attachment/upload/{id}), by the rows written in its page: 1 an image, 2 a pdf;
 // 3 (docx) has no preview and no file
 function pdfFile() {
@@ -276,6 +327,11 @@ const server = http.createServer((req, res) => {
 	if (cssType && fs.existsSync(path.join(CSS, url.substring(5)))) {
 		res.writeHead(200, { 'Content-Type': cssType });
 		fs.createReadStream(path.join(CSS, url.substring(5))).pipe(res);
+		return;
+	}
+	if (url === '/_page/stand/datasheet/index/0') {
+		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+		res.end(sheetHtml(url));
 		return;
 	}
 	// the shell's home page: a page as any other

@@ -2,32 +2,45 @@
 
 Work decided but not started. A section is done only when it says so.
 
-## The 1C dialect (decided 2026-10-25, not started)
+## The 1C dialect (decided 2026-10-25, started 2026-11-22: slice 1 of DataSheet done)
 
 Goal: an application converted from 1C (`D:\CLAUDE\from1c`: BAS Бухгалтерія КОРП 2.1, the «Такси» interface → a2v10meta `metadata.json`) behaves as its users know from 1C. The conversion is done there; this is UI only. The habits live in the table and the reference field.
 
 Decided:
-- A few controls in the current Vue 3 bundle (`packages/xaml`), ported by this repository's rules: one table, `DataSheet` (the component `data-sheet`, as `data-grid` and `tree-grid`), and two selectors. Their XAML elements in `A2v10.Xaml`; the shell is `shell-tabbed`, unchanged.
+- A few controls in the current Vue 3 bundle (`packages/xaml`), ported by this repository's rules: one table, `DataSheet` (the component `data-sheet`, as `data-grid` and `tree-grid`), and one selector. Their XAML elements in `A2v10.Xaml`; the shell is `shell-tabbed`, unchanged.
 
 `DataSheet` — named after Access's and SharePoint's datasheet view (records as cells, moved through and edited in place, Excel style); one control for lists and table parts, as in 1C: Form.xml has one `<Table>` for both (`Список` over a dynamic list, `Товары` over `Объект.Товары`); they differ by data and properties, not by type.
 - The cursor is a cell: arrows move it, the row is highlighted. A row mode is a property (1C `RowSelectionMode=Row`: 90 of 2 174 tables in BAS КОРП).
 - One row height for the whole table, as in 1C (`AutoCellHeight`: 62 fields in BAS КОРП). The scroll position, the cell under the pointer and the page size are arithmetic: row = `pos + floor((y − header) / h)`. The auto height: not now.
 - Scrolls by rows and columns, not pixels (Excel style): the wheel moves whole rows, the own scrollbar counts rows, only the visible rows render; the header and the first columns can be frozen.
-- Two modes:
-  - a table part: the cell edits in place; Enter edits / moves to the next cell; F4 choice in the cell; Ins adds a row (and a new row appears as one types past the last, 1C `AutoInsertNewRow`); F9 copies the row; Del deletes it;
-  - a list: Enter opens the object's form; Ins new, F9 copy, Del mark for deletion; typing searches by the current column.
+- The control never adds or removes rows (2026-11-22): Ins, F9, Del raise commands bound in XAML — a table part binds append / copy / remove, a list binds new / copy / mark for deletion. No `AutoInsertNewRow`.
+- The cursor's row is the array's `$selected`, both ways: the toolbar's commands read it; the model's `$append` / `$insert` select the new element, `$remove` the neighbour (`packages/model/src/model/array.ts`), so the cursor follows a command with no word from it.
+- No modes and no sheet property for them: the current cell's column decides. A column with `ControlType` (below): Enter edits / moves to the next cell, typing edits, F4 choice in the cell. Without: Enter raises the open command (as `DataGrid`'s double click), typing searches by the current column. A list is a sheet whose columns do not edit. A sheet-wide `Editable` was dropped (2026-11-22): it said what the columns say and could contradict them.
+- The column is a field, as 1C's (a Form.xml table column is the `InputField` / `CheckBoxField` itself): a binding, a type, a format, a width, a header. No content property: a child element in `DataSheetColumn` is a XAML parse error, so content in a cell cannot be written, not only should not be. The editor: `ControlType` (`TextBox` | `DatePicker` | `Selector` | `ComboBox` | `CheckBox`) and its settings as the column's attributes from an explicit list (as `DisplayProperty`); the column's one binding feeds the shown value and the editor both. No `ControlType`: the column does not edit. Weighed against the editor as a child element (2026-11-22): a child reads as the cell's content (as in `DataGridColumn`) and gives the field a second binding (`Content` shown, `Value` edited) that can part.
+- `ItemsPanel` (`SelectorSimple`'s channel grid, `LookupPanel` in `ControlsXaml.cs`) is not in a cell: an element is no attribute. The list in a cell is one line a candidate, as 1C's. Needed later: described as data (as `LookupColumns="Code,Barcode"`), the sheet builds the grid; never markup in the column.
+- The cell kinds are a layer of their own, the one place that knows the `ControlType`s: per kind, how the cell shows (the text by the format, a check box, a reference by `DisplayProperty`), its text for the search, its editor (the component, its props from the column's attributes). The sheet and the core know only that contract: a new kind or a new attribute is an entry in the layer, nothing else changes. Core's side the same: one mapping, the column's attributes → the editor's props.
+- The editor over a cell is an existing control (`textbox`, `datepicker`, `selector`, `combobox`), the cell kind's, mounted for the active row, no label. The controls write to the model themselves (`textbox` on `change`, `selector` on the choice), so the sheet writes nothing but the undo: it keeps `row[prop]` at the edit's start; Esc writes it back and unmounts; Enter / Tab blur the input first (a focused input removed from the DOM may never fire `change`), then unmount and move.
 - The row picture is a property bound to a row's property (1C `RowPictureDataPath`: `Список.DefaultPicture` 611, `Список.СостояниеДокумента` 132 in BAS КОРП); posted / not posted / marked for deletion is one use of it. Own icons: 1C's picture library is not copied.
 - The data source is the model's array either way: a list is a page of rows, the pager stands beside it (`Pager` in `FormMetadata`). No keyset: the pager is clearer. A list opens on its last page, the newest at the bottom.
 
 The core under it, in `packages/primitives`: the scroll window by rows and columns, the cursor, the keys, the edit over a cell. Written anew, not ported: `C:\A2v10_Net6\A2v10.SpreadSheet` (Vue 2) is not debugged yet and is only the model of the approach — the scroll position as a row index, the scrollbar counted in rows (`min / max / pos / page`), the frozen rows and columns, the edit over a cell. Its position math walks the rows from the scroll position (O(n) per call); the core's is arithmetic. Its data (a sparse `Cells["A1"]` map, spans, styles, a height per row) stays its own: the table is not built on the sheet through an adapter. The SpreadSheet may later sit on the same core; then the core takes a height per row too, the table keeps the arithmetic path.
 
-The selectors:
-- input by string (code, name); the choice history; «Показать все» opens the choice form;
-- F4 choose, Shift+F4 clear.
+Slices (2026-11-22):
+1. The core and a read-only sheet: the cursor, scrolled by rows and columns, the header and the fixed columns, the cursor's row as `$selected`. Done: `packages/primitives/src/sheet.ts` (exported as `a2v10.primitives`, tested by `test/core/sheet.js`), `packages/xaml/src/datasheet.ts`, `cellkinds.ts` (the text kind only), `datasheet.css`; the stand's DataSheet page (`/stand/datasheet/index/0`, written in `test/stand/server.js`: no element in Core yet).
+2. The keys of rows as commands (Enter, Ins, F9, Del), search by typing, the row picture, the pager beside.
+3. Editing: the editor over a cell, the cell kinds' editors.
 
-The requirement to Core (to CORE-VUE3.md when written): `XamlBuilder` emits the table instead of `DataGrid` in lists and instead of the standard table in table parts, and the selectors instead of the standard one, when the application asks by a key in `app.json` (next to `platformid`). A converted application gets the dialect whole, no form declared by hand.
+The selector (2026-11-22): one control, not two — the habits written for it are one reference field's. It extends `a2-selector` (`extends`), its XAML element derives from `Selector`: a selector written anew would repeat `a2-selector`'s semantics (fetch, `textItem`, `createNew`, the panes, the validation). The ported `a2-selector` stays Net48's.
+- Already in `a2-selector`: input by string, the list fetched as typed; clear (`hasClear`).
+- Added: the choice history; «Показать все» opens the choice form; F4 opens the choice form (in `a2-selector` F4 toggles the list; in 1C the list appears as one types); Shift+F4 clears.
+- Named by its behaviour, not `Selector2`: a number reads as `Selector`'s successor, and the two live side by side.
+
+New controls, not substitutes (2026-11-22): `DataSheet` and the selector are elements of their own with their own properties. Nothing takes `DataGrid`'s markup and renders it as `DataSheet`: it would have to repeat `DataGrid`'s semantics. The a2v10meta generator builds `DataSheet` from the metadata in a branch of its own, chosen by a key (as `Xaml:Grid` = `DataGrid` | `DataSheet`). The wiring waits: the control first.
+
+The requirement to Core (to CORE-VUE3.md when written): the elements `DataSheet` and the selector in `A2v10.Xaml`, rendered as their Vue 3 components; the generator's branch and its key. Rendered under a `"Framework"` other than `vue3`, an error that names the element, not an unknown tag.
 
 Open:
-- the key's name and values;
-- what the two selectors are, each;
+- the generator's key: its place (appsettings beside `Application:Framework`, or `app.json`); what it switches — the list's `DataGrid` (`ControlsXaml.cs`, `FormElementKind.DataGrid`) and the table part's `Table` both, so its value `DataGrid` means «`DataGrid` and `Table`»; not the selector's `LookupPanel`, `XamlOperationsBuilder`, the users' admin grid; whether the selector has a key too;
+- the selector's name;
+- where `datasheet.css` is included (Core's CSS, likely): a file of its own meanwhile, the stand links it, `copy-assets` does not copy it;
 - Del as mark for deletion: a state a2v10meta has, or a new platform semantic (then not a UI question).

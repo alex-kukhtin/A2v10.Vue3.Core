@@ -4,7 +4,7 @@ The A2v10 client on Vue 3: the port of Net48 `Scripts/tabmain.js` and A2v10.Core
 
 ## Where things are
 
-- `packages/model`: the data model (Net48 `services/datamodel.js`…); `platform`: the `std:*` modules, the page controller (base.js), include; `primitives`: `v-dropdown`, `v-contextmenu`; `core`: bundles them as `a2v10-core.js`; `shell-tabbed`: the tabbed shell; `xaml`: the components the XAML renders.
+- `packages/model`: the data model (Net48 `services/datamodel.js`…); `platform`: the `std:*` modules, the page controller (base.js), include; `primitives`: `v-dropdown`, `v-contextmenu`, the datasheet's core (`sheet.ts`, exported as `a2v10.primitives`); `core`: bundles them as `a2v10-core.js`; `shell-tabbed`: the tabbed shell; `xaml`: the components the XAML renders.
 - Net48 sources: `C:\A2v10_Net48\A2v10\Web\A2v10.Web.Site\app\` (`components/`, `services/`, `controllers/`); the tests find the site by `A2V10_NET48_SITE` (`.env`, template `.env.example`).
 - A2v10.Core: `C:\A2v10_Net6\A2v10.Core`; Core-only client sources in `Web/A2v10.Core.Web.Site/Scripts/`.
 - The application the pages come from: `C:\A2v10_Net6\MetaAppStand`.
