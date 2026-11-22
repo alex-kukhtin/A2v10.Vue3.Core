@@ -2,7 +2,7 @@
 
 Work decided but not started. A section is done only when it says so.
 
-## The 1C dialect (decided 2026-10-25, started 2026-11-22: slices 1 and 2 of DataSheet done)
+## The 1C dialect (decided 2026-10-25, started 2026-11-22: slices 1–3 of DataSheet done)
 
 Goal: an application converted from 1C (`D:\CLAUDE\from1c`: BAS Бухгалтерія КОРП 2.1, the «Такси» interface → a2v10meta `metadata.json`) behaves as its users know from 1C. The conversion is done there; this is UI only. The habits live in the table and the reference field.
 
@@ -28,7 +28,15 @@ The core under it, in `packages/primitives`: the scroll window by rows and colum
 Slices (2026-11-22):
 1. The core and a read-only sheet: the cursor, scrolled by rows and columns, the header and the fixed columns, the cursor's row as `$selected`. Done: `packages/primitives/src/sheet.ts` (exported as `a2v10.primitives`, tested by `test/core/sheet.js`), `packages/xaml/src/datasheet.ts`, `cellkinds.ts` (the text kind only), `datasheet.css`; the stand's DataSheet page (`/stand/datasheet/index/0`, written in `test/stand/server.js`: no element in Core yet).
 2. The keys of rows as commands, search by typing, the row picture, the pager beside. Done: the props `open` (Enter, a double click), `add` (Ins), `copy` (F9), `remove` (Del), each called with the cursor's element, `add` with none too; not bound: the key does nothing. Search: the typed prefix (pauses of 1s or less add up; `TypeAhead`, `findRow` in the core) from the cursor's row on, around, by the cursor's column's cell kind's text; shown in a badge, red when not found; Esc drops it. `row-picture`: a row's property holding an icon's name (`ico-…`), a column of its own before the fixed ones. `auto-select`: `first-item` (the default) or `last-item` (a list: the newest at the bottom); a new page of a list, no selection kept, gets it again. The last page itself is the server's (the list's `Offset`). The pager is the collection view's, beside the sheet: nothing in it. Stand: DataSheet list (`/stand/datasheet/list/0`, `collection-view-server`, `/_data/reload` by the offset).
-3. Editing: the editor over a cell, the cell kinds' editors.
+3. Editing: the editor over a cell, the cell kinds' editors. Done: `cellkinds.ts` has the kinds `TextBox` (`textbox`), `DatePicker` (`a2-date-picker`), `Selector` (`a2-selector`, `DisplayProperty` by default `Name`, as Core renders a `Selector`), `ComboBox` (`combobox`, the text an option's name by `DisplayProperty`, else `$name`; by `ValueProperty`, the option holding the value), `CheckBox` (no editor: a toggle in place, its box an icon). The column's attributes, the explicit list: `display` (`DisplayProperty`), `items-source`, `fetch`, `fetch-command`, `value-prop`; the content's path split at its last dot gives the element and the property edited.
+   - Start: Enter, a double click, a typed character (put in as typed, `execCommand('insertText')`: a value set by script raises no `change` on blur, so the textbox would not write it), F4 (the editor's choice: the selector's list, the calendar, the native select's picker).
+   - End, the value kept: Enter / Tab go on to the next editable column, then the next row's first (Shift+Tab back; at the sheet's end the cursor stays: no row added; `nextCell` in the core); focus leaving the editor, a click elsewhere in the sheet, the wheel. A click inside the editor (a calendar's day) keeps the edit: the editor's box (`tabindex=-1`) takes the focus. Enter and Esc while the selector's list is open are the selector's.
+   - Esc: unmounted, then on nextTick (after the selector's pick, which writes on nextTick) the value the edit started with written back through the setter, only if changed (no dirty). An element (a reference) is kept as its JSON: the selector merges the pick into the same element.
+   - The editor is the sheet root's child, not the view's: the view clips, the lists and the calendar hang out below.
+   - `CheckBox`: Space and a click on its box toggle; Enter goes on to the next cell.
+   - Tab outside an edit is the browser's (focus leaves the sheet).
+   - A column's props are evaluated by the sheet's render (the columns are its slot): a prop a cell reads made anew there (a literal array in `items-source`) renders the sheet again without end. A binding to the model is stable.
+   - Stand: DataSheet part (`/stand/datasheet/part/0`), a table part with every kind; the stand's colour scheme has no `--bgMenu`, so the selector's list and the calendar show transparent there (in tabbed.light not).
 
 The selector (2026-11-22): one control, not two — the habits written for it are one reference field's. It extends `a2-selector` (`extends`), its XAML element derives from `Selector`: a selector written anew would repeat `a2-selector`'s semantics (fetch, `textItem`, `createNew`, the panes, the validation). The ported `a2-selector` stays Net48's.
 - Already in `a2-selector`: input by string, the list fetched as typed; clear (`hasClear`).

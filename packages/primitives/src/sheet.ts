@@ -1,5 +1,5 @@
-// The datasheet's core (PLAN.md, "The 1C dialect"): the scroll window by rows and by columns, the cursor and its keys,
-// search by typing, the wheel. No Vue, no DOM: numbers in, numbers out. Written anew after A2v10.SpreadSheet, not ported: its position
+// The datasheet's core (PLAN.md, "The 1C dialect"): the scroll window by rows and by columns, the cursor and its keys, the
+// next cell to edit, search by typing, the wheel. No Vue, no DOM: numbers in, numbers out. Written anew after A2v10.SpreadSheet, not ported: its position
 // math walked the rows; here one row height for the whole sheet makes a row's place arithmetic.
 // Rows: `pos` is the first shown row, `page` the rows shown whole. Columns: the first `fixed` are always shown, the
 // others from `colPos` as many as the width holds; `widths` in px, one a column; `fixed` <= widths.length (the caller
@@ -155,6 +155,24 @@ export function moveCursor(key: string, ctrl: boolean, cur: Cursor, rowCount: nu
 		row: Math.min(Math.max(0, row), rowCount - 1),
 		col: Math.min(Math.max(0, col), colCount - 1)
 	};
+}
+
+// The cell an edit's Enter or Tab goes on to: the next column that `editable` lets stop at, along the row, then the
+// next row's first one; `back` (Shift+Tab): the other way. null: none (the sheet's end; the cursor stays).
+export function nextCell(cur: Cursor, back: boolean, rowCount: number, colCount: number, editable: (col: number) => boolean): Cursor | null {
+	const step = back ? -1 : 1;
+	for (let c = cur.col + step; c >= 0 && c < colCount; c += step)
+		if (editable(c))
+			return { row: cur.row, col: c };
+	const row = cur.row + step;
+	if (row < 0 || row >= rowCount)
+		return null;
+	for (let i = 0; i < colCount; i++) {
+		const c = back ? colCount - 1 - i : i;
+		if (editable(c))
+			return { row, col: c };
+	}
+	return null;
 }
 
 // --- search by typing ------------------------------------------------------------------------------------------

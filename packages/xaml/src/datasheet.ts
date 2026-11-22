@@ -7,15 +7,20 @@
 // to it (Enter and a double click `open`, Ins `add`, F9 `copy`, Del `remove`; a list binds new / copy / mark for
 // deletion, a table part append / copy / remove), each called with the cursor's element. Typing searches by the
 // cursor's column, its cell kind's text. The row picture: `row-picture`, a row's property holding an icon's name.
-// Its CSS: datasheet.css, beside. Not yet: editing.
+// Editing: a column with ControlType (cellkinds.ts). Enter, a typed character (the edit starts with it) or F4 (the
+// editor's choice) mount the kind's editor, an existing control, over the cursor's cell; the control writes to the model
+// itself, the sheet keeps the value the edit started with: Esc writes it back. Enter / Tab end the edit and go on to the
+// next editable cell (Shift+Tab back); focus leaving the editor, a click elsewhere, the wheel end it in place. A toggle
+// kind (CheckBox) edits in place: Space, a click on its icon; Enter goes on. Without ControlType: Enter opens, typing
+// searches. Its CSS: datasheet.css, beside.
 
 import { defineComponent, type PropType } from 'vue';
 import {
 	WheelSteps, TypeAhead, rowPage, clampRowPos, renderedRowCount, rowAt, fitRowPos,
-	visibleColumns, columnPage, clampColPos, columnAt, fitColPos, moveCursor, findRow
+	visibleColumns, columnPage, clampColPos, columnAt, fitColPos, moveCursor, nextCell, findRow
 } from '@a2v10/primitives';
 import { require, vocabulary } from './platform.js';
-import { kindOf, type SheetColumn } from './cellkinds.js';
+import { kindOf, targetOf, type SheetColumn, type CellTarget } from './cellkinds.js';
 
 const DEFAULT_WIDTH = '8rem';
 const PICTURE_WIDTH = '1.75rem';
@@ -105,7 +110,9 @@ vocabulary.component('a2-sheet-scrollbar', defineComponent({
 	}
 }));
 
-// --- the column: a field (PLAN.md), no content; registers with its sheet and renders nothing
+// --- the column: a field (PLAN.md), no content; registers with its sheet and renders nothing. Its props are evaluated
+// by the sheet's render (the columns are its slot): a prop a cell reads (ItemsSource) made anew there, a literal array,
+// renders the sheet again without end; a binding to the model is stable.
 vocabulary.component('data-sheet-column', defineComponent({
 	inject: { sheet: { from: 'dataSheet' } },
 	props: {
@@ -116,7 +123,12 @@ vocabulary.component('data-sheet-column', defineComponent({
 		hideZeros: Boolean,
 		align: String,
 		width: String,
-		controlType: String
+		controlType: String,
+		display: String, // DisplayProperty
+		itemsSource: Array,
+		fetch: Function,
+		fetchCommand: String,
+		valueProp: String
 	},
 	created() {
 		(this.sheet as any).$addColumn(this);
@@ -133,18 +145,21 @@ vocabulary.component('data-sheet-column', defineComponent({
 vocabulary.component('data-sheet', defineComponent({
 	template: `
 <div class="data-sheet" tabindex="0" :test-id="testId" @keydown="keydown">
-	<div class="ds-view" ref="view" @wheel.prevent="wheel" @pointerdown="pointerdown" @dblclick="dblclick">
+	<div class="ds-view" ref="view" @wheel="wheel" @pointerdown="pointerdown" @dblclick="dblclick">
 		<table class="ds-table" :style="{width: px(tableWidth)}">
 			<colgroup><col v-if="rowPicture" :style="{width: px(lead)}"/><col v-for="c in shownCols" :key="c" :style="{width: px(widths[c])}"/></colgroup>
 			<thead><tr><th v-if="rowPicture" class="ds-picture"></th><th v-for="c in shownCols" :key="c" :class="colClass(c)" v-text="columns[c].header"></th></tr></thead>
 			<tbody>
 				<tr v-for="r in shownRows" :key="r" :class="{active: r === cursorRow}">
 					<td v-if="rowPicture" class="ds-picture"><i v-if="picture(r)" :class="'ico ico-' + picture(r)"></i></td>
-					<td v-for="c in shownCols" :key="c" :class="cellClass(r, c)" v-text="cellText(r, c)"></td>
+					<td v-for="c in shownCols" :key="c" :class="cellClass(r, c)"><i v-if="cellIcon(r, c)" class="ds-icon" :class="cellIcon(r, c)"></i>{{cellText(r, c)}}</td>
 				</tr>
 			</tbody>
 		</table>
 		<div class="ds-search" v-if="search.text" :class="{fail: search.fail}" v-text="search.text"></div>
+	</div>
+	<div class="ds-editor" v-if="editing" ref="editor" tabindex="-1" :style="editorStyle" @keydown="editorKeydown" @focusout="editorFocusout">
+		<component :is="editing.tag" v-bind="editing.props" ref="editorVm"></component>
 	</div>
 	<a2-sheet-scrollbar class="ds-vscroll" :min="0" :max="rowCount" :page="page" :pos="pos" @update:pos="setPos"/>
 	<a2-sheet-scrollbar class="ds-hscroll" :horz="true" :min="fixed" :max="columns.length" :page="colPage" :pos="colPos" @update:pos="setColPos"/>
@@ -176,7 +191,9 @@ vocabulary.component('data-sheet', defineComponent({
 			rowHeight: 0,
 			rem: 16,
 			em: 16,
-			search: { text: '', fail: false }
+			search: { text: '', fail: false },
+			// the edit: the cell, its kind's editor (tag, props); the value it started with is _undo's, not reactive
+			editing: null as null | { row: number, col: number, tag: string, props: Record<string, unknown> }
 		};
 	},
 	computed: {
@@ -219,6 +236,22 @@ vocabulary.component('data-sheet', defineComponent({
 		},
 		tableWidth(): number {
 			return this.shownCols.reduce((w: number, c: number) => w + this.widths[c], this.lead);
+		},
+		// over the edited cell, in the view's coordinates: the editor is the root's child, the view clips (its lists)
+		editorStyle(): Record<string, string> {
+			const e = this.editing;
+			if (!e)
+				return {};
+			let left = this.lead;
+			for (const c of this.shownCols) {
+				if (c === e.col)
+					break;
+				left += this.widths[c];
+			}
+			return {
+				left: px(left), top: px(this.headerHeight + (e.row - this.pos) * this.rowHeight),
+				width: px(this.widths[e.col]), height: px(this.rowHeight)
+			};
 		}
 	},
 	watch: {
@@ -272,6 +305,122 @@ vocabulary.component('data-sheet', defineComponent({
 		cellText(r: number, c: number): string {
 			const col = this.column(c);
 			return kindOf(col).text(this.items[r], col);
+		},
+		cellIcon(r: number, c: number): string {
+			const col = this.column(c);
+			return kindOf(col).icon?.(this.items[r], col) || '';
+		},
+		editable(c: number): boolean {
+			const kind = kindOf(this.column(c));
+			return !!(kind.editor || kind.toggle);
+		},
+		// Starts the edit of the cursor's cell: `ch` typed (it replaces the value), `open` the editor's choice (F4).
+		// False: the column does not edit.
+		startEdit(ch?: string, open?: boolean): boolean {
+			const row = this.cursorRow;
+			const col = this.column(this.col);
+			const ed = col && kindOf(col).editor;
+			const t = ed && row >= 0 ? targetOf(this.items[row], col) : null;
+			if (!ed || !t)
+				return false;
+			this.clearSearch();
+			const old = t.item[t.prop];
+			(this as any)._undo = { t, old, json: require('std:utils').toJson(old) };
+			this.editing = { row, col: this.col, tag: ed.tag, props: ed.props(t, col) };
+			this.$nextTick(() => {
+				const box = this.$refs.editor as HTMLElement | undefined;
+				if (!box)
+					return;
+				const input = box.querySelector('input, select, textarea') as HTMLInputElement | null;
+				(input || box).focus();
+				if (open)
+					ed.open?.(this.$refs.editorVm);
+				else if (ch && input?.tagName === 'INPUT')
+					setTimeout(() => { // after v-focus selects the value (focus.ts), or the next key would replace the character
+						if (!input.isConnected)
+							return;
+						input.select();
+						// typed, not set: a value set by script raises no change on blur (the textbox writes on change)
+						document.execCommand('insertText', false, ch);
+					});
+			});
+			return true;
+		},
+		// Ends the edit, its value kept: the input blurred while still mounted, so that its change writes. `move`: on
+		// to the next editable cell (back: Shift+Tab); `refocus`: the sheet takes the focus (not when it went elsewhere).
+		endEdit(move: 'next' | 'back' | null, refocus: boolean) {
+			const e = this.editing;
+			if (!e)
+				return;
+			const box = this.$refs.editor as HTMLElement | undefined;
+			const active = document.activeElement as HTMLElement | null;
+			this.editing = null; // first: the focusout the blur raises finds no edit
+			if (refocus)
+				(this.$el as HTMLElement).focus();
+			else if (box && active && box.contains(active))
+				active.blur();
+			if (move)
+				this.goNext(move === 'back', e);
+		},
+		// Esc: the editor unmounted, the value the edit started with written back, after the editor's last write (the
+		// selector's pick writes on nextTick). An element (a reference) is merged into in place: its copy is written.
+		cancelEdit() {
+			if (!this.editing)
+				return;
+			const u = (this as any)._undo as { t: CellTarget, old: any, json: string };
+			this.editing = null;
+			(this.$el as HTMLElement).focus();
+			this.$nextTick(() => {
+				const utils = require('std:utils');
+				const cur = u.t.item[u.t.prop];
+				if (utils.toJson(cur) === u.json)
+					return; // unchanged: not written, not dirty
+				u.t.item[u.t.prop] = cur && cur.$merge ? JSON.parse(u.json) : u.old;
+			});
+		},
+		goNext(back: boolean, from?: { row: number, col: number }): boolean {
+			const to = nextCell(from || { row: this.cursorRow, col: this.col }, back, this.rowCount, this.columns.length, (c: number) => this.editable(c));
+			if (to) {
+				this.select(to.row);
+				this.col = to.col;
+			}
+			return true;
+		},
+		toggle(r: number, c: number): boolean {
+			const t = targetOf(this.items[r], this.column(c));
+			if (t)
+				t.item[t.prop] = !t.item[t.prop];
+			return true;
+		},
+		// The keys of a column that edits: Enter edits (a toggle: goes on), F4 the editor's choice, Space toggles.
+		cellKey(key: string): boolean {
+			if (this.cursorRow < 0 || !this.columns.length)
+				return false;
+			const kind = kindOf(this.column(this.col));
+			switch (key) {
+				case 'Enter': return kind.editor ? this.startEdit() : !!kind.toggle && this.goNext(false);
+				case 'F4': return this.startEdit(undefined, true);
+				case ' ': return !!kind.toggle && this.toggle(this.cursorRow, this.col);
+			}
+			return false;
+		},
+		editorKeydown(ev: KeyboardEvent) {
+			if (ev.defaultPrevented) // the editor's own (a list's Esc)
+				return;
+			switch (ev.key) {
+				case 'Enter': this.endEdit('next', true); break;
+				case 'Tab': this.endEdit(ev.shiftKey ? 'back' : 'next', true); break;
+				case 'Escape': this.cancelEdit(); break;
+				default: return;
+			}
+			ev.preventDefault();
+			ev.stopPropagation(); // the edit's, not the dialog's
+		},
+		editorFocusout(ev: FocusEvent) {
+			const to = ev.relatedTarget as Node | null;
+			if (to && (this.$refs.editor as HTMLElement | undefined)?.contains(to))
+				return; // within: a click on a calendar's day focuses the editor's box
+			this.endEdit(null, false);
 		},
 		select(row: number) {
 			const elem = this.items[row];
@@ -332,6 +481,10 @@ vocabulary.component('data-sheet', defineComponent({
 			if (ev.target !== this.$el || ev.altKey)
 				return;
 			const ctrl = ev.ctrlKey || ev.metaKey;
+			if (!ctrl && !ev.shiftKey && this.cellKey(ev.key)) {
+				ev.preventDefault();
+				return;
+			}
 			const name = !ctrl && !ev.shiftKey ? ROW_KEYS[ev.key] : undefined;
 			if (name) {
 				this.clearSearch();
@@ -347,7 +500,8 @@ vocabulary.component('data-sheet', defineComponent({
 			}
 			if (ev.key.length === 1 && !ctrl) {
 				ev.preventDefault();
-				this.typeSearch(ev.key);
+				if (!this.startEdit(ev.key))
+					this.typeSearch(ev.key);
 				return;
 			}
 			const cur = { row: Math.max(0, this.cursorRow), col: this.col };
@@ -361,6 +515,8 @@ vocabulary.component('data-sheet', defineComponent({
 		},
 		wheel(ev: WheelEvent) {
 			const self = this as any;
+			ev.preventDefault();
+			this.endEdit(null, true);
 			const horz = ev.shiftKey || Math.abs(ev.deltaX) > Math.abs(ev.deltaY);
 			if (horz) {
 				const delta = ev.shiftKey && !ev.deltaX ? ev.deltaY : ev.deltaX;
@@ -376,16 +532,26 @@ vocabulary.component('data-sheet', defineComponent({
 		pointerdown(ev: PointerEvent) {
 			if (ev.button !== 0)
 				return;
+			this.endEdit(null, false); // the click focuses the sheet itself
 			const { row, col } = this.cellAt(ev);
 			if (row < 0)
 				return;
 			this.clearSearch();
 			this.select(row);
-			if (col >= 0)
-				this.col = col;
+			if (col < 0)
+				return;
+			this.col = col;
+			if ((ev.target as Element).closest('.ds-icon') && kindOf(this.column(col)).toggle)
+				this.toggle(row, col);
 		},
+		// A column that edits: its edit (a toggle: none, its clicks toggled); else the open command.
 		dblclick(ev: MouseEvent) {
-			if (this.cellAt(ev).row >= 0)
+			const { row, col } = this.cellAt(ev);
+			if (row < 0)
+				return;
+			if (col >= 0 && this.editable(col))
+				this.startEdit();
+			else
 				this.command('open');
 		},
 		// The cell under the pointer; col -1 on the row picture (its row still found) or past the columns.

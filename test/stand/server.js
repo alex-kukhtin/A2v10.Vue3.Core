@@ -289,6 +289,59 @@ ${pageScript(url, docPage(lastPage), DOC_TYPES)}
 </script>`;
 }
 
+// data-sheet as a table part (slice 3): columns with ControlType, edited in their cells; Ins / F9 / Del bound to
+// append / copy / remove, as a document's rows are. A column's ItemsSource is the model's: a literal array in the
+// markup is made anew by each render of the sheet (the columns are its slot) and renders it again, without end. The selected row's values below show what the editors wrote.
+const PART_TYPES = `		function TItem(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TItem, {props: {'Id':Number,'Name':String}, $id: 'Id', $name: 'Name'}, true);
+		function TItemArray(source, path, parent) { return cmn.createArray(source, path, TItem, TItemArray, parent); }
+		function TUnit(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TUnit, {props: {'Id':Number,'Name':String}, $id: 'Id', $name: 'Name'}, true);
+		function TUnitArray(source, path, parent) { return cmn.createArray(source, path, TUnit, TUnitArray, parent); }
+		function TKind(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TKind, {props: {'Code':String,'Name':String}, $id: 'Code', $name: 'Name'}, true);
+		function TKindArray(source, path, parent) { return cmn.createArray(source, path, TKind, TKindArray, parent); }
+		function TRow(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TRow, {props: {'Id':Number,'Item':TItem,'Date':Date,'Qty':Number,'Price':Number,'Unit':TUnit,'Kind':String,'Memo':String,'Done':Boolean}, $id: 'Id'}, true);
+		function TRowArray(source, path, parent) { return cmn.createArray(source, path, TRow, TRowArray, parent); }
+		function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TRoot, {props: {'Rows':TRowArray,'Items':TItemArray,'Units':TUnitArray,'Kinds':TKindArray}}, false);
+		const ctors = {"TItem":TItem,"TItemArray":TItemArray,"TUnit":TUnit,"TUnitArray":TUnitArray,"TKind":TKind,"TKindArray":TKindArray,"TRow":TRow,"TRowArray":TRowArray,"TRoot":TRoot};`;
+
+const PART_ITEMS = ['Цвях 100мм', 'Шуруп 4х40', 'Дюбель 6мм', 'Клей ПВА', 'Фарба біла', 'Пензель 50мм', 'Скотч малярний'];
+const PART_UNITS = [{ Id: 1, Name: 'шт' }, { Id: 2, Name: 'кг' }, { Id: 3, Name: 'уп' }];
+const PART_KINDS = [{ Code: 'G', Name: 'Товар' }, { Code: 'S', Name: 'Послуга' }];
+
+function sheetPartHtml(url) {
+	const id = `el${crypto.randomUUID()}`;
+	const items = PART_ITEMS.map((Name, i) => ({ Id: i + 1, Name }));
+	const rows = Array.from({ length: 12 }, (_, i) => ({
+		Id: i + 1, Item: items[i % items.length], Date: new Date(Date.UTC(2026, 10, 1 + i)).toISOString().substring(0, 10) + 'T00:00:00',
+		Qty: i + 1, Price: 10 + i * 2.5, Unit: PART_UNITS[i % 3], Kind: i % 4 ? 'G' : 'S', Memo: '', Done: i % 3 === 0
+	}));
+	return `<div id="${id}" class="page absolute">
+	<div style="display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5rem;height:100%;padding:1rem;box-sizing:border-box">
+		<data-sheet :items-source="Rows" :fixed-columns="1" test-id="part"
+			:add="() => Rows.$append({Qty: 1})" :copy="(e) => Rows.$append({Item: e.Item, Qty: e.Qty, Price: e.Price, Unit: e.Unit, Kind: e.Kind})"
+			:remove="(e) => e.$remove()">
+			<data-sheet-column header="#" content="Id" data-type="Number" width="3rem"></data-sheet-column>
+			<data-sheet-column header="Товар" content="Item" control-type="Selector" display="Name" :items-source="Items" width="14rem"></data-sheet-column>
+			<data-sheet-column header="Дата" content="Date" data-type="Date" control-type="DatePicker" width="8rem"></data-sheet-column>
+			<data-sheet-column header="Кількість" content="Qty" data-type="Number" control-type="TextBox" width="6rem"></data-sheet-column>
+			<data-sheet-column header="Ціна" content="Price" data-type="Currency" control-type="TextBox" width="7rem"></data-sheet-column>
+			<data-sheet-column header="Од." content="Unit" control-type="ComboBox" :items-source="Units" width="5rem"></data-sheet-column>
+			<data-sheet-column header="Вид" content="Kind" control-type="ComboBox" :items-source="Kinds" display="Name" value-prop="Code" width="7rem"></data-sheet-column>
+			<data-sheet-column header="Примітка" content="Memo" control-type="TextBox" width="14rem"></data-sheet-column>
+			<data-sheet-column header="✓" content="Done" control-type="CheckBox" width="3rem"></data-sheet-column>
+		</data-sheet>
+		<div test-id="row" style="font-size:.85rem" v-text="Rows.$selected ? [Rows.$selected.Item.Name, Rows.$selected.Date.toLocaleDateString(), Rows.$selected.Qty, Rows.$selected.Price, Rows.$selected.Unit.Name, Rows.$selected.Kind, Rows.$selected.Memo, Rows.$selected.Done].join(' | ') : '—'"></div>
+	</div>
+</div>
+<script type="text/javascript">
+${pageScript(url, { Rows: rows, Items: items, Units: PART_UNITS, Kinds: PART_KINDS }, PART_TYPES)}
+</script>`;
+}
+
 // attachment/partial's files (/_file/attachment/upload/{id}), by the rows written in its page: 1 an image, 2 a pdf;
 // 3 (docx) has no preview and no file
 function pdfFile() {
@@ -381,6 +434,11 @@ const server = http.createServer((req, res) => {
 	if (url === '/_page/stand/datasheet/index/0') {
 		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
 		res.end(sheetHtml(url));
+		return;
+	}
+	if (url === '/_page/stand/datasheet/part/0') {
+		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+		res.end(sheetPartHtml(url));
 		return;
 	}
 	if (url === '/_page/stand/datasheet/list/0') {

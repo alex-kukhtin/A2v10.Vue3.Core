@@ -91,6 +91,23 @@ assert.strictEqual(s.moveCursor('Enter', false, at(0, 0), 100, 5, 10), null, 'no
 assert.strictEqual(s.moveCursor('ArrowDown', false, at(0, 0), 0, 5, 10), null, 'no rows');
 assert.strictEqual(s.moveCursor('ArrowDown', false, at(0, 0), 100, 0, 10), null, 'no columns');
 
+// the next cell to edit: 3 rows, 5 columns, the 0th and 3rd not editable
+const ed = c => c !== 0 && c !== 3;
+const next = (cur, back) => plain(s.nextCell(cur, back, 3, 5, ed));
+assert.deepStrictEqual(next(at(0, 1), false), at(0, 2));
+assert.deepStrictEqual(next(at(0, 2), false), at(0, 4), 'not editable: passed');
+assert.deepStrictEqual(next(at(0, 4), false), at(1, 1), 'the row\'s end: the next row\'s first');
+assert.deepStrictEqual(next(at(0, 0), false), at(0, 1), 'from a column not editable');
+assert.strictEqual(s.nextCell(at(2, 4), false, 3, 5, ed), null, 'the sheet\'s end');
+assert.deepStrictEqual(next(at(1, 4), true), at(1, 2), 'back');
+assert.deepStrictEqual(next(at(1, 1), true), at(0, 4), 'back: the row\'s start, the previous row\'s last');
+assert.strictEqual(s.nextCell(at(0, 1), true, 3, 5, ed), null, 'back: the sheet\'s start');
+assert.strictEqual(s.nextCell(at(0, 1), false, 3, 5, () => false), null, 'none editable');
+assert.strictEqual(s.nextCell(at(0, 0), false, 1, 1, () => true), null, 'one cell');
+assert.deepStrictEqual(plain(s.nextCell(at(1, 2), true, 3, 5, c => c !== 1)), at(1, 0), 'back: to the 0th column');
+assert.deepStrictEqual(plain(s.nextCell(at(1, 2), true, 3, 5, c => c === 2)), at(0, 2), 'back: the previous row\'s last editable');
+assert.strictEqual(s.nextCell(at(0, 4), false, 2, 5, c => c > 4), null, 'asked of the columns only');
+
 // search by typing: a pause of 1000ms or less adds up
 const ta = new s.TypeAhead(1000);
 assert.strictEqual(ta.push('a', 0), 'a');
