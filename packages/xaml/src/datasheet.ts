@@ -3,18 +3,28 @@
 // and columns, only the shown ones rendered; the header and the first `fixed-columns` always shown. The positions are
 // the core's arithmetic (@a2v10/primitives, sheet.ts); what a cell shows is its kind's (cellkinds.ts).
 // The cursor's row IS the array's $selected: moving the cursor selects, a selection made elsewhere (a command's
-// $append, $remove) moves the cursor. The sheet never adds or removes rows. Its CSS: datasheet.css, beside.
-// Not yet: editing, the keys of rows (Ins, F9, Del, Enter), search by typing, the row picture.
+// $append, $remove) moves the cursor. The sheet never adds or removes rows: the keys of rows raise the commands bound
+// to it (Enter and a double click `open`, Ins `add`, F9 `copy`, Del `remove`; a list binds new / copy / mark for
+// deletion, a table part append / copy / remove), each called with the cursor's element. Typing searches by the
+// cursor's column, its cell kind's text. The row picture: `row-picture`, a row's property holding an icon's name.
+// Its CSS: datasheet.css, beside. Not yet: editing.
 
 import { defineComponent, type PropType } from 'vue';
 import {
-	WheelSteps, rowPage, clampRowPos, renderedRowCount, rowAt, fitRowPos,
-	visibleColumns, columnPage, clampColPos, columnAt, fitColPos, moveCursor
+	WheelSteps, TypeAhead, rowPage, clampRowPos, renderedRowCount, rowAt, fitRowPos,
+	visibleColumns, columnPage, clampColPos, columnAt, fitColPos, moveCursor, findRow
 } from '@a2v10/primitives';
-import { vocabulary } from './platform.js';
+import { require, vocabulary } from './platform.js';
 import { kindOf, type SheetColumn } from './cellkinds.js';
 
 const DEFAULT_WIDTH = '8rem';
+const PICTURE_WIDTH = '1.75rem';
+const SEARCH_PAUSE = 1000; // ms: typing adds up to one prefix; its badge shown as long
+
+// The keys of rows (no Ctrl, no Shift): the command each raises, a prop of the sheet.
+const ROW_KEYS: Record<string, 'open' | 'add' | 'copy' | 'remove'> = {
+	Enter: 'open', Insert: 'add', F9: 'copy', Delete: 'remove'
+};
 
 // A column's width in px: the core counts in px. px, rem, em, or a bare number (px); anything else is the default.
 function toPx(width: string | undefined, rem: number, em: number): number {
@@ -123,16 +133,18 @@ vocabulary.component('data-sheet-column', defineComponent({
 vocabulary.component('data-sheet', defineComponent({
 	template: `
 <div class="data-sheet" tabindex="0" :test-id="testId" @keydown="keydown">
-	<div class="ds-view" ref="view" @wheel.prevent="wheel" @pointerdown="pointerdown">
+	<div class="ds-view" ref="view" @wheel.prevent="wheel" @pointerdown="pointerdown" @dblclick="dblclick">
 		<table class="ds-table" :style="{width: px(tableWidth)}">
-			<colgroup><col v-for="c in shownCols" :key="c" :style="{width: px(widths[c])}"/></colgroup>
-			<thead><tr><th v-for="c in shownCols" :key="c" :class="colClass(c)" v-text="columns[c].header"></th></tr></thead>
+			<colgroup><col v-if="rowPicture" :style="{width: px(lead)}"/><col v-for="c in shownCols" :key="c" :style="{width: px(widths[c])}"/></colgroup>
+			<thead><tr><th v-if="rowPicture" class="ds-picture"></th><th v-for="c in shownCols" :key="c" :class="colClass(c)" v-text="columns[c].header"></th></tr></thead>
 			<tbody>
 				<tr v-for="r in shownRows" :key="r" :class="{active: r === cursorRow}">
+					<td v-if="rowPicture" class="ds-picture"><i v-if="picture(r)" :class="'ico ico-' + picture(r)"></i></td>
 					<td v-for="c in shownCols" :key="c" :class="cellClass(r, c)" v-text="cellText(r, c)"></td>
 				</tr>
 			</tbody>
 		</table>
+		<div class="ds-search" v-if="search.text" :class="{fail: search.fail}" v-text="search.text"></div>
 	</div>
 	<a2-sheet-scrollbar class="ds-vscroll" :min="0" :max="rowCount" :page="page" :pos="pos" @update:pos="setPos"/>
 	<a2-sheet-scrollbar class="ds-hscroll" :horz="true" :min="fixed" :max="columns.length" :page="colPage" :pos="colPos" @update:pos="setColPos"/>
@@ -141,6 +153,12 @@ vocabulary.component('data-sheet', defineComponent({
 	props: {
 		itemsSource: Array as PropType<any[]>,
 		fixedColumns: { type: Number, default: 0 },
+		rowPicture: String,
+		autoSelect: { type: String, default: 'first-item' }, // 'last-item': a list, the newest at the bottom
+		open: Function,
+		add: Function,
+		copy: Function,
+		remove: Function,
 		testId: String
 	},
 	provide() {
@@ -157,7 +175,8 @@ vocabulary.component('data-sheet', defineComponent({
 			headerHeight: 0,
 			rowHeight: 0,
 			rem: 16,
-			em: 16
+			em: 16,
+			search: { text: '', fail: false }
 		};
 	},
 	computed: {
@@ -184,9 +203,13 @@ vocabulary.component('data-sheet', defineComponent({
 		fixed(): number {
 			return Math.min(Math.max(0, this.fixedColumns), this.columns.length);
 		},
+		// the row picture's column, before the fixed ones: the core counts the columns' width without it
+		lead(): number {
+			return this.rowPicture ? toPx(PICTURE_WIDTH, this.rem, this.em) : 0;
+		},
 		// not measured yet: every column, so that a row has cells to measure
 		width(): number {
-			return this.viewWidth || Number.MAX_SAFE_INTEGER;
+			return this.viewWidth ? this.viewWidth - this.lead : Number.MAX_SAFE_INTEGER;
 		},
 		shownCols(): number[] {
 			return visibleColumns(this.widths, this.fixed, this.colPos, this.width);
@@ -195,23 +218,26 @@ vocabulary.component('data-sheet', defineComponent({
 			return columnPage(this.widths, this.fixed, this.colPos, this.width);
 		},
 		tableWidth(): number {
-			return this.shownCols.reduce((w: number, c: number) => w + this.widths[c], 0);
+			return this.shownCols.reduce((w: number, c: number) => w + this.widths[c], this.lead);
 		}
 	},
 	watch: {
 		itemsSource() {
-			this.autoSelect();
+			this.selectStart();
 		},
+		// a new page of a list keeps no selection: the cursor goes to the start again
 		cursorRow(row: number) {
 			if (row >= 0)
 				this.pos = fitRowPos(row, this.pos, this.page, this.rowCount);
+			else
+				this.selectStart();
 		},
 		page() {
 			this.fitRows();
 		},
 		rowCount() {
 			this.fitRows();
-			this.autoSelect();
+			this.selectStart();
 		},
 		col(c: number) {
 			this.colPos = fitColPos(c, this.colPos, this.widths, this.fixed, this.width);
@@ -252,9 +278,44 @@ vocabulary.component('data-sheet', defineComponent({
 			if (elem && elem.$select && row !== this.cursorRow)
 				elem.$select();
 		},
-		autoSelect() {
+		selectStart() {
 			if (this.rowCount && this.cursorRow < 0)
-				this.select(0);
+				this.select(this.autoSelect === 'last-item' ? this.rowCount - 1 : 0);
+		},
+		picture(r: number): string {
+			return require('std:utils').eval(this.items[r], this.rowPicture, undefined, undefined, true /*skip format*/) || '';
+		},
+		// A key of rows: the bound command with the cursor's element; `add` with none too (an empty table). False: not bound.
+		command(name: 'open' | 'add' | 'copy' | 'remove'): boolean {
+			const fn = this[name] as ((elem: unknown) => void) | undefined;
+			if (typeof fn !== 'function')
+				return false;
+			const elem = this.cursorRow >= 0 ? this.items[this.cursorRow] : undefined;
+			if (!elem && name !== 'add')
+				return false;
+			fn(elem);
+			return true;
+		},
+		typeSearch(ch: string) {
+			const self = this as any;
+			const col = this.column(this.col);
+			if (!col)
+				return;
+			const kind = kindOf(col);
+			const prefix = self._typeAhead.push(ch, performance.now());
+			const row = findRow(this.rowCount, Math.max(0, this.cursorRow), prefix, (r: number) => kind.text(this.items[r], col));
+			this.search.text = prefix;
+			this.search.fail = row < 0;
+			if (row >= 0)
+				this.select(row);
+			clearTimeout(self._searchTimer);
+			self._searchTimer = setTimeout(() => this.search.text = '', SEARCH_PAUSE);
+		},
+		clearSearch() {
+			const self = this as any;
+			self._typeAhead.clear();
+			clearTimeout(self._searchTimer);
+			this.search.text = '';
 		},
 		fitRows() {
 			this.pos = this.cursorRow >= 0
@@ -270,11 +331,31 @@ vocabulary.component('data-sheet', defineComponent({
 		keydown(ev: KeyboardEvent) {
 			if (ev.target !== this.$el || ev.altKey)
 				return;
+			const ctrl = ev.ctrlKey || ev.metaKey;
+			const name = !ctrl && !ev.shiftKey ? ROW_KEYS[ev.key] : undefined;
+			if (name) {
+				this.clearSearch();
+				if (this.command(name))
+					ev.preventDefault();
+				return;
+			}
+			if (ev.key === 'Escape' && this.search.text) {
+				ev.preventDefault();
+				ev.stopPropagation(); // the search's, not the dialog's
+				this.clearSearch();
+				return;
+			}
+			if (ev.key.length === 1 && !ctrl) {
+				ev.preventDefault();
+				this.typeSearch(ev.key);
+				return;
+			}
 			const cur = { row: Math.max(0, this.cursorRow), col: this.col };
-			const to = moveCursor(ev.key, ev.ctrlKey || ev.metaKey, cur, this.rowCount, this.columns.length, this.page);
+			const to = moveCursor(ev.key, ctrl, cur, this.rowCount, this.columns.length, this.page);
 			if (!to)
 				return;
 			ev.preventDefault();
+			this.clearSearch();
 			this.select(to.row);
 			this.col = to.col;
 		},
@@ -295,13 +376,26 @@ vocabulary.component('data-sheet', defineComponent({
 		pointerdown(ev: PointerEvent) {
 			if (ev.button !== 0)
 				return;
-			const r = (this.$refs.view as HTMLElement).getBoundingClientRect();
-			const row = rowAt(ev.clientY - r.top, this.pos, this.headerHeight, this.rowHeight, this.rowCount);
-			const col = columnAt(ev.clientX - r.left, this.widths, this.fixed, this.colPos, this.width);
-			if (row < 0 || col < 0)
+			const { row, col } = this.cellAt(ev);
+			if (row < 0)
 				return;
+			this.clearSearch();
 			this.select(row);
-			this.col = col;
+			if (col >= 0)
+				this.col = col;
+		},
+		dblclick(ev: MouseEvent) {
+			if (this.cellAt(ev).row >= 0)
+				this.command('open');
+		},
+		// The cell under the pointer; col -1 on the row picture (its row still found) or past the columns.
+		cellAt(ev: MouseEvent): { row: number, col: number } {
+			const r = (this.$refs.view as HTMLElement).getBoundingClientRect();
+			const x = ev.clientX - r.left - this.lead;
+			return {
+				row: rowAt(ev.clientY - r.top, this.pos, this.headerHeight, this.rowHeight, this.rowCount),
+				col: x < 0 ? -1 : columnAt(x, this.widths, this.fixed, this.colPos, this.width)
+			};
 		},
 		// The sizes the core counts with, read from the DOM: the view's, the header's and a row's (one for all).
 		measure() {
@@ -323,10 +417,11 @@ vocabulary.component('data-sheet', defineComponent({
 		const self = this as any;
 		self._wheelV = new WheelSteps();
 		self._wheelH = new WheelSteps();
+		self._typeAhead = new TypeAhead(SEARCH_PAUSE);
 	},
 	mounted() {
 		this.colPos = this.fixed;
-		this.autoSelect();
+		this.selectStart();
 		const self = this as any;
 		self._resize = new ResizeObserver(() => this.measure());
 		self._resize.observe(this.$refs.view);
@@ -338,6 +433,8 @@ vocabulary.component('data-sheet', defineComponent({
 			this.measure();
 	},
 	beforeUnmount() {
-		(this as any)._resize?.disconnect();
+		const self = this as any;
+		self._resize?.disconnect();
+		clearTimeout(self._searchTimer);
 	}
 }));

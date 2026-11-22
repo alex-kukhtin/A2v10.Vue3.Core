@@ -2,7 +2,7 @@
 
 Work decided but not started. A section is done only when it says so.
 
-## The 1C dialect (decided 2026-10-25, started 2026-11-22: slice 1 of DataSheet done)
+## The 1C dialect (decided 2026-10-25, started 2026-11-22: slices 1 and 2 of DataSheet done)
 
 Goal: an application converted from 1C (`D:\CLAUDE\from1c`: BAS Бухгалтерія КОРП 2.1, the «Такси» interface → a2v10meta `metadata.json`) behaves as its users know from 1C. The conversion is done there; this is UI only. The habits live in the table and the reference field.
 
@@ -27,7 +27,7 @@ The core under it, in `packages/primitives`: the scroll window by rows and colum
 
 Slices (2026-11-22):
 1. The core and a read-only sheet: the cursor, scrolled by rows and columns, the header and the fixed columns, the cursor's row as `$selected`. Done: `packages/primitives/src/sheet.ts` (exported as `a2v10.primitives`, tested by `test/core/sheet.js`), `packages/xaml/src/datasheet.ts`, `cellkinds.ts` (the text kind only), `datasheet.css`; the stand's DataSheet page (`/stand/datasheet/index/0`, written in `test/stand/server.js`: no element in Core yet).
-2. The keys of rows as commands (Enter, Ins, F9, Del), search by typing, the row picture, the pager beside.
+2. The keys of rows as commands, search by typing, the row picture, the pager beside. Done: the props `open` (Enter, a double click), `add` (Ins), `copy` (F9), `remove` (Del), each called with the cursor's element, `add` with none too; not bound: the key does nothing. Search: the typed prefix (pauses of 1s or less add up; `TypeAhead`, `findRow` in the core) from the cursor's row on, around, by the cursor's column's cell kind's text; shown in a badge, red when not found; Esc drops it. `row-picture`: a row's property holding an icon's name (`ico-…`), a column of its own before the fixed ones. `auto-select`: `first-item` (the default) or `last-item` (a list: the newest at the bottom); a new page of a list, no selection kept, gets it again. The last page itself is the server's (the list's `Offset`). The pager is the collection view's, beside the sheet: nothing in it. Stand: DataSheet list (`/stand/datasheet/list/0`, `collection-view-server`, `/_data/reload` by the offset).
 3. Editing: the editor over a cell, the cell kinds' editors.
 
 The selector (2026-11-22): one control, not two — the habits written for it are one reference field's. It extends `a2-selector` (`extends`), its XAML element derives from `Selector`: a selector written anew would repeat `a2-selector`'s semantics (fetch, `textItem`, `createNew`, the panes, the validation). The ported `a2-selector` stays Net48's.

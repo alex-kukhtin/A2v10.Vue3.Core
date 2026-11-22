@@ -1,5 +1,5 @@
 // The datasheet's core (PLAN.md, "The 1C dialect"): the scroll window by rows and by columns, the cursor and its keys,
-// the wheel. No Vue, no DOM: numbers in, numbers out. Written anew after A2v10.SpreadSheet, not ported: its position
+// search by typing, the wheel. No Vue, no DOM: numbers in, numbers out. Written anew after A2v10.SpreadSheet, not ported: its position
 // math walked the rows; here one row height for the whole sheet makes a row's place arithmetic.
 // Rows: `pos` is the first shown row, `page` the rows shown whole. Columns: the first `fixed` are always shown, the
 // others from `colPos` as many as the width holds; `widths` in px, one a column; `fixed` <= widths.length (the caller
@@ -155,6 +155,41 @@ export function moveCursor(key: string, ctrl: boolean, cur: Cursor, rowCount: nu
 		row: Math.min(Math.max(0, row), rowCount - 1),
 		col: Math.min(Math.max(0, col), colCount - 1)
 	};
+}
+
+// --- search by typing ------------------------------------------------------------------------------------------
+
+// What one types into the sheet, as a prefix: characters typed with pauses of `pause` ms or less add up, a longer
+// pause starts a new prefix. `now` in ms, the caller's clock.
+export class TypeAhead {
+	private text = '';
+	private last = -Infinity;
+
+	constructor(private readonly pause: number) { }
+
+	push(ch: string, now: number): string {
+		if (now - this.last > this.pause)
+			this.text = '';
+		this.last = now;
+		this.text += ch;
+		return this.text;
+	}
+
+	clear(): void {
+		this.text = '';
+	}
+}
+
+// The first row from `from` on, around past the last, whose text starts with the prefix, any case; -1: none.
+// From the current row itself: a longer prefix that still fits it keeps the cursor where it is.
+export function findRow(rowCount: number, from: number, prefix: string, text: (row: number) => string): number {
+	const p = prefix.toLocaleLowerCase();
+	for (let i = 0; i < rowCount; i++) {
+		const row = (from + i) % rowCount;
+		if (text(row).toLocaleLowerCase().startsWith(p))
+			return row;
+	}
+	return -1;
 }
 
 // --- the wheel -------------------------------------------------------------------------------------------------

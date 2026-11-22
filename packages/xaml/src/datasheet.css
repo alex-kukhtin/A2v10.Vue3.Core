@@ -119,3 +119,29 @@
 .ds-sb .ds-thumb.drag {
 	background-color: var(--neutral500, #9e9e9e);
 }
+
+/* the row picture: a column of its own before the fixed ones */
+.data-sheet .ds-table .ds-picture {
+	padding: 0;
+	text-align: center;
+	border-right-color: var(--neutral400, #bdbdbd);
+}
+
+/* search by typing: the prefix typed, over the view's bottom left; not found, in red */
+.data-sheet .ds-search {
+	position: absolute;
+	left: .5rem;
+	bottom: .5rem;
+	padding: 0 .5rem;
+	line-height: 1.5rem;
+	border: 1px solid var(--neutral400, #bdbdbd);
+	border-radius: 3px;
+	background-color: var(--bgWhite, #fff);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+	pointer-events: none;
+}
+
+.data-sheet .ds-search.fail {
+	color: var(--danger-base, #c62828);
+	border-color: var(--danger-base, #c62828);
+}

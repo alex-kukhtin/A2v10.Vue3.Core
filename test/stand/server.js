@@ -240,6 +240,55 @@ ${pageScript(url, { Rows: rows }, SHEET_TYPES)}
 </script>`;
 }
 
+// data-sheet as a list (slice 2): a server page of documents in a collection view, the pager beside, opened on the
+// last page with the cursor on the newest (at the bottom); the row picture by Icon; the keys of rows bound to toasts,
+// Del to a mark for deletion. /_data/reload answers a page by the offset in the reloaded url.
+const DOC_TYPES = `		function TAgent(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TAgent, {props: {'Id':Number,'Name':String}, $id: 'Id', $name: 'Name'}, false);
+		function TDoc(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TDoc, {props: {'Id':Number,'No':Number,'Date':Date,'Agent':TAgent,'Sum':Number,'Memo':String,'Icon':String}, $id: 'Id', $name: 'Memo'}, true);
+		function TDocArray(source, path, parent) { return cmn.createArray(source, path, TDoc, TDocArray, parent); }
+		function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
+		cmn.defineObject(TRoot, {props: {'Docs':TDocArray}}, false);
+		const ctors = {"TAgent":TAgent,"TDoc":TDoc,"TDocArray":TDocArray,"TRoot":TRoot};`;
+
+const DOC_COUNT = 95;
+const DOC_PAGE = 20;
+
+function docPage(offset) {
+	const docs = [];
+	for (let i = offset; i < Math.min(offset + DOC_PAGE, DOC_COUNT); i++)
+		docs.push({
+			Id: 5000 + i, No: i + 1, Date: new Date(Date.UTC(2026, 6, 1 + i)).toISOString().substring(0, 10) + 'T00:00:00',
+			Agent: { Id: i % 5 + 1, Name: SHEET_AGENTS[i % 5] }, Sum: ((i * 7919) % 100000) / 100,
+			Memo: `Видаткова накладна №${i + 1}`, Icon: i % 7 ? 'success-outline-green' : 'warning-outline-yellow'
+		});
+	return {
+		Docs: docs, 'Docs.$RowCount': DOC_COUNT,
+		$ModelInfo: { Docs: { PageSize: DOC_PAGE, Offset: offset, SortOrder: 'Date', SortDir: 'asc' } }
+	};
+}
+
+function sheetListHtml(url) {
+	const id = `el${crypto.randomUUID()}`;
+	const lastPage = Math.floor((DOC_COUNT - 1) / DOC_PAGE) * DOC_PAGE;
+	return `<collection-view-server class="cw page absolute" id="${id}" :items-source="Docs" :initial-filter="{}" :persistent-filter="[]"><template v-slot="Parent"><div style="display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5rem;height:100%;padding:1rem;box-sizing:border-box">
+	<data-sheet :items-source="Parent.ItemsSource" :fixed-columns="1" row-picture="Icon" auto-select="last-item" test-id="list"
+		:open="(e) => $toast('Open: ' + e.Memo)" :add="() => $toast('New document', 'info')" :copy="(e) => $toast('Copy: ' + e.Memo, 'info')"
+		:remove="(e) => e.Icon = (e.Icon === 'close' ? 'warning-outline-yellow' : 'close')">
+		<data-sheet-column header="Номер" content="No" data-type="Number" width="5rem"></data-sheet-column>
+		<data-sheet-column header="Дата" content="Date" data-type="Date" align="center" width="7rem"></data-sheet-column>
+		<data-sheet-column header="Контрагент" content="Agent.Name" width="14rem"></data-sheet-column>
+		<data-sheet-column header="Сума" content="Sum" data-type="Currency" width="9rem"></data-sheet-column>
+		<data-sheet-column header="Примітка" content="Memo" width="18rem"></data-sheet-column>
+	</data-sheet>
+	<a2-pager :source="Parent.Pager"></a2-pager>
+</div></template></collection-view-server>
+<script type="text/javascript">
+${pageScript(url, docPage(lastPage), DOC_TYPES)}
+</script>`;
+}
+
 // attachment/partial's files (/_file/attachment/upload/{id}), by the rows written in its page: 1 an image, 2 a pdf;
 // 3 (docx) has no preview and no file
 function pdfFile() {
@@ -332,6 +381,28 @@ const server = http.createServer((req, res) => {
 	if (url === '/_page/stand/datasheet/index/0') {
 		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
 		res.end(sheetHtml(url));
+		return;
+	}
+	if (url === '/_page/stand/datasheet/list/0') {
+		res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+		res.end(sheetListHtml(url));
+		return;
+	}
+	// the data-sheet list's pages: the offset from the reloaded url's query
+	if (url === '/_data/reload' && req.method === 'POST') {
+		let body = '';
+		req.on('data', chunk => body += chunk);
+		req.on('end', () => {
+			const { baseUrl } = JSON.parse(body);
+			if (!baseUrl.includes('/stand/datasheet/list')) {
+				res.writeHead(404, { 'Content-Type': 'text/plain' });
+				res.end('No reload on the stand for ' + baseUrl);
+				return;
+			}
+			const offset = +(new URL(baseUrl, 'http://stand').searchParams.get('offset') || 0);
+			res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+			res.end(JSON.stringify(docPage(offset)));
+		});
 		return;
 	}
 	// the shell's home page: a page as any other

@@ -91,6 +91,25 @@ assert.strictEqual(s.moveCursor('Enter', false, at(0, 0), 100, 5, 10), null, 'no
 assert.strictEqual(s.moveCursor('ArrowDown', false, at(0, 0), 0, 5, 10), null, 'no rows');
 assert.strictEqual(s.moveCursor('ArrowDown', false, at(0, 0), 100, 0, 10), null, 'no columns');
 
+// search by typing: a pause of 1000ms or less adds up
+const ta = new s.TypeAhead(1000);
+assert.strictEqual(ta.push('a', 0), 'a');
+assert.strictEqual(ta.push('b', 500), 'ab');
+assert.strictEqual(ta.push('c', 1500), 'abc', 'a pause of exactly 1000ms: still adds up');
+assert.strictEqual(ta.push('d', 2501), 'd', 'a longer pause: a new prefix');
+ta.clear();
+assert.strictEqual(ta.push('e', 2600), 'e', 'cleared');
+
+const T = ['Alpha', 'beta', 'Bravo', 'alpine'];
+const text = row => T[row];
+assert.strictEqual(s.findRow(4, 0, 'b', text), 1, 'any case');
+assert.strictEqual(s.findRow(4, 2, 'b', text), 2, 'from the current row itself');
+assert.strictEqual(s.findRow(4, 3, 'al', text), 3);
+assert.strictEqual(s.findRow(4, 3, 'alph', text), 0, 'around past the last');
+assert.strictEqual(s.findRow(4, 0, 'z', text), -1);
+assert.strictEqual(s.findRow(0, 0, 'a', text), -1, 'no rows');
+assert.strictEqual(s.findRow(2, 0, 'тов', row => ['Склад', 'ТОВАР'][row]), 1, 'Cyrillic, any case');
+
 // the wheel: rows of 25px
 const w = new s.WheelSteps();
 assert.strictEqual(new s.WheelSteps().steps(100, 0, 0, 10), 0, 'no row height yet: no steps');
