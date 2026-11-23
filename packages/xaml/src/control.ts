@@ -27,6 +27,16 @@ export function forceUpdateChildren(instance: ComponentInternalInstance): void {
 	walk(instance.subTree);
 }
 
+// The level a control's errors show by (control-group's val-warning / val-info, data-sheet's cell mark): every one a
+// warning, 'warning'; every one info, 'info'; else 'error'.
+export function errorLevel(errs: { severity?: string }[]): 'error' | 'warning' | 'info' {
+	if (errs.every(e => e.severity === 'warning'))
+		return 'warning';
+	if (errs.every(e => e.severity === 'info'))
+		return 'info';
+	return 'error';
+}
+
 export const control = defineComponent({
 	props: {
 		label: String,
@@ -156,8 +166,9 @@ export const control = defineComponent({
 			const err = this.errors;
 			if (!err) return false;
 			if (out) {
-				out.warn = err.every((r: any) => r.severity === 'warning');
-				out.info = err.every((r: any) => r.severity === 'info');
+				const level = errorLevel(err);
+				out.warn = level === 'warning';
+				out.info = level === 'info';
 				out.all = err.length;
 			}
 			return err.length > 0;

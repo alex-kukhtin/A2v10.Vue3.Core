@@ -19,6 +19,7 @@ export interface SheetColumn {
 	fetch?: Function;
 	fetchCommand?: string;
 	valueProp?: string;
+	readOnly?: boolean;
 }
 
 // What a cell edits: the element holding the value and its property; the content's path split at its last dot.

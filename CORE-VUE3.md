@@ -109,11 +109,12 @@ A table part, the XAML and what Core writes:
 `DataSheet` (`[ContentProperty("Columns")]`), as `DataGrid` writes the same things:
 - `ItemsSource`: a binding, `:items-source` by `GetPath(context)`.
 - `FixedColumns` (Int32): `:fixed-columns`, written when not 0.
-- `CursorMode`, an enum of its own: `Cell` (the default: nothing written) | `Row` → `cursor-mode="row"` (the cursor is the row, 1C's `RowSelectionMode=Row`). A `DataSheetColumn` with `ControlType` in a sheet of `Row`: the client throws (no cell to edit); Core may refuse it first.
+- `CursorMode`, an enum of its own: `Cell` (the default: nothing written) | `Row` → `cursor-mode="row"` (the cursor is the row, 1C's `RowSelectionMode=Row`). Every column read-only there: a `ControlType` shows by its kind (a list's check box), edits not.
 - `Sort` (Boolean): `:sort="true"` when set, as `DataGrid`'s; its columns sort by a header's click, by the collection view that holds `ItemsSource` (no collection view: no sort).
 - `RowPicture`: a binding only, a row's property holding an icon's name; `row-picture` by the path without context (as `DataGrid`'s `Mark`); a value not bound: `XamlException`.
 - `AutoSelect` (`AutoSelectMode`): `LastItem` → `auto-select="last-item"`; `None`, `FirstItem`: nothing (the sheet always has a cursor, the first row by default); `ItemId`: `XamlException` (the sheet has none).
 - The keys of rows, `Command`s: `Open` (Enter, a double click), `Add` (Ins), `Copy` (F9), `Remove` (Del) → `:open`, `:add`, `:copy`, `:remove`, each `"() => " + GetCommand(context)`, as `DataGrid`'s `DoubleClick`. The cursor's row is the array's `$selected`: a command's argument reaches it as a toolbar's does (`{Bind Document.Rows}` with `…Selected`, `{Bind Document.Rows.$selected}`). Not bound: the key does nothing.
+- Read-only: `read-only` when the model is (`IsReadOnlyByModel`); then `Add`, `Copy`, `Remove` not written (as `BindCmd` disables `Append` / `Remove` on a button), `Open` written. No attribute of its own.
 - `Height`: the style, as `DataGrid`'s; `MergeAttributes` (margin, visibility, `TestId`) as `DataGrid`'s.
 - Its columns: in its body, the default slot, one `data-sheet-column` each, in order; nothing else in the body.
 
@@ -124,7 +125,10 @@ A table part, the XAML and what Core writes:
 - `Sort` (Boolean?): `:sort` when set (the sheet's overridden); `SortProperty`: `sort-prop`, the order the server sorts by (the content's path by default); as `DataGridColumn`'s.
 - `ControlType`, an enum of its own, not `ColumnControlType`: `None` (the default: the column does not edit) | `TextBox` | `DatePicker` | `Selector` | `ComboBox` | `CheckBox`; written `control-type` by the member's name as it is, not lower-cased (`DataGridColumn` lower-cases its own): the client's kinds are keyed by these names and throw on another. A binding: not supported.
 - The editor's attributes, this list only (the client's `SheetColumn`): `DisplayProperty` → `display` (`Selector`'s name; `ComboBox`'s option name, else `$name`); `ItemsSource` → `:items-source` by `GetPath(context)`; `Fetch` → `fetch-command` (bound: `:fetch-command` by `GetPathFormat(context)`), `Delegate` → `:fetch="$delegate('…')"`, both as `Selector`'s; `ValueProperty` → `value-prop` (`ComboBox`'s by `ComboBoxItem`'s `Value`). Another attribute: not written; a column needs no more today.
+- `ReadOnly` (Boolean): `read-only` when true; a binding: `:read-only` by `GetPath(context)`, the page's scope (a row's not: per row read-only not supported). The column shows by its `ControlType`, edits not.
 - An attribute evaluated by the sheet's render (the columns are its slot) must not make a new object each time (a literal array): it renders the sheet again without end. Bindings are stable; Core writes no literal.
+
+Validation: nothing written. A cell shows its value's errors by the template's `validators`, as a control bound to it does.
 
 Only on Vue 3: rendered under another `Framework`, `XamlException` naming the element (`DataSheet is supported by the Vue 3 client only`), asked of `RenderContext` as `MergeSlot` is, never `Framework` itself.
 

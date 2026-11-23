@@ -70,7 +70,7 @@ const FILES = {
 // The script body as Vue3DataScripter is to write it (CORE-VUE3.md, "The page script"): its HEADER, the module
 // function (DATAFUNC: template, data, modelData as CreateScript writes it), its FOOTER returning the descriptor.
 // types: modelData's type declarations, TRoot and the ctors map last.
-function pageScript(url, rawData, types) {
+function pageScript(url, rawData, types, template = '{}') {
 	return `'use strict';
 const eventBus = require('std:eventBus');
 const utils = require('std:utils');
@@ -80,7 +80,7 @@ const currentModule = function() {
 	const template = (function() {
 		let module = { exports: undefined };
 		(function(module, exports) {
-			module.exports = {};
+			module.exports = ${template};
 		})(module, module.exports);
 		return module.exports;
 	})();
@@ -247,7 +247,7 @@ ${pageScript(url, { Rows: rows }, SHEET_TYPES)}
 const DOC_TYPES = `		function TAgent(source, path, parent) { cmn.createObject(this, source, path, parent); }
 		cmn.defineObject(TAgent, {props: {'Id':Number,'Name':String}, $id: 'Id', $name: 'Name'}, false);
 		function TDoc(source, path, parent) { cmn.createObject(this, source, path, parent); }
-		cmn.defineObject(TDoc, {props: {'Id':Number,'No':Number,'Date':Date,'Agent':TAgent,'Sum':Number,'Memo':String,'Icon':String}, $id: 'Id', $name: 'Memo'}, true);
+		cmn.defineObject(TDoc, {props: {'Id':Number,'No':Number,'Date':Date,'Agent':TAgent,'Sum':Number,'Memo':String,'Icon':String,'Done':Boolean}, $id: 'Id', $name: 'Memo'}, true);
 		function TDocArray(source, path, parent) { return cmn.createArray(source, path, TDoc, TDocArray, parent); }
 		function TRoot(source, path, parent) { cmn.createObject(this, source, path, parent); }
 		cmn.defineObject(TRoot, {props: {'Docs':TDocArray}}, false);
@@ -259,7 +259,7 @@ const DOC_PAGE = 20;
 const DOC_ALL = Array.from({ length: DOC_COUNT }, (_, i) => ({
 	Id: 5000 + i, No: i + 1, Date: new Date(Date.UTC(2026, 6, 1 + i)).toISOString().substring(0, 10) + 'T00:00:00',
 	Agent: { Id: i % 5 + 1, Name: SHEET_AGENTS[i % 5] }, Sum: ((i * 7919) % 100000) / 100,
-	Memo: `Видаткова накладна №${i + 1}`, Icon: i % 7 ? 'success-outline-green' : 'warning-outline-yellow'
+	Memo: `Видаткова накладна №${i + 1}`, Icon: i % 7 ? 'success-outline-green' : 'warning-outline-yellow', Done: i % 7 !== 0
 }));
 const DOC_KEYS = { No: d => d.No, Date: d => d.Date, Agent: d => d.Agent.Name, Sum: d => d.Sum };
 
@@ -285,6 +285,7 @@ function sheetListHtml(url) {
 		<data-sheet-column header="Контрагент" content="Agent.Name" sort-prop="Agent" width="14rem"></data-sheet-column>
 		<data-sheet-column header="Сума" content="Sum" data-type="Currency" width="9rem"></data-sheet-column>
 		<data-sheet-column header="Примітка" content="Memo" :sort="false" width="18rem"></data-sheet-column>
+		<data-sheet-column header="Проведено" content="Done" control-type="CheckBox" width="6rem"></data-sheet-column>
 	</data-sheet>
 	<a2-pager :source="Parent.Pager"></a2-pager>
 </div></template></collection-view-server>
@@ -296,6 +297,14 @@ ${pageScript(url, docPage(lastPage), DOC_TYPES)}
 // data-sheet as a table part (slice 3): columns with ControlType, edited in their cells; Ins / F9 / Del bound to
 // append / copy / remove, as a document's rows are. A column's ItemsSource is the model's: a literal array in the
 // markup is made anew by each render of the sheet (the columns are its slot) and renders it again, without end. The selected row's values below show what the editors wrote.
+// Validation: Item required, Qty above zero (row 5 breaks it), an empty Memo a warning; Price read-only.
+const PART_TEMPLATE = `{
+	validators: {
+		'Rows[].Item': 'Вкажіть товар',
+		'Rows[].Qty': { valid: (e) => e.Qty > 0, msg: 'Кількість має бути більше нуля' },
+		'Rows[].Memo': { valid: 'notBlank', msg: 'Примітка не заповнена', severity: 'warning' }
+	}
+}`;
 const PART_TYPES = `		function TItem(source, path, parent) { cmn.createObject(this, source, path, parent); }
 		cmn.defineObject(TItem, {props: {'Id':Number,'Name':String}, $id: 'Id', $name: 'Name'}, true);
 		function TItemArray(source, path, parent) { return cmn.createArray(source, path, TItem, TItemArray, parent); }
@@ -321,7 +330,7 @@ function sheetPartHtml(url) {
 	const items = PART_ITEMS.map((Name, i) => ({ Id: i + 1, Name }));
 	const rows = Array.from({ length: 12 }, (_, i) => ({
 		Id: i + 1, Item: items[i % items.length], Date: new Date(Date.UTC(2026, 10, 1 + i)).toISOString().substring(0, 10) + 'T00:00:00',
-		Qty: i + 1, Price: 10 + i * 2.5, Unit: PART_UNITS[i % 3], Kind: i % 4 ? 'G' : 'S', Memo: '', Done: i % 3 === 0
+		Qty: i === 4 ? 0 : i + 1, Price: 10 + i * 2.5, Unit: PART_UNITS[i % 3], Kind: i % 4 ? 'G' : 'S', Memo: i % 5 ? 'ok' : '', Done: i % 3 === 0
 	}));
 	return `<div id="${id}" class="page absolute">
 	<div style="display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5rem;height:100%;padding:1rem;box-sizing:border-box">
@@ -332,7 +341,7 @@ function sheetPartHtml(url) {
 			<data-sheet-column header="Товар" content="Item" control-type="Selector" display="Name" :items-source="Items" width="14rem"></data-sheet-column>
 			<data-sheet-column header="Дата" content="Date" data-type="Date" control-type="DatePicker" width="8rem"></data-sheet-column>
 			<data-sheet-column header="Кількість" content="Qty" data-type="Number" control-type="TextBox" width="6rem"></data-sheet-column>
-			<data-sheet-column header="Ціна" content="Price" data-type="Currency" control-type="TextBox" width="7rem"></data-sheet-column>
+			<data-sheet-column header="Ціна" content="Price" data-type="Currency" control-type="TextBox" read-only width="7rem"></data-sheet-column>
 			<data-sheet-column header="Од." content="Unit" control-type="ComboBox" :items-source="Units" width="5rem"></data-sheet-column>
 			<data-sheet-column header="Вид" content="Kind" control-type="ComboBox" :items-source="Kinds" display="Name" value-prop="Code" width="7rem"></data-sheet-column>
 			<data-sheet-column header="Примітка" content="Memo" control-type="TextBox" width="14rem"></data-sheet-column>
@@ -342,7 +351,7 @@ function sheetPartHtml(url) {
 	</div>
 </div>
 <script type="text/javascript">
-${pageScript(url, { Rows: rows, Items: items, Units: PART_UNITS, Kinds: PART_KINDS }, PART_TYPES)}
+${pageScript(url, { Rows: rows, Items: items, Units: PART_UNITS, Kinds: PART_KINDS }, PART_TYPES, PART_TEMPLATE)}
 </script>`;
 }
 

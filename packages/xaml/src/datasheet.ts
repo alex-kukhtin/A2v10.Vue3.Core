@@ -16,8 +16,15 @@
 // $ModelInfo's SortOrder / SortDir, as data-grid's); no collection view, no sort: a sorted copy would part the rows
 // shown from the model's (the cursor is $selected), and reordering the model's rows is a command's, not the sheet's.
 // Row mode (`cursor-mode="row"`, 1C's RowSelectionMode=Row): the cursor is the row, no cell: the column stays the
-// first (search by typing goes by it), ArrowLeft / Right scroll the columns, Home / End go to the first / last row; no
-// edit: a column with ControlType throws.
+// first (search by typing goes by it), ArrowLeft / Right scroll the columns, Home / End go to the first / last row;
+// every column read-only.
+// Read-only: the sheet's `read-only` (Core: the model's), a column's (static or bound in the page's scope): a column
+// with ControlType shows by its kind and edits not, as one without: Enter opens, typing searches, Tab passes it
+// (editKind, the one gate).
+// Validation: a cell shows its value's errors as a control bound to it would (its target's $errors): a corner mark by
+// their level (errorLevel, control.ts), the messages as its title. The cursor's cell, the sheet focused, no edit: the
+// control's validator below the cell (an overlay of a control's DOM, so that Core's CSS shows it); in the edit, the
+// editor's own.
 // Its CSS: datasheet.css, beside.
 
 import { defineComponent, type PropType } from 'vue';
@@ -26,7 +33,8 @@ import {
 	visibleColumns, columnPage, clampColPos, columnAt, fitColPos, moveCursor, nextCell, findRow
 } from '@a2v10/primitives';
 import { require, vocabulary } from './platform.js';
-import { kindOf, targetOf, type SheetColumn, type CellTarget } from './cellkinds.js';
+import { kindOf, targetOf, type SheetColumn, type CellTarget, type CellKind } from './cellkinds.js';
+import { errorLevel } from './control.js';
 
 const DEFAULT_WIDTH = '8rem';
 const PICTURE_WIDTH = '1.75rem';
@@ -138,6 +146,7 @@ vocabulary.component('data-sheet-column', defineComponent({
 		fetch: Function,
 		fetchCommand: String,
 		valueProp: String,
+		readOnly: Boolean,
 		sort: { type: Boolean, default: undefined }, // the sheet's `sort` overridden
 		sortProp: String // the order the server sorts by; the content's path by default
 	},
@@ -163,7 +172,7 @@ vocabulary.component('data-sheet', defineComponent({
 			<tbody>
 				<tr v-for="r in shownRows" :key="r" :class="{active: r === cursorRow}">
 					<td v-if="rowPicture" class="ds-picture"><i v-if="picture(r)" :class="'ico ico-' + picture(r)"></i></td>
-					<td v-for="c in shownCols" :key="c" :class="cellClass(r, c)"><i v-if="cellIcon(r, c)" class="ds-icon" :class="cellIcon(r, c)"></i>{{cellText(r, c)}}</td>
+					<td v-for="c in shownCols" :key="c" :class="cellClass(r, c)" :title="cellTitle(r, c)"><i v-if="cellIcon(r, c)" class="ds-icon" :class="cellIcon(r, c)"></i>{{cellText(r, c)}}</td>
 				</tr>
 			</tbody>
 		</table>
@@ -171,6 +180,9 @@ vocabulary.component('data-sheet', defineComponent({
 	</div>
 	<div class="ds-editor" v-if="editing" ref="editor" tabindex="-1" :style="editorStyle" @keydown="editorKeydown" @focusout="editorFocusout">
 		<component :is="editing.tag" v-bind="editing.props" ref="editorVm"></component>
+	</div>
+	<div class="ds-validator control-group invalid" v-if="cursorErrors()" :class="'val-' + errorLevel(cursorErrors())" :style="validatorStyle">
+		<div class="input-group focus"><validator :invalid="cursorErrors" :errors="cursorErrors()"></validator></div>
 	</div>
 	<a2-sheet-scrollbar class="ds-vscroll" :min="0" :max="rowCount" :page="page" :pos="pos" @update:pos="setPos"/>
 	<a2-sheet-scrollbar class="ds-hscroll" :horz="true" :min="fixed" :max="columns.length" :page="colPage" :pos="colPos" @update:pos="setColPos"/>
@@ -183,6 +195,7 @@ vocabulary.component('data-sheet', defineComponent({
 		rowPicture: String,
 		autoSelect: { type: String, default: 'first-item' }, // 'last-item': a list, the newest at the bottom
 		cursorMode: { type: String, default: 'cell' }, // 'row': the cursor is the row
+		readOnly: Boolean,
 		open: Function,
 		add: Function,
 		copy: Function,
@@ -261,21 +274,16 @@ vocabulary.component('data-sheet', defineComponent({
 		tableWidth(): number {
 			return this.shownCols.reduce((w: number, c: number) => w + this.widths[c], this.lead);
 		},
-		// over the edited cell, in the view's coordinates: the editor is the root's child, the view clips (its lists)
+		// over the edited cell: the editor is the root's child, the view clips (its lists)
 		editorStyle(): Record<string, string> {
 			const e = this.editing;
-			if (!e)
-				return {};
-			let left = this.lead;
-			for (const c of this.shownCols) {
-				if (c === e.col)
-					break;
-				left += this.widths[c];
-			}
-			return {
-				left: px(left), top: px(this.headerHeight + (e.row - this.pos) * this.rowHeight),
-				width: px(this.widths[e.col]), height: px(this.rowHeight)
-			};
+			const r = e && this.cellRect(e.row, e.col);
+			return r ? { left: px(r.left), top: px(r.top), width: px(r.width), height: px(r.height) } : {};
+		},
+		// below the cursor's cell, the validator's arrow at its bottom
+		validatorStyle(): Record<string, string> {
+			const r = this.cellRect(this.cursorRow, this.col);
+			return r ? { left: px(r.left), top: px(r.top + r.height), width: px(r.width) } : {};
 		}
 	},
 	watch: {
@@ -303,8 +311,6 @@ vocabulary.component('data-sheet', defineComponent({
 	methods: {
 		px,
 		$addColumn(column: unknown) {
-			if (this.rowMode && (column as SheetColumn).controlType)
-				throw new Error(`data-sheet: a column with ControlType "${(column as SheetColumn).controlType}" in a sheet of cursor-mode "row" (no cell to edit)`);
 			this.columns.push(column); // a component instance: Vue never makes it reactive
 		},
 		$removeColumn(column: unknown) {
@@ -315,6 +321,19 @@ vocabulary.component('data-sheet', defineComponent({
 		},
 		column(c: number): SheetColumn {
 			return this.columns[c] as SheetColumn;
+		},
+		errorLevel,
+		// A shown cell's box in the root's coordinates (the view at its top left); null: not shown.
+		cellRect(r: number, c: number): { left: number, top: number, width: number, height: number } | null {
+			if (r < this.pos || r >= this.pos + this.page || !this.shownCols.includes(c))
+				return null;
+			let left = this.lead;
+			for (const sc of this.shownCols) {
+				if (sc === c)
+					break;
+				left += this.widths[sc];
+			}
+			return { left, top: this.headerHeight + (r - this.pos) * this.rowHeight, width: this.widths[c], height: this.rowHeight };
 		},
 		// The order a column sorts by; undefined: it does not sort.
 		sortOrder(c: number): string | undefined {
@@ -349,7 +368,26 @@ vocabulary.component('data-sheet', defineComponent({
 			const cls = this.colClass(c);
 			if (r === this.cursorRow && c === this.col && !this.rowMode)
 				cls.push('cursor');
+			const errs = this.cellErrors(r, c);
+			if (errs)
+				cls.push('ds-' + errorLevel(errs));
 			return cls;
+		},
+		// A cell's errors: its target's, as a control bound to it shows them; null: none. A method: the model's
+		// validation is not reactive as a whole (control's invalid, the same).
+		cellErrors(r: number, c: number): { msg: string, severity: string }[] | null {
+			const t = targetOf(this.items[r], this.column(c));
+			const errs = t && t.item.$errors ? t.item.$errors(t.prop) : null;
+			return errs && errs.length ? errs : null;
+		},
+		cellTitle(r: number, c: number): string | undefined {
+			return this.cellErrors(r, c)?.map((e: { msg: string }) => e.msg).join('\n');
+		},
+		// The cursor's cell's errors, shown by the validator below it: not in an edit (the editor's own), not in row mode.
+		cursorErrors(): { msg: string, severity: string }[] | null {
+			if (this.editing || this.rowMode || this.cursorRow < 0 || !this.columns.length)
+				return null;
+			return this.cellErrors(this.cursorRow, this.col);
 		},
 		cellText(r: number, c: number): string {
 			const col = this.column(c);
@@ -359,16 +397,21 @@ vocabulary.component('data-sheet', defineComponent({
 			const col = this.column(c);
 			return kindOf(col).icon?.(this.items[r], col) || '';
 		},
-		editable(c: number): boolean {
-			const kind = kindOf(this.column(c));
-			return !!(kind.editor || kind.toggle);
+		// The kind of a column that edits; null: it does not (a read-only sheet or column, row mode, a kind that shows
+		// only). The one gate of editing: the keys, the clicks, Tab's next cell.
+		editKind(c: number): CellKind | null {
+			const col = this.column(c);
+			if (!col || this.readOnly || this.rowMode || col.readOnly)
+				return null;
+			const kind = kindOf(col);
+			return kind.editor || kind.toggle ? kind : null;
 		},
 		// Starts the edit of the cursor's cell: `ch` typed (it replaces the value), `open` the editor's choice (F4).
 		// False: the column does not edit.
 		startEdit(ch?: string, open?: boolean): boolean {
 			const row = this.cursorRow;
 			const col = this.column(this.col);
-			const ed = col && kindOf(col).editor;
+			const ed = this.editKind(this.col)?.editor;
 			const t = ed && row >= 0 ? targetOf(this.items[row], col) : null;
 			if (!ed || !t)
 				return false;
@@ -428,7 +471,7 @@ vocabulary.component('data-sheet', defineComponent({
 			});
 		},
 		goNext(back: boolean, from?: { row: number, col: number }): boolean {
-			const to = nextCell(from || { row: this.cursorRow, col: this.col }, back, this.rowCount, this.columns.length, (c: number) => this.editable(c));
+			const to = nextCell(from || { row: this.cursorRow, col: this.col }, back, this.rowCount, this.columns.length, (c: number) => !!this.editKind(c));
 			if (to) {
 				this.select(to.row);
 				this.col = to.col;
@@ -445,7 +488,9 @@ vocabulary.component('data-sheet', defineComponent({
 		cellKey(key: string): boolean {
 			if (this.cursorRow < 0 || !this.columns.length)
 				return false;
-			const kind = kindOf(this.column(this.col));
+			const kind = this.editKind(this.col);
+			if (!kind)
+				return false;
 			switch (key) {
 				case 'Enter': return kind.editor ? this.startEdit() : !!kind.toggle && this.goNext(false);
 				case 'F4': return this.startEdit(undefined, true);
@@ -596,7 +641,7 @@ vocabulary.component('data-sheet', defineComponent({
 			if (col < 0 || this.rowMode)
 				return;
 			this.col = col;
-			if ((ev.target as Element).closest('.ds-icon') && kindOf(this.column(col)).toggle)
+			if ((ev.target as Element).closest('.ds-icon') && this.editKind(col)?.toggle)
 				this.toggle(row, col);
 		},
 		// A column that edits: its edit (a toggle: none, its clicks toggled); else the open command.
@@ -604,7 +649,7 @@ vocabulary.component('data-sheet', defineComponent({
 			const { row, col } = this.cellAt(ev);
 			if (row < 0)
 				return;
-			if (col >= 0 && this.editable(col))
+			if (col >= 0 && this.editKind(col))
 				this.startEdit();
 			else
 				this.command('open');
