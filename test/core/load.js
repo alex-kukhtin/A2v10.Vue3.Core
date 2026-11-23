@@ -25,7 +25,7 @@ function loadCore(file, globals = {}) {
 		...globals
 	});
 	ctx.window = ctx;
-	const bundle = path.join(DIST, file);
+	const bundle = path.resolve(DIST, file); // a name in dist, or a path (a mutant: test/core/sheet-mutants.js)
 	vm.runInContext(fs.readFileSync(bundle, 'utf8'), ctx, { filename: bundle });
 	return { ctx, errors };
 }

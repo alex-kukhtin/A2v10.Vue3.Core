@@ -42,4 +42,5 @@ The A2v10 client on Vue 3: the port of Net48 `Scripts/tabmain.js` and A2v10.Core
 
 - `pnpm build`: the packages, then copies the files to Core (`scripts/copy-assets.mjs`).
 - `pnpm test`: model, trace, platform and shell tests; stops at the first failing suite.
+- `pnpm test:mutants`: the mutation run over the datasheet's core (after `pnpm build`); a survivor not in its list of equivalent mutants fails it. Run it when `sheet.ts` or `test/core/sheet.js` changes.
 - `pnpm stand`: the stand, `http://localhost:3077/`.

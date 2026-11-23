@@ -7,7 +7,7 @@
 const assert = require('assert');
 const { loadCore } = require('./load.js');
 
-const { ctx } = loadCore('a2v10-core.js');
+const { ctx } = loadCore(process.env.A2V10_CORE_BUNDLE || 'a2v10-core.js'); // the env: a mutant's (sheet-mutants.js)
 const s = ctx.a2v10.primitives;
 const plain = v => JSON.parse(JSON.stringify(v)); // the context's arrays and objects are of another realm
 
