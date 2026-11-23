@@ -88,6 +88,14 @@ assert.deepStrictEqual(move('End', false, at(7, 3)), at(7, 4));
 assert.deepStrictEqual(move('Home', true, at(7, 3)), at(0, 3));
 assert.deepStrictEqual(move('End', true, at(7, 3)), at(99, 3));
 assert.strictEqual(s.moveCursor('Enter', false, at(0, 0), 100, 5, 10), null, 'not a cursor key');
+// row mode: Home / End by rows, the column kept; ArrowLeft / Right not the cursor's
+const moveRow = (key, ctrl, cur) => plain(s.moveCursor(key, ctrl, cur, 100, 5, 10, true));
+assert.deepStrictEqual(moveRow('Home', false, at(7, 3)), at(0, 3));
+assert.deepStrictEqual(moveRow('End', false, at(7, 3)), at(99, 3));
+assert.deepStrictEqual(moveRow('End', true, at(7, 3)), at(99, 3));
+assert.deepStrictEqual(moveRow('ArrowDown', false, at(7, 3)), at(8, 3));
+assert.strictEqual(s.moveCursor('ArrowLeft', false, at(7, 3), 100, 5, 10, true), null);
+assert.strictEqual(s.moveCursor('ArrowRight', false, at(7, 3), 100, 5, 10, true), null);
 assert.strictEqual(s.moveCursor('ArrowDown', false, at(0, 0), 0, 5, 10), null, 'no rows');
 assert.strictEqual(s.moveCursor('ArrowDown', false, at(0, 0), 100, 0, 10), null, 'no columns');
 

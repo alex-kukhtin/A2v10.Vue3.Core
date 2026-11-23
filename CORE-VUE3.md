@@ -109,6 +109,7 @@ A table part, the XAML and what Core writes:
 `DataSheet` (`[ContentProperty("Columns")]`), as `DataGrid` writes the same things:
 - `ItemsSource`: a binding, `:items-source` by `GetPath(context)`.
 - `FixedColumns` (Int32): `:fixed-columns`, written when not 0.
+- `CursorMode`, an enum of its own: `Cell` (the default: nothing written) | `Row` → `cursor-mode="row"` (the cursor is the row, 1C's `RowSelectionMode=Row`). A `DataSheetColumn` with `ControlType` in a sheet of `Row`: the client throws (no cell to edit); Core may refuse it first.
 - `Sort` (Boolean): `:sort="true"` when set, as `DataGrid`'s; its columns sort by a header's click, by the collection view that holds `ItemsSource` (no collection view: no sort).
 - `RowPicture`: a binding only, a row's property holding an icon's name; `row-picture` by the path without context (as `DataGrid`'s `Mark`); a value not bound: `XamlException`.
 - `AutoSelect` (`AutoSelectMode`): `LastItem` → `auto-select="last-item"`; `None`, `FirstItem`: nothing (the sheet always has a cursor, the first row by default); `ItemId`: `XamlException` (the sheet has none).

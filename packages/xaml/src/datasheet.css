@@ -218,3 +218,13 @@
 	content: ' ▼';
 	font-size: .7em;
 }
+
+/* row mode: the cursor is the row, outlined whole */
+.data-sheet.ds-row-mode .ds-table tr.active {
+	outline: 2px solid var(--neutral400, #bdbdbd);
+	outline-offset: -2px;
+}
+
+.data-sheet.ds-row-mode:focus .ds-table tr.active {
+	outline-color: var(--link);
+}

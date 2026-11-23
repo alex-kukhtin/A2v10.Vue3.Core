@@ -15,6 +15,9 @@
 // searches. Sorting: a click on a header, by the collection view holding the sheet's array (on the server: its
 // $ModelInfo's SortOrder / SortDir, as data-grid's); no collection view, no sort: a sorted copy would part the rows
 // shown from the model's (the cursor is $selected), and reordering the model's rows is a command's, not the sheet's.
+// Row mode (`cursor-mode="row"`, 1C's RowSelectionMode=Row): the cursor is the row, no cell: the column stays the
+// first (search by typing goes by it), ArrowLeft / Right scroll the columns, Home / End go to the first / last row; no
+// edit: a column with ControlType throws.
 // Its CSS: datasheet.css, beside.
 
 import { defineComponent, type PropType } from 'vue';
@@ -33,6 +36,9 @@ const SEARCH_PAUSE = 1000; // ms: typing adds up to one prefix; its badge shown 
 const ROW_KEYS: Record<string, 'open' | 'add' | 'copy' | 'remove'> = {
 	Enter: 'open', Insert: 'add', F9: 'copy', Delete: 'remove'
 };
+
+// Row mode: the keys that scroll the columns by one, the cursor having none.
+const HORZ_KEYS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
 
 // A column's width in px: the core counts in px. px, rem, em, or a bare number (px); anything else is the default.
 function toPx(width: string | undefined, rem: number, em: number): number {
@@ -149,7 +155,7 @@ vocabulary.component('data-sheet-column', defineComponent({
 // --- the sheet
 vocabulary.component('data-sheet', defineComponent({
 	template: `
-<div class="data-sheet" tabindex="0" :test-id="testId" @keydown="keydown">
+<div class="data-sheet" :class="{'ds-row-mode': rowMode}" tabindex="0" :test-id="testId" @keydown="keydown">
 	<div class="ds-view" ref="view" @wheel="wheel" @pointerdown="pointerdown" @dblclick="dblclick">
 		<table class="ds-table" :style="{width: px(tableWidth)}">
 			<colgroup><col v-if="rowPicture" :style="{width: px(lead)}"/><col v-for="c in shownCols" :key="c" :style="{width: px(widths[c])}"/></colgroup>
@@ -176,6 +182,7 @@ vocabulary.component('data-sheet', defineComponent({
 		sort: Boolean, // the columns sort (each may say otherwise), when a collection view holds the array
 		rowPicture: String,
 		autoSelect: { type: String, default: 'first-item' }, // 'last-item': a list, the newest at the bottom
+		cursorMode: { type: String, default: 'cell' }, // 'row': the cursor is the row
 		open: Function,
 		add: Function,
 		copy: Function,
@@ -248,6 +255,9 @@ vocabulary.component('data-sheet', defineComponent({
 			const cw = this.collectionView as any;
 			return cw && cw.ItemsSource === this.itemsSource ? cw : null;
 		},
+		rowMode(): boolean {
+			return this.cursorMode === 'row';
+		},
 		tableWidth(): number {
 			return this.shownCols.reduce((w: number, c: number) => w + this.widths[c], this.lead);
 		},
@@ -293,6 +303,8 @@ vocabulary.component('data-sheet', defineComponent({
 	methods: {
 		px,
 		$addColumn(column: unknown) {
+			if (this.rowMode && (column as SheetColumn).controlType)
+				throw new Error(`data-sheet: a column with ControlType "${(column as SheetColumn).controlType}" in a sheet of cursor-mode "row" (no cell to edit)`);
 			this.columns.push(column); // a component instance: Vue never makes it reactive
 		},
 		$removeColumn(column: unknown) {
@@ -335,7 +347,7 @@ vocabulary.component('data-sheet', defineComponent({
 		},
 		cellClass(r: number, c: number): string[] {
 			const cls = this.colClass(c);
-			if (r === this.cursorRow && c === this.col)
+			if (r === this.cursorRow && c === this.col && !this.rowMode)
 				cls.push('cursor');
 			return cls;
 		},
@@ -542,9 +554,15 @@ vocabulary.component('data-sheet', defineComponent({
 				return;
 			}
 			const cur = { row: Math.max(0, this.cursorRow), col: this.col };
-			const to = moveCursor(ev.key, ctrl, cur, this.rowCount, this.columns.length, this.page);
-			if (!to)
+			const to = moveCursor(ev.key, ctrl, cur, this.rowCount, this.columns.length, this.page, this.rowMode);
+			if (!to) {
+				const step = this.rowMode ? HORZ_KEYS[ev.key] : undefined;
+				if (step) {
+					ev.preventDefault();
+					this.setColPos(this.colPos + step);
+				}
 				return;
+			}
 			ev.preventDefault();
 			this.clearSearch();
 			this.select(to.row);
@@ -575,7 +593,7 @@ vocabulary.component('data-sheet', defineComponent({
 				return;
 			this.clearSearch();
 			this.select(row);
-			if (col < 0)
+			if (col < 0 || this.rowMode)
 				return;
 			this.col = col;
 			if ((ev.target as Element).closest('.ds-icon') && kindOf(this.column(col)).toggle)

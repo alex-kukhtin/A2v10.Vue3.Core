@@ -240,7 +240,7 @@ ${pageScript(url, { Rows: rows }, SHEET_TYPES)}
 </script>`;
 }
 
-// data-sheet as a list (slice 2): a server page of documents in a collection view, the pager beside, opened on the
+// data-sheet as a list (slice 2), in row mode: a server page of documents in a collection view, the pager beside, opened on the
 // last page with the cursor on the newest (at the bottom); the row picture by Icon; the keys of rows bound to toasts,
 // Del to a mark for deletion. /_data/reload answers a page by the offset, the order and the direction in the reloaded
 // url (a header's click sorts by the collection view); Memo does not sort (the column's :sort="false").
@@ -277,7 +277,7 @@ function sheetListHtml(url) {
 	const id = `el${crypto.randomUUID()}`;
 	const lastPage = Math.floor((DOC_COUNT - 1) / DOC_PAGE) * DOC_PAGE;
 	return `<collection-view-server class="cw page absolute" id="${id}" :items-source="Docs" :initial-filter="{}" :persistent-filter="[]"><template v-slot="Parent"><div style="display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5rem;height:100%;padding:1rem;box-sizing:border-box">
-	<data-sheet :items-source="Parent.ItemsSource" :fixed-columns="1" row-picture="Icon" auto-select="last-item" :sort="true" test-id="list"
+	<data-sheet :items-source="Parent.ItemsSource" :fixed-columns="1" row-picture="Icon" auto-select="last-item" cursor-mode="row" :sort="true" test-id="list"
 		:open="(e) => $toast('Open: ' + e.Memo)" :add="() => $toast('New document', 'info')" :copy="(e) => $toast('Copy: ' + e.Memo, 'info')"
 		:remove="(e) => e.Icon = (e.Icon === 'close' ? 'warning-outline-yellow' : 'close')">
 		<data-sheet-column header="Номер" content="No" data-type="Number" width="5rem"></data-sheet-column>

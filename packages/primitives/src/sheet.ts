@@ -136,19 +136,23 @@ export function fitColPos(col: number, colPos: number, widths: readonly number[]
 
 // The cursor a key moves to (KeyboardEvent.key), clamped to the sheet; null: not a cursor key, or no rows.
 // Home / End: the row's first / last column; Ctrl+Home / Ctrl+End: the first / last row, the column kept.
-export function moveCursor(key: string, ctrl: boolean, cur: Cursor, rowCount: number, colCount: number, page: number): Cursor | null {
+// rowMode (the cursor is the row): no column to move; Home / End are the first / last row, ArrowLeft / Right not
+// the cursor's (the caller scrolls the columns).
+export function moveCursor(key: string, ctrl: boolean, cur: Cursor, rowCount: number, colCount: number, page: number,
+	rowMode = false): Cursor | null {
 	if (rowCount <= 0 || colCount <= 0)
 		return null;
 	let { row, col } = cur;
+	const byRow = ctrl || rowMode;
 	switch (key) {
 		case 'ArrowUp': row -= 1; break;
 		case 'ArrowDown': row += 1; break;
-		case 'ArrowLeft': col -= 1; break;
-		case 'ArrowRight': col += 1; break;
+		case 'ArrowLeft': if (rowMode) return null; col -= 1; break;
+		case 'ArrowRight': if (rowMode) return null; col += 1; break;
 		case 'PageUp': row -= page; break;
 		case 'PageDown': row += page; break;
-		case 'Home': if (ctrl) row = 0; else col = 0; break;
-		case 'End': if (ctrl) row = rowCount - 1; else col = colCount - 1; break;
+		case 'Home': if (byRow) row = 0; else col = 0; break;
+		case 'End': if (byRow) row = rowCount - 1; else col = colCount - 1; break;
 		default: return null;
 	}
 	return {
