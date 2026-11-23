@@ -25,6 +25,10 @@
 // their level (errorLevel, control.ts), the messages as its title. The cursor's cell, the sheet focused, no edit: the
 // control's validator below the cell (an overlay of a control's DOM, so that Core's CSS shows it); in the edit, the
 // editor's own.
+// A column's width: its `width`, then the user's, dragged by the header's right edge (any column, the fixed too). The
+// user's widths, px by the column's key (its content's path; a repeated one `path#2`; none: `#` and its position), to
+// be kept by whoever wants: $widths() gives them, $setWidths() puts them (before the columns register too), the event
+// widths-change raised at a drag's end. Not kept by the sheet: the page's lifetime.
 // Its CSS: datasheet.css, beside.
 
 import { defineComponent, type PropType } from 'vue';
@@ -39,6 +43,7 @@ import { errorLevel } from './control.js';
 const DEFAULT_WIDTH = '8rem';
 const PICTURE_WIDTH = '1.75rem';
 const SEARCH_PAUSE = 1000; // ms: typing adds up to one prefix; its badge shown as long
+const MIN_WIDTH = 20; // px: a column dragged narrower stops here
 
 // The keys of rows (no Ctrl, no Shift): the command each raises, a prop of the sheet.
 const ROW_KEYS: Record<string, 'open' | 'add' | 'copy' | 'remove'> = {
@@ -164,11 +169,11 @@ vocabulary.component('data-sheet-column', defineComponent({
 // --- the sheet
 vocabulary.component('data-sheet', defineComponent({
 	template: `
-<div class="data-sheet" :class="{'ds-row-mode': rowMode}" tabindex="0" :test-id="testId" @keydown="keydown">
+<div class="data-sheet" :class="{'ds-row-mode': rowMode, 'ds-resizing': resizing}" tabindex="0" :test-id="testId" @keydown="keydown">
 	<div class="ds-view" ref="view" @wheel="wheel" @pointerdown="pointerdown" @dblclick="dblclick">
 		<table class="ds-table" :style="{width: px(tableWidth)}">
 			<colgroup><col v-if="rowPicture" :style="{width: px(lead)}"/><col v-for="c in shownCols" :key="c" :style="{width: px(widths[c])}"/></colgroup>
-			<thead><tr><th v-if="rowPicture" class="ds-picture"></th><th v-for="c in shownCols" :key="c" :class="headClass(c)" v-text="columns[c].header" @click="sortBy(c)"></th></tr></thead>
+			<thead><tr><th v-if="rowPicture" class="ds-picture"></th><th v-for="c in shownCols" :key="c" :class="headClass(c)" @click="sortBy(c)">{{columns[c].header}}<span class="ds-resize" @pointerdown.stop="resizeStart($event, c)" @pointermove="resizeMove" @pointerup="resizeEnd" @lostpointercapture="resizeEnd" @click.stop></span></th></tr></thead>
 			<tbody>
 				<tr v-for="r in shownRows" :key="r" :class="{active: r === cursorRow}">
 					<td v-if="rowPicture" class="ds-picture"><i v-if="picture(r)" :class="'ico ico-' + picture(r)"></i></td>
@@ -205,6 +210,7 @@ vocabulary.component('data-sheet', defineComponent({
 	inject: {
 		collectionView: { from: 'collectionView', default: null }
 	},
+	emits: ['widths-change'],
 	provide() {
 		return { dataSheet: this };
 	},
@@ -221,6 +227,8 @@ vocabulary.component('data-sheet', defineComponent({
 			rem: 16,
 			em: 16,
 			search: { text: '', fail: false },
+			userWidths: new Map<string, number>(), // the column's key → px: dragged or put by $setWidths
+			resizing: null as null | { key: string, from: number, width: number, start: number },
 			// the edit: the cell, its kind's editor (tag, props); the value it started with is _undo's, not reactive
 			editing: null as null | { row: number, col: number, tag: string, props: Record<string, unknown> }
 		};
@@ -244,7 +252,18 @@ vocabulary.component('data-sheet', defineComponent({
 			return Array.from({ length: n }, (_, i) => this.pos + i);
 		},
 		widths(): number[] {
-			return this.columns.map((c: SheetColumn & { width?: string }) => toPx(c.width, this.rem, this.em));
+			return this.columns.map((c: SheetColumn & { width?: string }, i: number) =>
+				this.userWidths.get(this.keys[i]) ?? toPx(c.width, this.rem, this.em));
+		},
+		// The columns' keys of the user's widths: the content's path, a repeated one `path#2`…; no content: `#` and the position.
+		keys(): string[] {
+			const seen: Record<string, number> = {};
+			return this.columns.map((c: SheetColumn, i: number) => {
+				if (!c.content)
+					return `#${i}`;
+				const n = seen[c.content] = (seen[c.content] || 0) + 1;
+				return n === 1 ? c.content : `${c.content}#${n}`;
+			});
 		},
 		fixed(): number {
 			return Math.min(Math.max(0, this.fixedColumns), this.columns.length);
@@ -303,6 +322,10 @@ vocabulary.component('data-sheet', defineComponent({
 		rowCount() {
 			this.fitRows();
 			this.selectStart();
+		},
+		// narrower or wider: the scrolled columns' last position moves
+		widths() {
+			this.setColPos(this.colPos);
 		},
 		col(c: number) {
 			this.colPos = fitColPos(c, this.colPos, this.widths, this.fixed, this.width);
@@ -567,6 +590,38 @@ vocabulary.component('data-sheet', defineComponent({
 		},
 		setPos(pos: number) {
 			this.pos = clampRowPos(pos, this.rowCount, this.page);
+		},
+		// A header's right edge dragged: the column's width, the pointer captured by the edge (as the scrollbar's thumb).
+		resizeStart(ev: PointerEvent, c: number) {
+			if (ev.button !== 0)
+				return;
+			(ev.target as HTMLElement).setPointerCapture(ev.pointerId);
+			this.resizing = { key: this.keys[c], from: ev.clientX, width: this.widths[c], start: this.widths[c] };
+		},
+		resizeMove(ev: PointerEvent) {
+			const r = this.resizing;
+			if (r) {
+				r.width = Math.max(MIN_WIDTH, Math.round(r.start + ev.clientX - r.from));
+				this.userWidths.set(r.key, r.width);
+			}
+		},
+		resizeEnd() {
+			const r = this.resizing;
+			this.resizing = null;
+			if (r && r.width !== r.start)
+				this.$emit('widths-change', this.$widths());
+		},
+		// The user's widths, px by the column's key: to be kept.
+		$widths(): Record<string, number> {
+			return Object.fromEntries(this.userWidths);
+		},
+		// The widths kept, put over the columns' `width`: every one before dropped ({}: none); a key with no column
+		// waits for it; less than the least, the least.
+		$setWidths(widths: Record<string, number>) {
+			this.userWidths.clear();
+			for (const [key, w] of Object.entries(widths || {}))
+				if (Number.isFinite(w))
+					this.userWidths.set(key, Math.max(MIN_WIDTH, Math.round(w)));
 		},
 		setColPos(pos: number) {
 			this.colPos = clampColPos(pos, this.widths, this.fixed, this.width);

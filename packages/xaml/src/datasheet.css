@@ -254,6 +254,26 @@
 	transform: rotate(45deg);
 }
 
+/* a column's width: its header's right edge dragged */
+.data-sheet .ds-table th {
+	position: relative;
+}
+
+.data-sheet .ds-table th .ds-resize {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 6px;
+	cursor: col-resize;
+	touch-action: none;
+}
+
+.data-sheet.ds-resizing,
+.data-sheet.ds-resizing * {
+	cursor: col-resize !important;
+}
+
 /* sorting: a header that sorts, its direction when sorted by it */
 .data-sheet .ds-table th.sort {
 	cursor: pointer;
